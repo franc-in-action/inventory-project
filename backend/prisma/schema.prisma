@@ -33,9 +33,12 @@ model Location {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  users     User[]
-  products  Product[]
+  users           User[]
+  products        Product[]
+  stockLevels     StockLevel[]
+  stockMovements  StockMovement[]
 }
+
 
 model Category {
   id        String    @id @default(cuid())
@@ -47,20 +50,65 @@ model Category {
 }
 
 model Product {
-  id         String    @id @default(cuid())
-  name       String
-  sku        String    @unique
-  description String?   // <--- add this
-  quantity   Int       @default(0)
-  price      Float
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  locationId String
-  location   Location  @relation(fields: [locationId], references: [id])
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  id          String      @id @default(cuid())
+  name        String
+  sku         String      @unique
+  description String?
+  quantity    Int         @default(0)
+  price       Float
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  locationId  String
+  location    Location    @relation(fields: [locationId], references: [id])
+  
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
+
+  stockLevels     StockLevel[]
+  stockMovements  StockMovement[]
 }
 
+
+model StockLevel {
+  id         Int      @id @default(autoincrement())
+  productId  String
+  locationId String
+  quantity   Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  product   Product  @relation(fields: [productId], references: [id])
+  location  Location @relation(fields: [locationId], references: [id])
+
+  @@unique([productId, locationId])
+}
+
+
+model StockMovement {
+  id           Int      @id @default(autoincrement())
+  movementUuid String   @unique
+  productId    String
+  locationId   String
+  delta        Int
+  reason       String
+  refId        String?
+  createdAt    DateTime @default(now())
+
+  product  Product  @relation(fields: [productId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+}
+
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  entity    String
+  entityId  Int?
+  performedBy String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
 
 enum Role {
   ADMIN
