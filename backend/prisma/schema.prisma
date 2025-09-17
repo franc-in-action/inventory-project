@@ -27,49 +27,53 @@ model User {
 }
 
 model Location {
-  id        String    @id @default(cuid())
-  name      String    @unique
+  id        String   @id @default(cuid())
+  name      String   @unique
   address   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  users           User[]
-  products        Product[]
-  stockLevels     StockLevel[]
-  stockMovements  StockMovement[]
+  users          User[]
+  products       Product[]
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
+
+  // New relation for sales
+  sales Sale[]
 }
 
-
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  products  Product[]
+  products Product[]
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
-  sku         String      @unique
+  sku         String  @unique
   description String?
-  quantity    Int         @default(0)
+  quantity    Int     @default(0)
   price       Float
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
 
-  locationId  String
-  location    Location    @relation(fields: [locationId], references: [id])
-  
-  categoryId  String?
-  category    Category?   @relation(fields: [categoryId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  stockLevels     StockLevel[]
-  stockMovements  StockMovement[]
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
+
+  // New relation for sale items
+  saleItems SaleItem[]
 }
-
 
 model StockLevel {
   id         Int      @id @default(autoincrement())
@@ -78,12 +82,11 @@ model StockLevel {
   quantity   Int      @default(0)
   updatedAt  DateTime @updatedAt
 
-  product   Product  @relation(fields: [productId], references: [id])
-  location  Location @relation(fields: [locationId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
 
   @@unique([productId, locationId])
 }
-
 
 model StockMovement {
   id           Int      @id @default(autoincrement())
@@ -99,15 +102,61 @@ model StockMovement {
   location Location @relation(fields: [locationId], references: [id])
 }
 
-
 model AuditLog {
-  id        Int      @id @default(autoincrement())
-  action    String
-  entity    String
-  entityId  Int?
+  id          Int      @id @default(autoincrement())
+  action      String
+  entity      String
+  entityId    Int?
   performedBy String
-  metadata  Json?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?  @unique
+  phone     String?
+  balance   Float    @default(0)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales Sale[]
+}
+
+model Sale {
+  id         Int      @id @default(autoincrement())
+  saleUuid   String   @unique
+  locationId String // matches Location.id
+  customerId Int // matches Customer.id
+  total      Float
+  createdAt  DateTime @default(now())
+
+  location Location   @relation(fields: [locationId], references: [id])
+  customer Customer   @relation(fields: [customerId], references: [id])
+  items    SaleItem[]
+  payments Payment[]
+}
+
+model SaleItem {
+  id        Int    @id @default(autoincrement())
+  saleId    Int
+  productId String
+  qty       Int
+  price     Float
+
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  saleId    Int
+  amount    Float
+  method    String
+  createdAt DateTime @default(now())
+
+  sale Sale @relation(fields: [saleId], references: [id])
 }
 
 enum Role {

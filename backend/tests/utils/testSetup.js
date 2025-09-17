@@ -9,6 +9,9 @@ export async function setupTestDB() {
 
   try {
     console.log("Clearing test database...");
+    await prisma.saleItem.deleteMany();
+    await prisma.payment.deleteMany();
+    await prisma.sale.deleteMany();
     await prisma.stockMovement.deleteMany();
     await prisma.stockLevel.deleteMany();
     await prisma.auditLog.deleteMany();
@@ -16,6 +19,7 @@ export async function setupTestDB() {
     await prisma.user.deleteMany();
     await prisma.location.deleteMany();
     await prisma.category.deleteMany();
+    await prisma.customer.deleteMany();
 
     console.log("Seeding test location...");
     location = await prisma.location.create({

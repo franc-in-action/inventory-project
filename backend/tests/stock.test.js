@@ -1,3 +1,5 @@
+// tests/stock.test.js
+
 import request from "supertest";
 import app from "../src/app.js";
 import { prisma } from "../src/prisma.js";
