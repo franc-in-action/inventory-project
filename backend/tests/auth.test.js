@@ -1,5 +1,5 @@
 import request from "supertest";
-import app from "../src/app.js";   // ⬅️ use app.js, not server.js
+import app from "../src/app.js";
 import { prisma } from "../src/prisma.js";
 import bcrypt from "bcrypt";
 

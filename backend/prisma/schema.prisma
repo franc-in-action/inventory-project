@@ -28,7 +28,7 @@ model User {
 
 model Location {
   id        String    @id @default(cuid())
-  name      String
+  name      String    @unique
   address   String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -37,18 +37,30 @@ model Location {
   products  Product[]
 }
 
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+}
+
 model Product {
   id         String    @id @default(cuid())
   name       String
   sku        String    @unique
+  description String?   // <--- add this
   quantity   Int       @default(0)
   price      Float
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-
   locationId String
   location   Location  @relation(fields: [locationId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
 }
+
 
 enum Role {
   ADMIN

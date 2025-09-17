@@ -1,4 +1,7 @@
+// prisma/seed.js
 import { PrismaClient } from "../generated/prisma/index.js";
+import bcrypt from "bcrypt";
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -10,11 +13,14 @@ async function main() {
         },
     });
 
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash("password", 10);
+
     // Create an Admin User
     await prisma.user.create({
         data: {
             email: "admin@example.com",
-            password: "hashed-password", // TODO: hash with bcrypt
+            password: hashedPassword,
             name: "System Admin",
             role: "ADMIN",
             locationId: location.id
