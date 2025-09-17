@@ -12,8 +12,13 @@ export async function setupTestDB() {
     await prisma.saleItem.deleteMany();
     await prisma.payment.deleteMany();
     await prisma.sale.deleteMany();
+
+    await prisma.purchaseItem.deleteMany(); // ← Delete PO items first
+    await prisma.purchase.deleteMany(); // ← Then delete purchases
+
     await prisma.stockMovement.deleteMany();
     await prisma.stockLevel.deleteMany();
+
     await prisma.auditLog.deleteMany();
     await prisma.product.deleteMany();
     await prisma.user.deleteMany();

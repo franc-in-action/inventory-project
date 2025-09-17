@@ -40,6 +40,9 @@ model Location {
 
   // New relation for sales
   sales Sale[]
+
+  // Back-relation for purchases
+  purchases Purchase[]
 }
 
 model Category {
@@ -73,6 +76,9 @@ model Product {
 
   // New relation for sale items
   saleItems SaleItem[]
+
+  // Back-relation for purchase items
+  purchaseItems PurchaseItem[]
 }
 
 model StockLevel {
@@ -157,6 +163,42 @@ model Payment {
   createdAt DateTime @default(now())
 
   sale Sale @relation(fields: [saleId], references: [id])
+}
+
+model Vendor {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?  @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchases Purchase[]
+}
+
+model Purchase {
+  id           Int      @id @default(autoincrement())
+  purchaseUuid String   @unique
+  vendorId     Int
+  locationId   String
+  total        Float
+  received     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  vendor   Vendor         @relation(fields: [vendorId], references: [id])
+  location Location       @relation(fields: [locationId], references: [id])
+  items    PurchaseItem[]
+}
+
+model PurchaseItem {
+  id         Int    @id @default(autoincrement())
+  purchaseId Int
+  productId  String
+  qty        Int
+  price      Float
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
 }
 
 enum Role {
