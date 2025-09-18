@@ -8,10 +8,10 @@ const router = express.Router();
 const toEntityId = (id) =>
   id !== undefined && id !== null ? String(id) : null;
 
-// Helper to convert ServerChange (and BigInt IDs) for JSON
+// Helper to serialize server changes
 const serializeChange = (change) => ({
   ...change,
-  id: change.id.toString(),
+  id: change.id.toString(), // serverId stays string
   entityId: change.entityId !== null ? String(change.entityId) : null,
 });
 
@@ -22,13 +22,13 @@ router.post("/push", authMiddleware, async (req, res) => {
     return res.status(400).json({ error: "Array required" });
 
   const results = [];
-  let serverSeq = 0n;
+  let serverSeq = 0;
 
   try {
     for (const change of changes) {
       const { entityType, entityUuid, payload } = change;
 
-      // ----------------- Append-only entities -----------------
+      // Append-only entities
       if (["Sale", "StockMovement", "Purchase"].includes(entityType)) {
         const existing = await prisma.serverChange.findFirst({
           where: { payload: { path: ["uuid"], equals: entityUuid } },
@@ -38,6 +38,7 @@ router.post("/push", authMiddleware, async (req, res) => {
             clientUuid: entityUuid,
             serverId: existing.id.toString(),
           });
+          serverSeq = Number(existing.id);
           continue;
         }
 
@@ -52,11 +53,11 @@ router.post("/push", authMiddleware, async (req, res) => {
           clientUuid: entityUuid,
           serverId: newChange.id.toString(),
         });
-        serverSeq = newChange.id;
+        serverSeq = Number(newChange.id);
         continue;
       }
 
-      // ----------------- Mutable entities -----------------
+      // Mutable entities
       if (["Product"].includes(entityType)) {
         const existingEntity = await prisma.product.findUnique({
           where: { id: payload.id },
@@ -73,13 +74,11 @@ router.post("/push", authMiddleware, async (req, res) => {
             });
           }
 
-          // Apply update
           const updated = await prisma.product.update({
             where: { id: payload.id },
             data: { ...payload, updatedAt: new Date() },
           });
 
-          // Record server change
           const newChange = await prisma.serverChange.create({
             data: {
               entityType,
@@ -91,10 +90,9 @@ router.post("/push", authMiddleware, async (req, res) => {
             clientUuid: entityUuid,
             serverId: newChange.id.toString(),
           });
-          serverSeq = newChange.id;
+          serverSeq = Number(newChange.id);
           continue;
         } else {
-          // Create new product
           const created = await prisma.product.create({ data: payload });
           const newChange = await prisma.serverChange.create({
             data: {
@@ -107,16 +105,13 @@ router.post("/push", authMiddleware, async (req, res) => {
             clientUuid: entityUuid,
             serverId: newChange.id.toString(),
           });
-          serverSeq = newChange.id;
+          serverSeq = Number(newChange.id);
           continue;
         }
       }
     }
 
-    res.json({
-      results,
-      serverSeq: serverSeq.toString(),
-    });
+    res.json({ results, serverSeq });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -125,7 +120,7 @@ router.post("/push", authMiddleware, async (req, res) => {
 
 // -------------------- PULL --------------------
 router.get("/pull", authMiddleware, async (req, res) => {
-  const sinceSeq = BigInt(req.query.since_seq || 0);
+  const sinceSeq = Number(req.query.since_seq || 0);
   try {
     const changes = await prisma.serverChange.findMany({
       where: { id: { gt: sinceSeq } },
@@ -133,12 +128,12 @@ router.get("/pull", authMiddleware, async (req, res) => {
     });
 
     const serverSeq = changes.length
-      ? changes[changes.length - 1].id
+      ? Number(changes[changes.length - 1].id)
       : sinceSeq;
 
     res.json({
       changes: changes.map(serializeChange),
-      serverSeq: serverSeq.toString(),
+      serverSeq, // stays number
     });
   } catch (err) {
     console.error(err);
