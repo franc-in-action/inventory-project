@@ -8,7 +8,7 @@ export async function setupTestDB() {
   let location;
 
   try {
-    console.log("Clearing test database...");
+    //console.log("Clearing test database...");
     await prisma.saleItem.deleteMany();
     await prisma.payment.deleteMany();
     await prisma.sale.deleteMany();
@@ -26,12 +26,12 @@ export async function setupTestDB() {
     await prisma.category.deleteMany();
     await prisma.customer.deleteMany();
 
-    console.log("Seeding test location...");
+    //console.log("Seeding test location...");
     location = await prisma.location.create({
       data: { name: "Main Branch", address: "Downtown" },
     });
 
-    console.log("Seeding admin user...");
+    //console.log("Seeding admin user...");
     const hashed = await bcrypt.hash("password", 10);
     await prisma.user.create({
       data: {
@@ -43,7 +43,7 @@ export async function setupTestDB() {
       },
     });
 
-    console.log("Logging in admin user...");
+    //console.log("Logging in admin user...");
     const res = await request(app)
       .post("/api/auth/login")
       .send({ email: "admin@example.com", password: "password" });
@@ -54,7 +54,7 @@ export async function setupTestDB() {
     }
 
     token = res.body.token;
-    console.log("Admin login successful. Token obtained.");
+    //console.log("Admin login successful. Token obtained.");
   } catch (err) {
     console.error("Error in test setup:", err);
     throw err;
