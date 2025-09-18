@@ -119,15 +119,17 @@ model AuditLog {
 }
 
 model Customer {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String?  @unique
-  phone     String?
-  balance   Float    @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String?  @unique
+  phone        String?
+  balance      Float    @default(0)
+  credit_limit Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  sales Sale[]
+  sales    Sale[]
+  payments Payment[]
 }
 
 model Sale {
@@ -156,13 +158,15 @@ model SaleItem {
 }
 
 model Payment {
-  id        Int      @id @default(autoincrement())
-  saleId    Int
-  amount    Float
-  method    String
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  saleId     Int?
+  customerId Int?
+  amount     Float
+  method     String
+  createdAt  DateTime @default(now())
 
-  sale Sale @relation(fields: [saleId], references: [id])
+  sale     Sale?     @relation(fields: [saleId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
 }
 
 model Vendor {

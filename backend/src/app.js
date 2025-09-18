@@ -9,6 +9,8 @@ import productsRouter from "./routes/products.js";
 import stockRouter from "./routes/stock.js";
 import salesRouter from "./routes/sales.js";
 import purchasesRouter from "./routes/purchases.js";
+import customersRouter from "./routes/customers.js";
+import paymentsRouter from "./routes/payments.js";
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.use("/api/products", productsRouter);
 app.use("/api/stock", stockRouter);
 app.use("/api/sales", salesRouter);
 app.use("/api/purchases", purchasesRouter);
+app.use("/api/customers", customersRouter);
+app.use("/api/payments", paymentsRouter);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

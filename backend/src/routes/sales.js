@@ -81,8 +81,9 @@ router.post(
           });
         }
 
-        // Create payment if provided
+        // Create payment or update customer balance
         if (payment && payment.amount > 0) {
+          // Payment provided: reduce customer balance
           await tx.payment.create({
             data: {
               saleId: newSale.id,
@@ -91,10 +92,25 @@ router.post(
             },
           });
 
-          // Reduce customer balance if on credit
           await tx.customer.update({
             where: { id: customerId },
             data: { balance: { decrement: payment.amount } },
+          });
+        } else if (customerId) {
+          // Sale on credit: increase customer balance
+          const customer = await tx.customer.findUnique({
+            where: { id: customerId },
+          });
+          if (!customer) throw new Error("Customer not found");
+
+          // Check credit limit
+          if (customer.balance + total > customer.credit_limit) {
+            throw new Error("Credit limit exceeded");
+          }
+
+          await tx.customer.update({
+            where: { id: customerId },
+            data: { balance: { increment: total } },
           });
         }
 
