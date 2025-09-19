@@ -1,3 +1,5 @@
+// Dashboard.jsx
+
 import { Box, Heading, Button } from "@chakra-ui/react";
 
 export default function Dashboard() {
