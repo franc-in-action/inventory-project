@@ -1,5 +1,3 @@
-// ProductForm.jsx
-
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -30,30 +28,54 @@ export default function ProductForm({ productId, onSaved }) {
 
   const token = localStorage.getItem("token");
 
-  // Fetch categories on mount
+  // Fetch categories
   useEffect(() => {
-    fetch(`${backendUrl}/categories`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch(console.error);
+    async function loadCategories() {
+      try {
+        if (window.api) {
+          // offline
+          const localCats = await window.api.query("SELECT * FROM categories");
+          setCategories(localCats);
+        } else {
+          const res = await fetch(`${backendUrl}/categories`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          setCategories(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadCategories();
   }, [token]);
 
   // Fetch product if editing
   useEffect(() => {
     if (!productId) return;
-
-    fetch(`${backendUrl}/products/${productId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Product not found");
-        return res.json();
-      })
-      .then(setProduct)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    async function loadProduct() {
+      try {
+        if (window.api) {
+          const [localProduct] = await window.api.query(
+            "SELECT * FROM products WHERE id = ?",
+            [productId]
+          );
+          if (localProduct) setProduct(localProduct);
+        } else {
+          const res = await fetch(`${backendUrl}/products/${productId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Product not found");
+          const data = await res.json();
+          setProduct(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProduct();
   }, [productId, token]);
 
   const handleChange = (e) => {
@@ -71,17 +93,48 @@ export default function ProductForm({ productId, onSaved }) {
       : `${backendUrl}/products`;
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(product),
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error?.error || "Failed to save product");
+      if (window.api) {
+        // offline insert/update
+        if (productId) {
+          await window.api.run(
+            "UPDATE products SET name=?, sku=?, price=?, quantity=?, description=?, categoryId=? WHERE id=?",
+            [
+              product.name,
+              product.sku,
+              product.price,
+              product.quantity,
+              product.description,
+              product.categoryId,
+              productId,
+            ]
+          );
+        } else {
+          await window.api.run(
+            "INSERT INTO products (name, sku, price, quantity, description, categoryId) VALUES (?, ?, ?, ?, ?, ?)",
+            [
+              product.name,
+              product.sku,
+              product.price,
+              product.quantity,
+              product.description,
+              product.categoryId,
+            ]
+          );
+        }
+      } else {
+        // online save
+        const res = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(product),
+        });
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error?.error || "Failed to save product");
+        }
       }
       onSaved();
     } catch (err) {

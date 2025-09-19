@@ -31,6 +31,12 @@ export default function Login() {
       const data = await res.json();
       if (res.ok && data.token) {
         localStorage.setItem("token", data.token); // ✅ persistent storage
+
+        // 🚀 Send token to Electron main
+        if (window.electronAPI) {
+          window.electronAPI.authSuccess(data.token);
+        }
+
         window.location.href = "/dashboard";
       } else {
         setError(data.error || "Login failed");

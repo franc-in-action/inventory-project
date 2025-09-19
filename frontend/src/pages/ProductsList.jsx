@@ -17,13 +17,19 @@ export default function ProductsList({ onEdit }) {
   const fetchProducts = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${backendUrl}/products`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      let data;
+      if (window.api) {
+        data = await window.api.query("SELECT * FROM products");
+      } else {
+        const res = await fetch(`${backendUrl}/products`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        data = await res.json();
+      }
       setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -33,10 +39,14 @@ export default function ProductsList({ onEdit }) {
     if (!confirm("Delete this product?")) return;
     const token = localStorage.getItem("token");
     try {
-      await fetch(`${backendUrl}/products/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (window.api) {
+        await window.api.run("DELETE FROM products WHERE id = ?", [id]);
+      } else {
+        await fetch(`${backendUrl}/products/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
       fetchProducts();
     } catch (err) {
       console.error(err);

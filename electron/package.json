@@ -1,4 +1,23 @@
 {
   "name": "electron",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env ELECTRON_START_URL=http://localhost:5144 electron .",
+    "start": "electron .",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^25.0.0",
+    "jest": "^29.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0"
+  }
 }
