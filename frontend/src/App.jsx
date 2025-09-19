@@ -1,63 +1,60 @@
-import { useEffect, useState } from "react";
-import { Box, Heading, List, ListItem, Spinner } from "@chakra-ui/react";
-import './App.css'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { ChakraProvider, Box } from "@chakra-ui/react";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Products from "./pages/Products.jsx";
+import Header from "./components/Header.jsx";
 
-function App() {
-  const [products, setProducts] = useState(null);
-  const [loading, setLoading] = useState(true);
+// --- Protected Route ---
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/login" />;
+}
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  const email = import.meta.env.VITE_ADMIN_EMAIL;
-  const password = import.meta.env.VITE_ADMIN_PASSWORD;
-
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        // Auto-login
-        const loginRes = await fetch(`${backendUrl}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-        const loginData = await loginRes.json();
-        const token = loginData.token;
-
-        // Save token to localStorage (optional)
-        localStorage.setItem("token", token);
-
-        // Fetch products with token
-        const res = await fetch(`${backendUrl}/api/products`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-
-        if (Array.isArray(data)) setProducts(data);
-        else setProducts([]);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProducts();
-  }, [backendUrl, email, password]);
-
-  if (loading) return <Spinner />;
-
+// --- Protected Layout with Header ---
+function ProtectedLayout({ children }) {
   return (
-    <Box p={6}>
-      <Heading size="md">Products</Heading>
-      <List>
-        {products.map((p) => (
-          <ListItem key={p.id}>
-            {p.sku} - {p.name} (${p.price})
-          </ListItem>
-        ))}
-      </List>
+    <Box>
+      <Header />
+      {children}
     </Box>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ChakraProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout>
+                  <Dashboard />
+                </ProtectedLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout>
+                  <Products />
+                </ProtectedLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </Router>
+    </ChakraProvider>
+  );
+}

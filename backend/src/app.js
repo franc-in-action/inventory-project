@@ -6,6 +6,7 @@ import cors from "cors"; // <--- add this
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import productsRouter from "./routes/products.js";
+import categoriesRouter from "./routes/categories.js";
 import stockRouter from "./routes/stock.js";
 import salesRouter from "./routes/sales.js";
 import purchasesRouter from "./routes/purchases.js";
@@ -29,6 +30,7 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productsRouter);
+app.use("/api/categories", categoriesRouter);
 app.use("/api/stock", stockRouter);
 app.use("/api/sales", salesRouter);
 app.use("/api/purchases", purchasesRouter);

@@ -19,6 +19,22 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
+// GET single product by id
+router.get("/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { category: true },
+    });
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.json(product);
+  } catch (err) {
+    console.error(`[GET /products/${id}] Error:`, err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // CREATE product
 router.post(
   "/",
