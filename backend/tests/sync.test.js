@@ -99,4 +99,100 @@ describe("Sync endpoints", () => {
     // ✅ convert serverSeq to number for comparison
     expect(Number(res.body.serverSeq)).toBeGreaterThanOrEqual(0);
   });
+
+  test("Multi-device sync simulation", async () => {
+    const saleUuid = "sale-multi-1";
+    const salePayload = {
+      uuid: saleUuid,
+      total: 200,
+      customerId: 1,
+      locationId: location.id,
+    };
+
+    // Device A pushes
+    const resA1 = await request(app)
+      .post("/api/sync/push")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        changes: [
+          { entityType: "Sale", entityUuid: saleUuid, payload: salePayload },
+        ],
+      });
+
+    expect(resA1.status).toBe(200);
+
+    // Device B pushes the same sale later
+    const resB1 = await request(app)
+      .post("/api/sync/push")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        changes: [
+          { entityType: "Sale", entityUuid: saleUuid, payload: salePayload },
+        ],
+      });
+
+    // Should dedupe
+    expect(resB1.body.results[0].serverId).toBe(resA1.body.results[0].serverId);
+
+    // Device B pulls changes since 0
+    const pullB = await request(app)
+      .get("/api/sync/pull?since_seq=0")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(pullB.status).toBe(200);
+    expect(pullB.body.changes.length).toBeGreaterThanOrEqual(1);
+
+    // Simulate conflicting product updates
+    const product = await prisma.product.create({
+      data: {
+        id: "prod-multi",
+        name: "Multi Product",
+        sku: "MP001",
+        price: 100,
+        quantity: 5,
+        locationId: location.id,
+      },
+    });
+
+    // Device A updates product
+    const updateA = {
+      ...product,
+      price: 120,
+      updatedAt: new Date().toISOString(),
+    };
+    await request(app)
+      .post("/api/sync/push")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        changes: [
+          {
+            entityType: "Product",
+            entityUuid: "prod-multi-a",
+            payload: updateA,
+          },
+        ],
+      });
+
+    // Device B tries to update same product with old updatedAt
+    const updateB = {
+      ...product,
+      price: 130,
+      updatedAt: new Date(Date.now() - 10000).toISOString(),
+    };
+    const resConflict = await request(app)
+      .post("/api/sync/push")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        changes: [
+          {
+            entityType: "Product",
+            entityUuid: "prod-multi-b",
+            payload: updateB,
+          },
+        ],
+      });
+
+    expect(resConflict.status).toBe(409);
+    expect(resConflict.body.serverSnapshot.id).toBe(product.id);
+  });
 });
