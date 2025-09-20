@@ -1,5 +1,3 @@
--- schema.sql
-
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS products (
@@ -9,6 +7,14 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     price REAL DEFAULT 0,
     updatedAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS local_sales (
+    local_uuid TEXT PRIMARY KEY,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime ('now')),
+    synced INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS stock_movements (
@@ -32,7 +38,8 @@ CREATE TABLE IF NOT EXISTS sync_queue (
     entity_type TEXT NOT NULL,
     entity_uuid TEXT,
     payload TEXT NOT NULL,
-    queued_at TEXT NOT NULL
+    queued_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' -- added this column
 );
 
 -- indexes

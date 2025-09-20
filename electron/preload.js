@@ -13,6 +13,9 @@ const API = {
         pushMovement: (movement) => ipcRenderer.invoke("stock:pushMovement", movement),
         listMovements: (filters) => ipcRenderer.invoke("stock:listMovements", filters),
     },
+    sales: {
+        create: (sale) => ipcRenderer.invoke("sales:create", sale),
+    },
     syncQueue: {
         enqueue: (item) => ipcRenderer.invoke("sync:enqueue", item),
         peekAll: () => ipcRenderer.invoke("sync:peekAll"),

@@ -5,99 +5,89 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
-let db;
-
-export function initDb(userDataPath) {
-    return new Promise((resolve, reject) => {
-        try {
-            const dbPath = path.join(userDataPath, "local_cache.sqlite");
-            const firstTime = !fs.existsSync(dbPath);
-            db = new Database(dbPath);
-
-            // enable WAL for concurrency
-            db.pragma("journal_mode = WAL");
-
-            if (firstTime) {
-                runMigrations();
-            } else {
-                // optionally validate schema version
-                runMigrations(); // safe: migrations will be idempotent
-            }
-            resolve();
-        } catch (err) {
-            reject(err);
-        }
-    });
-}
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-function runMigrations() {
+// --- Singleton DB ---
+let db;
+
+// Allow optional custom path (for tests)
+export function initDb(userDataPath = null) {
+    if (db) return db; // already initialized
+
+    const basePath = userDataPath || path.join(process.cwd(), "electron-data");
+    fs.mkdirSync(basePath, { recursive: true });
+
+    const dbPath = path.join(basePath, "local_cache.sqlite");
+    const firstTime = !fs.existsSync(dbPath);
+
+    db = new Database(dbPath);
+    db.pragma("journal_mode = WAL"); // enable WAL
+
+    runMigrations(firstTime);
+
+    return db;
+}
+
+function runMigrations(firstTime) {
     const schemaPath = path.join(__dirname, "schema.sql");
     const schemaSql = fs.readFileSync(schemaPath, "utf8");
     db.exec(schemaSql);
 }
 
+// auto-init singleton with default folder
+initDb();
+
 // ---- Products CRUD ----
 export function listProducts() {
-    const stmt = db.prepare("SELECT * FROM products ORDER BY name ASC");
-    return stmt.all();
+    return db.prepare("SELECT * FROM products ORDER BY name ASC").all();
 }
 
 export function getProduct(id) {
-    const stmt = db.prepare("SELECT * FROM products WHERE id = ?");
-    return stmt.get(id);
+    return db.prepare("SELECT * FROM products WHERE id = ?").get(id);
 }
 
 export function upsertProduct(product) {
     if (product.id) {
-        const update = db.prepare(`
+        const info = db.prepare(`
             UPDATE products
             SET sku=@sku, name=@name, description=@description,
                 price=@price, updatedAt=@updatedAt
             WHERE id=@id
-        `);
-        const info = update.run({
+        `).run({
             ...product,
             description: product.description ?? null,
-            updatedAt: product.updatedAt || new Date().toISOString()
+            updatedAt: product.updatedAt || new Date().toISOString(),
         });
         if (info.changes) return getProduct(product.id);
     }
 
     const id = product.id || generateId();
-    const insert = db.prepare(`
+    db.prepare(`
         INSERT INTO products (id, sku, name, description, price, updatedAt)
         VALUES (@id, @sku, @name, @description, @price, @updatedAt)
-    `);
-    insert.run({
+    `).run({
         ...product,
         id,
         description: product.description ?? null,
-        updatedAt: product.updatedAt || new Date().toISOString()
+        updatedAt: product.updatedAt || new Date().toISOString(),
     });
     return getProduct(id);
 }
 
-
 export function deleteProduct(id) {
-    const stmt = db.prepare("DELETE FROM products WHERE id = ?");
-    return stmt.run(id);
+    return db.prepare("DELETE FROM products WHERE id = ?").run(id);
 }
 
-// ---- Stock movements (append-only ledger) ----
+// ---- Stock movements ----
 export function pushStockMovement(mv) {
-    // mv: { movement_uuid, product_id, location_id, delta, reason, ref_id, created_at }
-    // dedupe by movement_uuid
     const existing = db.prepare("SELECT id FROM stock_movements WHERE movement_uuid = ?").get(mv.movement_uuid);
     if (existing) return { id: existing.id, deduped: true };
 
-    const stmt = db.prepare(`
-    INSERT INTO stock_movements (movement_uuid, product_id, location_id, delta, reason, ref_id, created_at)
-    VALUES (@movement_uuid, @product_id, @location_id, @delta, @reason, @ref_id, @created_at)
-  `);
-    const info = stmt.run({
+    const info = db.prepare(`
+        INSERT INTO stock_movements (movement_uuid, product_id, location_id, delta, reason, ref_id, created_at)
+        VALUES (@movement_uuid, @product_id, @location_id, @delta, @reason, @ref_id, @created_at)
+    `).run({
         movement_uuid: mv.movement_uuid,
         product_id: mv.product_id,
         location_id: mv.location_id || null,
@@ -115,9 +105,10 @@ export function listStockMovements() {
 
 // ---- Sync queue ----
 export function enqueueSync(item) {
-    // item is JSON blob with {entityType, entityUuid, payload}
-    const stmt = db.prepare("INSERT INTO sync_queue (entity_type, entity_uuid, payload, queued_at) VALUES (?, ?, ?, ?)");
-    const info = stmt.run(item.entityType, item.entityUuid, JSON.stringify(item.payload), new Date().toISOString());
+    const info = db.prepare(`
+        INSERT INTO sync_queue (entity_type, entity_uuid, payload, queued_at)
+        VALUES (?, ?, ?, ?)
+    `).run(item.entityType, item.entityUuid, JSON.stringify(item.payload), new Date().toISOString());
     return info.lastInsertRowid;
 }
 
@@ -137,8 +128,8 @@ export function getDeviceMeta(key) {
 }
 
 export function setDeviceMeta(key, value) {
-    const exists = db.prepare("SELECT key FROM device_meta WHERE key = ?").get(key);
     const str = JSON.stringify(value);
+    const exists = db.prepare("SELECT key FROM device_meta WHERE key = ?").get(key);
     if (exists) {
         return db.prepare("UPDATE device_meta SET value = ? WHERE key = ?").run(str, key);
     } else {
@@ -146,10 +137,10 @@ export function setDeviceMeta(key, value) {
     }
 }
 
+// --- Export singleton db ---
 export { db };
 
-// helper id generator
+// --- Helper ---
 function generateId() {
-    // small cuid-like: timestamp + random
     return `local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }

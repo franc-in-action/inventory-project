@@ -38,6 +38,22 @@ export function registerIpcHandlers() {
         return db.listStockMovements();
     });
 
+    ipcMain.handle("sales:create", async (_event, sale) => {
+        const local_uuid = crypto.randomUUID();
+        db.prepare(`
+    INSERT INTO local_sales(local_uuid, product_id, quantity)
+    VALUES (?, ?, ?)
+  `).run(local_uuid, sale.product_id, sale.quantity);
+
+        // queue a payload for push
+        db.prepare(`
+    INSERT INTO sync_queue(payload, status)
+    VALUES (?, 'pending')
+  `).run(JSON.stringify({ type: "sale", local_uuid }));
+
+        return { local_uuid };
+    });
+
     // Sync queue
     ipcMain.handle("sync:enqueue", async (event, item) => {
         return db.enqueueSync(item);
