@@ -6,7 +6,17 @@
   "scripts": {
     "dev": "cross-env ELECTRON_START_URL=http://localhost:5144 electron .",
     "start": "electron .",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.yourcompany.inventory",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    }
   },
   "jest": {
     "testEnvironment": "node",
