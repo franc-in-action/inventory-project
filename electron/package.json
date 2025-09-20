@@ -6,17 +6,21 @@
   "scripts": {
     "dev": "cross-env ELECTRON_START_URL=http://localhost:5144 electron .",
     "start": "electron .",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "dist": "electron-builder --win"
   },
   "build": {
-    "appId": "com.yourcompany.inventory",
+    "appId": "com.affluentlife.inventory",
     "win": {
       "target": [
         "nsis"
       ],
       "icon": "build/icon.ico"
-    }
+    },
+    "npmRebuild": false,
+    "asarUnpack": [
+      "**/darwin/**"
+    ]
   },
   "jest": {
     "testEnvironment": "node",
@@ -25,9 +29,13 @@
   "devDependencies": {
     "cross-env": "^7.0.3",
     "electron": "^25.0.0",
+    "electron-builder": "^26.0.12",
+    "electron-rebuild": "^3.2.9",
     "jest": "^29.0.0"
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0"
+    "axios": "^1.12.2",
+    "better-sqlite3": "^12.2.0",
+    "dotenv": "^17.2.2"
   }
 }

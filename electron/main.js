@@ -1,11 +1,12 @@
-// main.js
-import "dotenv/config";  // <-- loads .env automatically
-import { app, BrowserWindow, ipcMain } from "electron";
-import path from "path";
-import url from "url";
-import { registerIpcHandlers } from "./ipcHandlers.js";
-import { initDb } from "./db/index.js";
-import { startSyncWorker, setAuthToken } from "./syncWorker.js";
+// main.js (CommonJS version)
+import 'dotenv/config'; // instead of require("dotenv").config()
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import url from 'url';
+import { registerIpcHandlers } from './ipcHandlers.js';
+import { initDb } from './db/index.js';
+import { startSyncWorker, setAuthToken } from './syncWorker.js';
+
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -36,10 +37,10 @@ async function createWindow() {
 
     registerIpcHandlers();
 
-    // 🚀 start background sync worker
+    // Start background sync worker
     startSyncWorker();
 
-    // ✅ IPC wiring: receive auth token from renderer
+    // Receive auth token from renderer
     ipcMain.on("auth-success", (_, token) => {
         console.log("Auth token received from renderer");
         setAuthToken(token);
