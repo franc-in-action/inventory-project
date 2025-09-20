@@ -106,11 +106,12 @@ export function listStockMovements() {
 // ---- Sync queue ----
 export function enqueueSync(item) {
     const info = db.prepare(`
-        INSERT INTO sync_queue (entity_type, entity_uuid, payload, queued_at)
-        VALUES (?, ?, ?, ?)
-    `).run(item.entityType, item.entityUuid, JSON.stringify(item.payload), new Date().toISOString());
+        INSERT INTO sync_queue (entity_type, entity_uuid, payload)
+        VALUES (?, ?, ?)
+    `).run(item.entityType, item.entityUuid, JSON.stringify(item.payload));
     return info.lastInsertRowid;
 }
+
 
 export function peekSyncQueue() {
     return db.prepare("SELECT id, entity_type, entity_uuid, payload, queued_at FROM sync_queue ORDER BY id ASC").all()

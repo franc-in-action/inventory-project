@@ -38,8 +38,9 @@ CREATE TABLE IF NOT EXISTS sync_queue (
     entity_type TEXT NOT NULL,
     entity_uuid TEXT,
     payload TEXT NOT NULL,
-    queued_at TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending' -- added this column
+    queued_at TEXT NOT NULL DEFAULT (datetime ('now')),
+    status TEXT NOT NULL DEFAULT 'pending',
+    retry_count INTEGER NOT NULL DEFAULT 0
 );
 
 -- indexes
