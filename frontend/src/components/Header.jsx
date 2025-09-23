@@ -5,23 +5,20 @@ import {
   Button,
   Heading,
   IconButton,
-  useDisclosure,
+  Text,
 } from "@chakra-ui/react";
-import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
+import { HamburgerIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
+import { getUserFromToken, logout } from "../utils/authUtils.js";
 
 export default function Header({ onOpenSidebar }) {
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+  const user = getUserFromToken();
 
   return (
     <Box px={{ base: 4, md: 6 }} py={{ base: 3, md: 4 }} boxShadow="sm">
       <Flex align="center" justify="space-between" wrap="wrap" gap={2}>
-        {/* Mobile Hamburger: visible only on small screens */}
+        {/* Mobile Hamburger */}
         <IconButton
           display={{ base: "flex", md: "none" }}
           icon={<HamburgerIcon />}
@@ -35,10 +32,16 @@ export default function Header({ onOpenSidebar }) {
 
         <Spacer />
 
+        {user && (
+          <Text mr={4} fontSize="sm" color="gray.700">
+            {user.role}: {user.name || "User"}
+          </Text>
+        )}
+
         <Button
           size={{ base: "sm", md: "md" }}
           colorScheme="red"
-          onClick={handleLogout}
+          onClick={() => logout(navigate)}
         >
           Logout
         </Button>

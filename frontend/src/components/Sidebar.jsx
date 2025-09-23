@@ -6,8 +6,24 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { NavLink } from "react-router-dom";
+import { getUserFromToken, userHasRole } from "../utils/authUtils.js";
+import { PERMISSIONS } from "../utils/permissions.js";
 
-export default function Sidebar({ links, isOpen, onOpen, onClose }) {
+export default function Sidebar({ isOpen, onOpen, onClose }) {
+  const user = getUserFromToken();
+  const userRole = user?.role?.toLowerCase();
+
+  // Build links dynamically based on role
+  const links = [
+    { to: "/dashboard", label: "Dashboard", roles: PERMISSIONS.DASHBOARD },
+    { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
+    {
+      to: "/admin-tools",
+      label: "Admin Tools",
+      roles: PERMISSIONS.ADMIN_TOOLS,
+    },
+  ].filter((link) => userHasRole(link.roles));
+
   const SidebarContent = (
     <Box
       as="nav"

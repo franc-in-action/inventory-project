@@ -7,49 +7,47 @@ import {
   Button,
   Text,
   Flex,
+  useToast,
 } from "@chakra-ui/react";
-
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { useNavigate } from "react-router-dom";
+import { isLoggedIn, login, getDefaultPage } from "../utils/authUtils.js";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const toast = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      window.location.href = "/dashboard";
+    // Redirect logged-in users safely
+    const defaultPage = getDefaultPage();
+    if (isLoggedIn() && window.location.pathname !== defaultPage) {
+      navigate(defaultPage, { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      const res = await fetch(`${backendUrl}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+    const result = await login({ email, password });
+
+    if (result.success) {
+      toast({
+        title: "Login successful",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
       });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        if (window.electronAPI) {
-          window.electronAPI.authSuccess(data.token);
-        }
-        window.location.href = "/dashboard";
-      } else {
-        setError(data.error || "Login failed");
-      }
-    } catch {
-      setError("Network error");
-    } finally {
-      setLoading(false);
+      navigate(getDefaultPage(), { replace: true });
+    } else {
+      setError(result.error);
     }
+
+    setLoading(false);
   };
 
   return (

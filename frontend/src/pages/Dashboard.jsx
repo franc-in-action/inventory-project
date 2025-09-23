@@ -1,6 +1,9 @@
-import { Box, Heading, Button, Flex } from "@chakra-ui/react";
+import { Box, Heading, Button, Flex, Text } from "@chakra-ui/react";
+import { getUserFromToken } from "../utils/authUtils.js";
 
 export default function Dashboard() {
+  const user = getUserFromToken();
+
   return (
     <Flex
       p={{ base: 4, md: 6 }}
@@ -9,8 +12,14 @@ export default function Dashboard() {
       justify="center"
       textAlign="center"
       minH="60vh"
+      gap={4}
     >
-      <Heading mb={6}>Dashboard</Heading>
+      <Heading mb={2}>Dashboard</Heading>
+      {user && (
+        <Text>
+          Welcome, {user.name || "User"} ({user.role})
+        </Text>
+      )}
       <Button
         colorScheme="blue"
         onClick={() => (window.location.href = "/products")}
