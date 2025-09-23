@@ -24,7 +24,7 @@ router.get("/", async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     const location = await prisma.location.findUnique({
-      where: { id: Number(req.params.id) },
+      where: { id: req.params.id },
     });
     res.json(location);
   } catch (err) {
@@ -50,7 +50,7 @@ router.put("/:id", async (req, res, next) => {
   try {
     const { name, address } = req.body;
     const updatedLocation = await prisma.location.update({
-      where: { id: Number(req.params.id) },
+      where: { id: req.params.id },
       data: { name, address },
     });
     res.json(updatedLocation);
@@ -62,7 +62,7 @@ router.put("/:id", async (req, res, next) => {
 // DELETE location
 router.delete("/:id", async (req, res, next) => {
   try {
-    await prisma.location.delete({ where: { id: Number(req.params.id) } });
+    await prisma.location.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   } catch (err) {
     next(err);
