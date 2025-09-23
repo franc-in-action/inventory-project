@@ -9,9 +9,10 @@ import {
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Products from "./pages/Products.jsx";
+import SalesPage from "./pages/SalesPage.jsx"; // <-- import sales page
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
-import { PERMISSIONS } from "./utils/permissions.js";
+import { PERMISSIONS } from "./constants/permissions.js";
 import { isLoggedIn, userHasRole, getDefaultPage } from "./utils/authUtils.js";
 
 function ProtectedRoute({ children }) {
@@ -32,6 +33,7 @@ function ProtectedLayout({ children }) {
   const links = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/products", label: "Products" },
+    { to: "/sales", label: "Sales" }, // <-- add Sales link
   ];
 
   return (
@@ -88,6 +90,19 @@ export default function App() {
                 <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
                   <ProtectedLayout>
                     <Products />
+                  </ProtectedLayout>
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/sales"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={PERMISSIONS.SALES}>
+                  <ProtectedLayout>
+                    <SalesPage />
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>

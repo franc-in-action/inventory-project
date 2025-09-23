@@ -26,6 +26,12 @@ export default function Dashboard() {
       >
         Go to Products
       </Button>
+      <Button
+        colorScheme="teal"
+        onClick={() => (window.location.href = "/sales")}
+      >
+        Go to Sales
+      </Button>
     </Flex>
   );
 }

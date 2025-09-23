@@ -135,4 +135,35 @@ router.post(
   }
 );
 
+// GET /api/sales?startDate=&endDate=&locationId=&customerId=
+router.get(
+  "/",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER", "STAFF"]),
+  async (req, res) => {
+    const { startDate, endDate, locationId, customerId } = req.query;
+
+    try {
+      const where = {};
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) where.createdAt.gte = new Date(startDate);
+        if (endDate) where.createdAt.lte = new Date(endDate);
+      }
+      if (locationId) where.locationId = locationId;
+      if (customerId) where.customerId = parseInt(customerId);
+
+      const sales = await prisma.sale.findMany({
+        where,
+        include: { customer: true, items: true, payments: true },
+        orderBy: { createdAt: "desc" },
+      });
+
+      res.json(sales);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 export default router;

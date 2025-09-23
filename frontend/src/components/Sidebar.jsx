@@ -8,7 +8,7 @@ import {
 } from "@chakra-ui/react";
 import { NavLink } from "react-router-dom";
 import { getUserFromToken, userHasRole } from "../utils/authUtils.js";
-import { PERMISSIONS } from "../utils/permissions.js";
+import { PERMISSIONS } from "../constants/permissions.js";
 
 export default function Sidebar({ isOpen, onOpen, onClose }) {
   const user = getUserFromToken();
@@ -18,6 +18,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
   const links = [
     { to: "/dashboard", label: "Dashboard", roles: PERMISSIONS.DASHBOARD },
     { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
+    { to: "/sales", label: "Sales", roles: PERMISSIONS.SALES },
     {
       to: "/admin-tools",
       label: "Admin Tools",
