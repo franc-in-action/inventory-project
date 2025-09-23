@@ -20,6 +20,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
     { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
     { to: "/sales", label: "Sales", roles: PERMISSIONS.SALES },
     { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
+    { to: "/locations", label: "Locations", roles: PERMISSIONS.LOCATIONS },
     {
       to: "/admin-tools",
       label: "Admin Tools",
@@ -40,7 +41,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
       <VStack spacing={4} align="stretch">
         {user?.location && (
           <Text fontSize="sm" color="gray.400">
-            {user.location} {/* Show location first */}
+            {user.location}
           </Text>
         )}
         {user && (

@@ -1,5 +1,5 @@
-// src/utils/customersUtils.js
-import { apiFetch } from "../../utils/commonUtils.js";
+// src/utils/customersApi.js
+import { apiFetch } from "../../utils/commonApi.js";
 
 export async function createCustomer(customerData) {
   return apiFetch("/customers", {

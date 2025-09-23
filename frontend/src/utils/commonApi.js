@@ -1,4 +1,4 @@
-// src/utils/commonUtils.js
+// src/utils/commonApi.js
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 

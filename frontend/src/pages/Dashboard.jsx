@@ -38,6 +38,12 @@ export default function Dashboard() {
       >
         Go to Purchases
       </Button>
+      <Button
+        colorScheme="orange"
+        onClick={() => (window.location.href = "/locations")}
+      >
+        Go to Locations
+      </Button>
     </Flex>
   );
 }

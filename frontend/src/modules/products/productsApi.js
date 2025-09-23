@@ -1,5 +1,5 @@
-// src/utils/productsUtils.js
-import { apiFetch } from "../../utils/commonUtils.js";
+// src/utils/productsApi.js
+import { apiFetch } from "../../utils/commonApi.js";
 
 // ---------- PRODUCTS API ---------- //
 export async function fetchProducts(params = {}) {

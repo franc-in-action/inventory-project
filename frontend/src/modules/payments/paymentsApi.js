@@ -1,5 +1,5 @@
-// src/utils/paymentsUtils.js
-import { apiFetch } from "../../utils/commonUtils.js";
+// src/utils/paymentsApi.js
+import { apiFetch } from "../../utils/commonApi.js";
 
 export async function createPayment(paymentData) {
   return apiFetch("/payments", {

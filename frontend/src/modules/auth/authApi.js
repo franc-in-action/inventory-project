@@ -1,4 +1,4 @@
-// src/utils/authUtils.js
+// src/utils/authApi.js
 export const TOKEN_KEY = "token";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 

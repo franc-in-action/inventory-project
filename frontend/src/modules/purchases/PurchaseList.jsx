@@ -13,7 +13,7 @@ import {
   VStack,
   Text,
 } from "@chakra-ui/react";
-import { fetchPurchases, receivePurchase } from "../utils/purchasesUtils.js";
+import { fetchPurchases, receivePurchase } from "../utils/purchasesApi.js";
 import PurchaseForm from "../components/modals/PurchaseForm.jsx";
 
 export default function PurchasesList() {

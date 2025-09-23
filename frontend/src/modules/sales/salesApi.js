@@ -1,5 +1,5 @@
-// src/utils/salesUtils.js
-import { apiFetch } from "../../utils/commonUtils.js";
+// src/utils/salesApi.js
+import { apiFetch } from "../../utils/commonApi.js";
 
 // ---------- SALES API ---------- //
 

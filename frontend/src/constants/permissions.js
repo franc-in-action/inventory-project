@@ -5,4 +5,5 @@ export const PERMISSIONS = {
   ADMIN_TOOLS: ["Admin"],
   SALES: ["Admin", "Manager", "Staff"],
   PURCHASES: ["Admin", "Manager"],
+  LOCATIONS: ["Admin", "Manager"],
 };

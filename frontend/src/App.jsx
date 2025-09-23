@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import SalesPage from "./modules/sales/SalesPage.jsx"; // <-- import sales page
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
+import LocationsPage from "./modules/locations/LocationsPage.jsx";
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import { PERMISSIONS } from "./constants/permissions.js";
@@ -74,7 +75,6 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
-
           {/* Protected + Role-based */}
           <Route
             path="/dashboard"
@@ -88,7 +88,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/products"
             element={
@@ -101,7 +100,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/sales"
             element={
@@ -127,6 +125,18 @@ export default function App() {
             }
           />
 
+          <Route
+            path="/locations"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={PERMISSIONS.LOCATIONS}>
+                  <ProtectedLayout>
+                    <LocationsPage />
+                  </ProtectedLayout>
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
           {/* Catch-all */}
           <Route
             path="*"
