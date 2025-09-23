@@ -33,8 +33,13 @@ export default function Header({ onOpenSidebar }) {
         <Spacer />
 
         {user && (
-          <Text mr={4} fontSize="sm" color="gray.700">
-            {user.role}: {user.name || "User"}
+          <Text fontSize="sm" color="gray.400">
+            {user.name} ({user.role})
+          </Text>
+        )}
+        {user?.location && (
+          <Text fontSize="sm" color="gray.400">
+            {user.location} {/* Show location first */}
           </Text>
         )}
 

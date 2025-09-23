@@ -1,4 +1,5 @@
 import {
+  Text,
   Box,
   Drawer,
   DrawerContent,
@@ -35,6 +36,17 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
       p={4}
     >
       <VStack spacing={4} align="stretch">
+        {user?.location && (
+          <Text fontSize="sm" color="gray.400">
+            {user.location} {/* Show location first */}
+          </Text>
+        )}
+        {user && (
+          <Text fontSize="sm" color="gray.400">
+            {user.name} ({user.role})
+          </Text>
+        )}
+
         {links.map((link) => (
           <NavLink
             key={link.to}

@@ -34,35 +34,27 @@ router.post("/register", async (req, res) => {
 
 // Login
 router.post("/login", async (req, res) => {
-  //console.log("[LOGIN] Body received:", req.body);
-  //console.log("[LOGIN] JWT_SECRET:", JWT_SECRET);
-
   try {
     const { email, password } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { location: true }, // <-- include the location relation
+    });
 
-    if (!user) {
-      console.warn("[LOGIN] User not found for email:", email);
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    // Log DB hash and incoming password
-    //console.log("[LOGIN] Password from request:", password);
-    //console.log("[LOGIN] Hashed password in DB:", user.password);
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      console.warn("[LOGIN] Invalid password for user:", email);
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign(
-      { userId: user.id, role: user.role, name: user.name },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const tokenPayload = {
+      userId: user.id,
+      role: user.role,
+      name: user.name,
+      location: user.location ? user.location.name : null, // <-- include location name
+    };
 
-    //console.log("[LOGIN] Token generated for user:", email);
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "1d" });
+
     res.json({ token });
   } catch (err) {
     console.error("[LOGIN] Error:", err.message);
