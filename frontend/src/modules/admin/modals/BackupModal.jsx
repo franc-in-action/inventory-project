@@ -13,7 +13,7 @@ import {
   VStack,
   useToast,
 } from "@chakra-ui/react";
-import { adminApi } from "./adminApi.js";
+import { adminApi } from "../adminApi.js";
 
 export default function BackupModal({ isOpen, onClose }) {
   const toast = useToast();

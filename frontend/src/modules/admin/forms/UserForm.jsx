@@ -17,7 +17,7 @@ import {
   FormLabel,
   Spinner,
 } from "@chakra-ui/react";
-import { adminApi } from "./adminApi.js";
+import { adminApi } from "../adminApi.js";
 
 export default function UserForm({ userId, isOpen, onClose, onSaved }) {
   const toast = useToast();
@@ -35,8 +35,8 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
     setLoading(true);
     (async () => {
       try {
-        const res = await adminApi.getUsers();
-        const u = res.data.find((x) => x.id === userId);
+        const users = await adminApi.getUsers();
+        const u = users.find((x) => x.id === userId);
         if (u) setUser(u);
       } catch (err) {
         console.error("[UserForm] Failed to load user:", err);

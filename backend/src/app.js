@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import cors from "cors"; // <--- add this
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
+import rolesRouter from "./routes/roles.js";
 import productsRouter from "./routes/products.js";
 import categoriesRouter from "./routes/categories.js";
 import stockRouter from "./routes/stock.js";
@@ -14,6 +15,7 @@ import customersRouter from "./routes/customers.js";
 import paymentsRouter from "./routes/payments.js";
 import syncRouter from "./routes/sync.js";
 import locationsRouter from "./routes/locations.js";
+import logsRouter from "./routes/logs.js";
 
 const app = express();
 
@@ -30,6 +32,7 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/roles", rolesRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/stock", stockRouter);
@@ -39,6 +42,7 @@ app.use("/api/customers", customersRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/sync", syncRouter);
 app.use("/api/locations", locationsRouter);
+app.use("/api/logs", logsRouter);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

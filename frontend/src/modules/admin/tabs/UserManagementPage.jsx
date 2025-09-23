@@ -16,7 +16,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
-import UserForm from "../UserForm.jsx";
+import UserForm from "../forms/UserForm.jsx";
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
@@ -31,9 +31,7 @@ export default function UserManagementPage() {
     setLoading(true);
     try {
       const res = await adminApi.getUsers();
-      const usersArray = Array.isArray(res.data)
-        ? res.data
-        : res.data.users || [];
+      const usersArray = Array.isArray(res) ? res : [];
       setUsers(usersArray);
     } catch (err) {
       console.error("Failed to fetch users:", err);
@@ -84,17 +82,24 @@ export default function UserManagementPage() {
     : [];
 
   return (
-    <Box>
-      <Text fontSize="2xl" mb={4}>
+    <Box p={{ base: 2, md: 4 }}>
+      <Text fontSize="xl" mb={4}>
         Manage System Users
       </Text>
-      <Flex gap={2} mb={4}>
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        gap={2}
+        mb={4}
+        wrap="wrap"
+      >
         <Input
+          flex={{ md: 1 }}
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <Select
+          flex={{ md: 1 }}
           placeholder="Filter role"
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
@@ -103,7 +108,7 @@ export default function UserManagementPage() {
           <option value="Manager">Manager</option>
           <option value="Staff">Staff</option>
         </Select>
-        <Button colorScheme="green" onClick={() => openForm()}>
+        <Button colorScheme="green" onClick={() => openForm()} flexShrink={0}>
           Add User
         </Button>
       </Flex>
@@ -115,46 +120,48 @@ export default function UserManagementPage() {
       ) : filteredUsers.length === 0 ? (
         <Text>No users found.</Text>
       ) : (
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Email</Th>
-              <Th>Role</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {filteredUsers.map((user) => (
-              <Tr key={user.id}>
-                <Td>{user.name}</Td>
-                <Td>{user.email}</Td>
-                <Td>{user.role}</Td>
-                <Td>
-                  <Button size="sm" onClick={() => openForm(user.id)}>
-                    Edit
-                  </Button>
-                  <Button
-                    ml={2}
-                    colorScheme="red"
-                    size="sm"
-                    onClick={() => handleDelete(user.id)}
-                  >
-                    Delete
-                  </Button>
-                  <Button
-                    ml={2}
-                    colorScheme="blue"
-                    size="sm"
-                    onClick={() => handleResetPassword(user.id)}
-                  >
-                    Reset
-                  </Button>
-                </Td>
+        <Box overflowX="auto">
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr>
+                <Th>Name</Th>
+                <Th>Email</Th>
+                <Th>Role</Th>
+                <Th>Actions</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {filteredUsers.map((user) => (
+                <Tr key={user.id}>
+                  <Td>{user.name}</Td>
+                  <Td>{user.email}</Td>
+                  <Td>{user.role}</Td>
+                  <Td>
+                    <Flex wrap="wrap" gap={1}>
+                      <Button size="sm" onClick={() => openForm(user.id)}>
+                        Edit
+                      </Button>
+                      <Button
+                        colorScheme="red"
+                        size="sm"
+                        onClick={() => handleDelete(user.id)}
+                      >
+                        Delete
+                      </Button>
+                      <Button
+                        colorScheme="blue"
+                        size="sm"
+                        onClick={() => handleResetPassword(user.id)}
+                      >
+                        Reset
+                      </Button>
+                    </Flex>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       )}
 
       <UserForm

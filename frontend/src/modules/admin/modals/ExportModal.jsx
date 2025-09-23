@@ -11,7 +11,7 @@ import {
   Button,
   VStack,
 } from "@chakra-ui/react";
-import { adminApi } from "./adminApi.js";
+import { adminApi } from "../adminApi.js";
 
 export default function ExportModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);

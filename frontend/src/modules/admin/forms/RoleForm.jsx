@@ -17,7 +17,7 @@ import {
   FormLabel,
   Spinner,
 } from "@chakra-ui/react";
-import { adminApi } from "./adminApi.js";
+import { adminApi } from "../adminApi.js";
 
 export default function RoleForm({ roleId, isOpen, onClose, onSaved }) {
   const toast = useToast();

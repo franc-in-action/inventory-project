@@ -13,7 +13,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { adminApi } from "./adminApi.js";
+import { adminApi } from "../adminApi.js";
 
 export default function LogDetailModal({ logId, isOpen, onClose }) {
   const [log, setLog] = useState(null);

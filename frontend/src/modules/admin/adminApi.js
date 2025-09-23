@@ -1,39 +1,40 @@
-// src/modules/admin/adminApi.js
-import axios from "axios";
-import { getToken } from "../auth/authApi.js";
-
-const api = axios.create({
-  baseURL: "/api/admin",
-  headers: {
-    Authorization: `Bearer ${getToken()}`,
-  },
-});
+import { apiFetch } from "../../utils/commonApi.js";
 
 export const adminApi = {
   // Users
-  getUsers: () => api.get("/users"),
-  updateUser: (id, data) => api.put(`/users/${id}`, data),
-  deleteUser: (id) => api.delete(`/users/${id}`),
-  resetPassword: (id) => api.post(`/users/${id}/reset-password`),
+  getUsers: () => apiFetch("/users"),
+  updateUser: (id, data) =>
+    apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteUser: (id) => apiFetch(`/users/${id}`, { method: "DELETE" }),
+  resetPassword: (id) =>
+    apiFetch(`/users/${id}/reset-password`, { method: "POST" }),
 
   // Roles
-  getRoles: () => api.get("/roles"),
-  updateRole: (id, data) => api.put(`/roles/${id}`, data),
+  getRoles: async () => {
+    const res = await apiFetch("/roles");
+    return res.roles || []; // handle backend object
+  },
+  updateRole: (id, data) =>
+    apiFetch(`/roles/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+
+  // Logs
+  getLogs: async (params) => {
+    const res = await apiFetch(`/logs?${new URLSearchParams(params)}`);
+    return res.logs || []; // handle backend object
+  },
 
   // Backup
-  triggerBackup: () => api.post("/backup"),
+  triggerBackup: () => apiFetch("/backup", { method: "POST" }),
   restoreBackup: (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    return api.post("/backup/restore", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return apiFetch("/backup/restore", { method: "POST", body: formData });
   },
 
   // Export
   exportData: (type, filters) =>
-    api.post(`/export/${type}`, filters, { responseType: "blob" }),
-
-  // Logs
-  getLogs: (params) => api.get("/logs", { params }),
+    apiFetch(`/export/${type}`, {
+      method: "POST",
+      body: JSON.stringify(filters),
+    }),
 };

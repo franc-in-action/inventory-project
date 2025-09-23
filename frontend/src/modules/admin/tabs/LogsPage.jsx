@@ -14,7 +14,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
-import LogDetailModal from "../LogDetailModal.jsx";
+import LogDetailModal from "../modals/LogDetailModal.jsx";
 
 export default function LogsPage() {
   const [logs, setLogs] = useState([]);
@@ -26,10 +26,7 @@ export default function LogsPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getLogs({ search });
-      const logsArray = Array.isArray(res.data)
-        ? res.data
-        : res.data.logs || [];
+      const logsArray = await adminApi.getLogs({ search });
       setLogs(logsArray);
     } catch (err) {
       console.error("Failed to fetch logs:", err);
@@ -54,17 +51,24 @@ export default function LogsPage() {
   };
 
   return (
-    <Box>
-      <Text fontSize="2xl" mb={4}>
+    <Box p={{ base: 2, md: 4 }}>
+      <Text fontSize="xl" mb={4}>
         View System Logs
       </Text>
-      <Flex mb={4}>
+
+      <Flex
+        mb={4}
+        direction={{ base: "column", md: "row" }}
+        gap={2}
+        wrap="wrap"
+      >
         <Input
+          flex={{ md: 1 }}
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Button ml={2} onClick={fetchLogs}>
+        <Button onClick={fetchLogs} flexShrink={0}>
           Filter
         </Button>
       </Flex>
@@ -76,28 +80,30 @@ export default function LogsPage() {
       ) : logs.length === 0 ? (
         <Text>No logs found.</Text>
       ) : (
-        <Table variant="simple" size="sm">
-          <Thead>
-            <Tr>
-              <Th>User</Th>
-              <Th>Action</Th>
-              <Th>Date</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {logs.map((log) => (
-              <Tr
-                key={log.id}
-                _hover={{ bg: "gray.100", cursor: "pointer" }}
-                onClick={() => openLog(log.id)}
-              >
-                <Td>{log.userName}</Td>
-                <Td>{log.action}</Td>
-                <Td>{new Date(log.createdAt).toLocaleString()}</Td>
+        <Box overflowX="auto">
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr>
+                <Th>User</Th>
+                <Th>Action</Th>
+                <Th>Date</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {logs.map((log) => (
+                <Tr
+                  key={log.id}
+                  _hover={{ bg: "gray.100", cursor: "pointer" }}
+                  onClick={() => openLog(log.id)}
+                >
+                  <Td>{log.userName}</Td>
+                  <Td>{log.action}</Td>
+                  <Td>{new Date(log.createdAt).toLocaleString()}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       )}
 
       <LogDetailModal

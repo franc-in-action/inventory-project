@@ -14,7 +14,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
-import RoleForm from "../RoleForm.jsx";
+import RoleForm from "../forms/RoleForm.jsx";
 
 export default function RolesPage() {
   const [roles, setRoles] = useState([]);
@@ -26,10 +26,7 @@ export default function RolesPage() {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getRoles();
-      const rolesArray = Array.isArray(res.data)
-        ? res.data
-        : res.data.roles || [];
+      const rolesArray = await adminApi.getRoles();
       setRoles(rolesArray);
     } catch (err) {
       console.error("Failed to fetch roles:", err);
@@ -50,12 +47,13 @@ export default function RolesPage() {
   };
 
   return (
-    <Box>
-      <Text fontSize="2xl" mb={4}>
-        Manage Users Roles
+    <Box p={{ base: 2, md: 4 }}>
+      <Text fontSize="xl" mb={4}>
+        Manage User Roles
       </Text>
-      <Flex mb={4}>
-        <Button colorScheme="green" onClick={() => openForm()}>
+
+      <Flex mb={4} direction={{ base: "column", md: "row" }} gap={2}>
+        <Button colorScheme="green" onClick={() => openForm()} flexShrink={0}>
           Add Role
         </Button>
       </Flex>
@@ -67,28 +65,32 @@ export default function RolesPage() {
       ) : roles.length === 0 ? (
         <Text>No roles found.</Text>
       ) : (
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>User</Th>
-              <Th>Role</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {roles.map((r) => (
-              <Tr key={r.id}>
-                <Td>{r.userName}</Td>
-                <Td>{r.role}</Td>
-                <Td>
-                  <Button size="sm" onClick={() => openForm(r.id)}>
-                    Edit
-                  </Button>
-                </Td>
+        <Box overflowX="auto">
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr>
+                <Th>User</Th>
+                <Th>Role</Th>
+                <Th>Actions</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {roles.map((role) => (
+                <Tr key={role.id}>
+                  <Td>{role.roleName}</Td>
+                  <Td>{role.roleName}</Td>
+                  <Td>
+                    <Flex wrap="wrap" gap={1}>
+                      <Button size="sm" onClick={() => openForm(role.id)}>
+                        Edit
+                      </Button>
+                    </Flex>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
       )}
 
       <RoleForm
