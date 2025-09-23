@@ -13,8 +13,8 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { fetchPurchases, receivePurchase } from "../../utils/purchasesUtils.js";
-import { fetchLocations } from "../../utils/locationsUtils.js";
+import { fetchPurchases, receivePurchase } from "./purchaseApi.js";
+import { fetchLocations } from "../locations/locationsApi.js";
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
 

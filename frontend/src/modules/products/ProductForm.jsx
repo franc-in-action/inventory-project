@@ -22,12 +22,9 @@ import {
   fetchProductById,
   createProduct,
   updateProduct,
-} from "../../utils/productsUtils.js";
-import {
-  fetchCategories,
-  createCategory,
-} from "../../utils/categoriesUtils.js";
-import { fetchLocations } from "../../utils/locationsUtils.js";
+} from "./productsApi.js";
+import { fetchCategories, createCategory } from "./categoriesApi.js";
+import { fetchLocations } from "../locations/locationsApi.js";
 
 export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const toast = useToast();

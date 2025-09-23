@@ -18,9 +18,9 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
-import { fetchProducts } from "../../utils/productsUtils.js";
-import { fetchLocations } from "../../utils/locationsUtils.js";
-import { createPurchase } from "../../utils/purchasesUtils.js";
+import { fetchProducts } from "../products/productsApi.js";
+import { fetchLocations } from "../locations/locationsApi.js";
+import { createPurchase } from "./purchaseApi.js";
 
 export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   const toast = useToast();

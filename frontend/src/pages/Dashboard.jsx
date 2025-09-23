@@ -1,5 +1,5 @@
 import { Box, Heading, Button, Flex, Text } from "@chakra-ui/react";
-import { getUserFromToken } from "../utils/authUtils.js";
+import { getUserFromToken } from "../modules/auth/authApi.js";
 
 export default function Dashboard() {
   const user = getUserFromToken();

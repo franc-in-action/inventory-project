@@ -12,7 +12,7 @@ import {
   useDisclosure,
   Text,
 } from "@chakra-ui/react";
-import { fetchSales } from "../../utils/salesUtils.js";
+import { fetchSales } from "./salesApi.js";
 import CashierForm from "./SalesForm.jsx";
 import SalesList from "./SalesList.jsx";
 

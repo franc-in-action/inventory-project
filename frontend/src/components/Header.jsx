@@ -9,7 +9,7 @@ import {
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
-import { getUserFromToken, logout } from "../utils/authUtils.js";
+import { getUserFromToken, logout } from "../modules/auth/authApi.js";
 
 export default function Header({ onOpenSidebar }) {
   const navigate = useNavigate();

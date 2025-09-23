@@ -16,9 +16,9 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import ComboBox from "../../components/ComboBox.jsx";
-import { getCustomers, createCustomer } from "../../utils/customersUtils.js";
-import { fetchProducts, createProduct } from "../../utils/productsUtils.js";
-import { createSale } from "../../utils/salesUtils.js";
+import { getCustomers, createCustomer } from "../customers/customersApi.js";
+import { fetchProducts, createProduct } from "../products/productsApi.js";
+import { createSale } from "./salesApi.js";
 
 export default function CashierForm({ isOpen, onClose, onSaleCreated }) {
   const toast = useToast();

@@ -18,9 +18,9 @@ import {
   Select,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { fetchProducts, deleteProduct } from "../../utils/productsUtils.js";
-import { fetchCategories } from "../../utils/categoriesUtils.js";
-import { fetchLocations } from "../../utils/locationsUtils.js";
+import { fetchProducts, deleteProduct } from "./productsApi.js";
+import { fetchCategories } from "./categoriesApi.js";
+import { fetchLocations } from "../locations/locationsApi.js";
 
 export default function ProductsList({ onEdit, refreshKey }) {
   const [products, setProducts] = useState([]);

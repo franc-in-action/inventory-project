@@ -21,8 +21,8 @@ import {
   NumberInputField,
   useToast,
 } from "@chakra-ui/react";
-import { fetchProducts } from "../../utils/productsUtils.js";
-import { createPurchase } from "../../utils/purchasesUtils.js";
+import { fetchProducts } from "../products/productsApi.js";
+import { createPurchase } from "./purchaseApi.js";
 
 export default function PurchaseDetails({
   purchase,

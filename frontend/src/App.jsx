@@ -10,11 +10,15 @@ import Login from "./modules/auth/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import SalesPage from "./modules/sales/SalesPage.jsx"; // <-- import sales page
-import PurchasesPage from "./modules/purchases/PurchasesPage.jsx";
+import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import { PERMISSIONS } from "./constants/permissions.js";
-import { isLoggedIn, userHasRole, getDefaultPage } from "./utils/authUtils.js";
+import {
+  isLoggedIn,
+  userHasRole,
+  getDefaultPage,
+} from "./modules/auth/authApi.js";
 
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;

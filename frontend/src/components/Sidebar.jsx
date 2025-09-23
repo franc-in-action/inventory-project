@@ -7,7 +7,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { NavLink } from "react-router-dom";
-import { getUserFromToken, userHasRole } from "../utils/authUtils.js";
+import { getUserFromToken, userHasRole } from "../modules/auth/authApi.js";
 import { PERMISSIONS } from "../constants/permissions.js";
 
 export default function Sidebar({ isOpen, onOpen, onClose }) {

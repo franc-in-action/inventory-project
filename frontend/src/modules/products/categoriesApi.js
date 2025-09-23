@@ -1,5 +1,5 @@
 // src/utils/productsUtils.js
-import { apiFetch } from "./commonUtils.js";
+import { apiFetch } from "../../utils/commonUtils.js";
 
 // ---------- CATEGORY API ---------- //
 export async function fetchCategories() {

@@ -10,7 +10,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { isLoggedIn, login, getDefaultPage } from "../../utils/authUtils.js";
+import { isLoggedIn, login, getDefaultPage } from "./authApi.js";
 
 export default function Login() {
   const [email, setEmail] = useState("");

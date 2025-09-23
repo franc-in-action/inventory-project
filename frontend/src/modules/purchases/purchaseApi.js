@@ -1,5 +1,5 @@
 // src/utils/purchasesUtils.js
-import { apiFetch } from "./commonUtils.js";
+import { apiFetch } from "../../utils/commonUtils.js";
 
 export async function fetchPurchases(params = {}) {
   if (window.api) {

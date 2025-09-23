@@ -1,5 +1,5 @@
 // src/utils/locationsUtils.js
-import { apiFetch } from "./commonUtils.js";
+import { apiFetch } from "../../utils/commonUtils.js";
 
 export async function fetchLocations() {
   if (window.api) {
