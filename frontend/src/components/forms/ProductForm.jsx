@@ -23,9 +23,9 @@ import {
   fetchProductById,
   createProduct,
   updateProduct,
-} from "../utils/productsUtils.js";
-import { fetchCategories } from "../utils/categoriesUtils.js";
-import { fetchLocations } from "../utils/locationsUtils.js";
+} from "../../utils/productsUtils.js";
+import { fetchCategories } from "../../utils/categoriesUtils.js";
+import { fetchLocations } from "../../utils/locationsUtils.js";
 
 /**
  * ---- ComboBox ----

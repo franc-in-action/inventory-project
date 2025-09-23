@@ -7,11 +7,12 @@ const router = express.Router();
 // GET all products
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    //console.log("[GET /products] Fetching all products...");
     const products = await prisma.product.findMany({
-      include: { category: true },
+      include: {
+        category: true,
+        location: true, // ✅ include location so we can display location.name
+      },
     });
-    //console.log(`[GET /products] Found ${products.length} products.`);
     res.json(products);
   } catch (err) {
     console.error("[GET /products] Error fetching products:", err);
@@ -25,7 +26,10 @@ router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { category: true },
+      include: {
+        category: true,
+        location: true, // ✅ include location name for single product too
+      },
     });
     if (!product) return res.status(404).json({ error: "Product not found" });
     res.json(product);
@@ -43,7 +47,6 @@ router.post(
   async (req, res) => {
     const { sku, name, description, price, quantity, categoryId, locationId } =
       req.body;
-    //console.log("[POST /products] Creating product with data:", req.body);
     try {
       const product = await prisma.product.create({
         data: {
@@ -56,7 +59,6 @@ router.post(
           locationId,
         },
       });
-      //console.log("[POST /products] Product created:", product);
       res.status(201).json(product);
     } catch (err) {
       console.error("[POST /products] Error creating product:", err);
@@ -72,14 +74,13 @@ router.put(
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
     const { id } = req.params;
-    const { name, description, price, quantity, categoryId } = req.body;
-    //console.log(`[PUT /products/${id}] Updating product with data:`, req.body);
+    const { name, description, price, quantity, categoryId, locationId } =
+      req.body;
     try {
       const product = await prisma.product.update({
         where: { id },
-        data: { name, description, price, quantity, categoryId },
+        data: { name, description, price, quantity, categoryId, locationId },
       });
-      //console.log(`[PUT /products/${id}] Product updated:`, product);
       res.json(product);
     } catch (err) {
       console.error(`[PUT /products/${id}] Error updating product:`, err);
@@ -95,10 +96,8 @@ router.delete(
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
     const { id } = req.params;
-    //console.log(`[DELETE /products/${id}] Deleting product...`);
     try {
       await prisma.product.delete({ where: { id } });
-      //console.log(`[DELETE /products/${id}] Product deleted.`);
       res.json({ message: "Deleted" });
     } catch (err) {
       console.error(`[DELETE /products/${id}] Error deleting product:`, err);

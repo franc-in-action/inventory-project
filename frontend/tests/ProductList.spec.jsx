@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import ProductsList from "../src/pages/ProductsList.jsx";
+import ProductsList from "../src/components/lists/ProductsList.jsx";
 
 test("renders products table", async () => {
   global.fetch = vi.fn().mockResolvedValue({

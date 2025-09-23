@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Button, useDisclosure, Flex } from "@chakra-ui/react";
-import ProductsList from "./ProductsList.jsx";
-import ProductForm from "./ProductForm.jsx";
+import ProductsList from "../components/lists/ProductsList.jsx";
+import ProductForm from "../components/forms/ProductForm.jsx";
 
 export default function Products() {
   const [editingId, setEditingId] = useState(null);
