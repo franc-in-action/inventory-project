@@ -10,6 +10,7 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Products from "./pages/Products.jsx";
 import SalesPage from "./pages/SalesPage.jsx"; // <-- import sales page
+import PurchasesPage from "./pages/PurchasesPage.jsx";
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import { PERMISSIONS } from "./constants/permissions.js";
@@ -34,6 +35,7 @@ function ProtectedLayout({ children }) {
     { to: "/dashboard", label: "Dashboard" },
     { to: "/products", label: "Products" },
     { to: "/sales", label: "Sales" }, // <-- add Sales link
+    { to: "/purchases", label: "Purchases" },
   ];
 
   return (
@@ -103,6 +105,18 @@ export default function App() {
                 <RoleRoute allowedRoles={PERMISSIONS.SALES}>
                   <ProtectedLayout>
                     <SalesPage />
+                  </ProtectedLayout>
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/purchases"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={PERMISSIONS.PURCHASES}>
+                  <ProtectedLayout>
+                    <PurchasesPage />
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>

@@ -63,7 +63,7 @@ router.post(
           data: {
             action: "PURCHASE_CREATED",
             entity: "Purchase",
-            entityId: newPurchase.id,
+            entityId: newPurchase.id.toString(), // <-- convert to string
             performedBy: userId,
             metadata: { items },
           },
@@ -149,7 +149,7 @@ router.put(
           data: {
             action: "PURCHASE_RECEIVED",
             entity: "Purchase",
-            entityId: purchaseId,
+            entityId: purchaseId.toString(),
             performedBy: userId,
             metadata: { items: purchase.items },
           },
@@ -160,6 +160,36 @@ router.put(
         where: { id: purchaseId },
       });
       res.status(200).json(updatedPurchase);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// GET /api/purchases?locationId=1&vendorId=2&page=1&limit=10
+router.get(
+  "/",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER", "STAFF"]),
+  async (req, res) => {
+    const { locationId, vendorId, page = 1, limit = 10 } = req.query;
+
+    try {
+      const where = {};
+      if (locationId) where.locationId = parseInt(locationId);
+      if (vendorId) where.vendorId = parseInt(vendorId);
+
+      const purchases = await prisma.purchase.findMany({
+        where,
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: parseInt(limit),
+      });
+
+      const total = await prisma.purchase.count({ where });
+
+      res.json({ purchases, total });
     } catch (err) {
       res.status(400).json({ error: err.message });
     }

@@ -19,6 +19,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
     { to: "/dashboard", label: "Dashboard", roles: PERMISSIONS.DASHBOARD },
     { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
     { to: "/sales", label: "Sales", roles: PERMISSIONS.SALES },
+    { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
     {
       to: "/admin-tools",
       label: "Admin Tools",
