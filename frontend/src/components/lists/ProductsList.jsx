@@ -92,7 +92,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  if (loading) return <Spinner />;
+  if (loading) return <Spinner size="xl" margin={"auto"} />;
 
   return (
     <Box w="full">
