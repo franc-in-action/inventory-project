@@ -9,7 +9,7 @@ import {
 import Login from "./modules/auth/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
-import SalesPage from "./modules/sales/SalesPage.jsx"; // <-- import sales page
+import SalesPage from "./modules/sales/SalesPage.jsx";
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
 import Header from "./components/Header.jsx";
@@ -20,6 +20,9 @@ import {
   userHasRole,
   getDefaultPage,
 } from "./modules/auth/authApi.js";
+
+// Admin Tools Pages
+import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;
@@ -39,8 +42,11 @@ function ProtectedLayout({ children }) {
   const links = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/products", label: "Products" },
-    { to: "/sales", label: "Sales" }, // <-- add Sales link
+    { to: "/sales", label: "Sales" },
     { to: "/purchases", label: "Purchases" },
+    { to: "/locations", label: "Locations" },
+    { to: "/admin-tools", label: "Admin Tools" },
+    { to: "/admin/logs", label: "Logs" },
   ];
 
   return (
@@ -75,7 +81,8 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
-          {/* Protected + Role-based */}
+
+          {/* Protected Routes */}
           <Route
             path="/dashboard"
             element={
@@ -124,7 +131,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/locations"
             element={
@@ -137,6 +143,21 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Admin Tools */}
+          <Route
+            path="/admin-tools"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allowedRoles={PERMISSIONS.ADMIN_TOOLS}>
+                  <ProtectedLayout>
+                    <AdminToolsPage />
+                  </ProtectedLayout>
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Catch-all */}
           <Route
             path="*"

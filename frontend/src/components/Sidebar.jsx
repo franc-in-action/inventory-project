@@ -1,29 +1,63 @@
 import {
-  Text,
   Box,
   Drawer,
   DrawerContent,
   DrawerOverlay,
   VStack,
+  Text,
+  Icon,
+  Divider,
 } from "@chakra-ui/react";
 import { NavLink } from "react-router-dom";
 import { getUserFromToken, userHasRole } from "../modules/auth/authApi.js";
 import { PERMISSIONS } from "../constants/permissions.js";
+import {
+  FaTachometerAlt,
+  FaBox,
+  FaCashRegister,
+  FaShoppingCart,
+  FaMapMarkerAlt,
+  FaTools,
+} from "react-icons/fa";
 
-export default function Sidebar({ isOpen, onOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose }) {
   const user = getUserFromToken();
-  const userRole = user?.role?.toLowerCase();
 
-  // Build links dynamically based on role
   const links = [
-    { to: "/dashboard", label: "Dashboard", roles: PERMISSIONS.DASHBOARD },
-    { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
-    { to: "/sales", label: "Sales", roles: PERMISSIONS.SALES },
-    { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
-    { to: "/locations", label: "Locations", roles: PERMISSIONS.LOCATIONS },
+    {
+      to: "/dashboard",
+      label: "Dashboard",
+      icon: FaTachometerAlt,
+      roles: PERMISSIONS.DASHBOARD,
+    },
+    {
+      to: "/products",
+      label: "Products",
+      icon: FaBox,
+      roles: PERMISSIONS.PRODUCTS,
+    },
+    {
+      to: "/sales",
+      label: "Sales",
+      icon: FaCashRegister,
+      roles: PERMISSIONS.SALES,
+    },
+    {
+      to: "/purchases",
+      label: "Purchases",
+      icon: FaShoppingCart,
+      roles: PERMISSIONS.PURCHASES,
+    },
+    {
+      to: "/locations",
+      label: "Locations",
+      icon: FaMapMarkerAlt,
+      roles: PERMISSIONS.LOCATIONS,
+    },
     {
       to: "/admin-tools",
       label: "Admin Tools",
+      icon: FaTools,
       roles: PERMISSIONS.ADMIN_TOOLS,
     },
   ].filter((link) => userHasRole(link.roles));
@@ -38,30 +72,38 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
       h="full"
       p={4}
     >
-      <VStack spacing={4} align="stretch">
-        {user?.location && (
+      {user && (
+        <Box mb={6} textAlign="center">
+          {user.location && (
+            <Text fontSize="sm" color="gray.400">
+              {user.location}
+            </Text>
+          )}
+          <Text fontWeight="bold">{user.name}</Text>
           <Text fontSize="sm" color="gray.400">
-            {user.location}
+            {user.role}
           </Text>
-        )}
-        {user && (
-          <Text fontSize="sm" color="gray.400">
-            {user.name} ({user.role})
-          </Text>
-        )}
-
+        </Box>
+      )}
+      <Divider borderColor="gray.700" mb={4} />
+      <VStack spacing={2} align="stretch">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             style={({ isActive }) => ({
-              backgroundColor: isActive ? "#2D3748" : "transparent",
-              borderRadius: "6px",
-              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "10px 12px",
+              borderRadius: "8px",
               fontWeight: isActive ? "bold" : "normal",
+              backgroundColor: isActive ? "#2D3748" : "transparent",
+              color: isActive ? "#63B3ED" : "#A0AEC0",
             })}
             onClick={onClose}
           >
+            <Icon as={link.icon} w={5} h={5} />
             {link.label}
           </NavLink>
         ))}
@@ -71,10 +113,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }) {
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <Box display={{ base: "none", md: "block" }}>{SidebarContent}</Box>
-
-      {/* Mobile Drawer Sidebar */}
       <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>{SidebarContent}</DrawerContent>
