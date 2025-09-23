@@ -6,26 +6,18 @@ import {
   Button,
   HStack,
   Spinner,
+  Flex,
+  Text,
 } from "@chakra-ui/react";
+import { fetchProducts, deleteProduct } from "../utils/productsUtils.js";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-export default function ProductsList({ onEdit }) {
+export default function ProductsList({ onEdit, refreshKey }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProducts = async () => {
-    const token = localStorage.getItem("token");
+  const loadProducts = async () => {
     try {
-      let data;
-      if (window.api) {
-        data = await window.api.query("SELECT * FROM products");
-      } else {
-        const res = await fetch(`${backendUrl}/products`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        data = await res.json();
-      }
+      const data = await fetchProducts();
       setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -35,46 +27,41 @@ export default function ProductsList({ onEdit }) {
     }
   };
 
+  useEffect(() => {
+    loadProducts();
+  }, [refreshKey]);
+
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
-    const token = localStorage.getItem("token");
     try {
-      if (window.api) {
-        await window.api.run("DELETE FROM products WHERE id = ?", [id]);
-      } else {
-        await fetch(`${backendUrl}/products/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-      fetchProducts();
+      await deleteProduct(id);
+      loadProducts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   if (loading) return <Spinner />;
 
   return (
-    <Box>
+    <Box w="full">
       <Heading mb={4}>Products</Heading>
       <VStack align="stretch" spacing={3}>
         {products.map((p) => (
-          <HStack
+          <Flex
             key={p.id}
+            direction={{ base: "column", sm: "row" }}
             borderWidth={1}
             borderRadius="md"
             p={3}
             justify="space-between"
+            align={{ base: "stretch", sm: "center" }}
+            gap={2}
           >
-            <Box>
-              {p.sku} - {p.name} (${p.price})
-            </Box>
-            <HStack>
+            <Text flex="1">
+              {p.sku} – {p.name} (${p.price})
+            </Text>
+            <HStack justify={{ base: "flex-end", sm: "initial" }}>
               <Button size="sm" colorScheme="blue" onClick={() => onEdit(p.id)}>
                 Edit
               </Button>
@@ -86,7 +73,7 @@ export default function ProductsList({ onEdit }) {
                 Delete
               </Button>
             </HStack>
-          </HStack>
+          </Flex>
         ))}
       </VStack>
     </Box>

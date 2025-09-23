@@ -1,14 +1,22 @@
-// Dashboard.jsx
-
-import { Box, Heading, Button } from "@chakra-ui/react";
+import { Box, Heading, Button, Flex } from "@chakra-ui/react";
 
 export default function Dashboard() {
   return (
-    <Box p={6}>
-      <Heading mb={4}>Dashboard</Heading>
-      <Button onClick={() => (window.location.href = "/products")}>
+    <Flex
+      p={{ base: 4, md: 6 }}
+      direction="column"
+      align="center"
+      justify="center"
+      textAlign="center"
+      minH="60vh"
+    >
+      <Heading mb={6}>Dashboard</Heading>
+      <Button
+        colorScheme="blue"
+        onClick={() => (window.location.href = "/products")}
+      >
         Go to Products
       </Button>
-    </Box>
+    </Flex>
   );
 }

@@ -1,18 +1,125 @@
 import { useState, useEffect } from "react";
 import {
-  Box,
-  Heading,
-  Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
   Button,
   VStack,
-  Spinner,
-  Select,
+  Input,
   Textarea,
+  Spinner,
+  FormControl,
+  FormLabel,
+  Select,
+  Box,
+  useToast,
 } from "@chakra-ui/react";
+import { useCombobox } from "downshift";
+import {
+  fetchProductById,
+  createProduct,
+  updateProduct,
+} from "../utils/productsUtils.js";
+import { fetchCategories } from "../utils/categoriesUtils.js";
+import { fetchLocations } from "../utils/locationsUtils.js";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+/**
+ * ---- ComboBox ----
+ * Reusable searchable combobox with inline "create new" option.
+ */
+function ComboBox({ items, selectedItemId, onSelect }) {
+  const {
+    isOpen,
+    getMenuProps,
+    getInputProps,
+    getItemProps,
+    highlightedIndex,
+    inputValue,
+  } = useCombobox({
+    items,
+    itemToString: (item) => (item ? item.name : ""),
+    selectedItem: items.find((c) => c.id === selectedItemId) || null,
+    onSelectedItemChange: ({ selectedItem }) => {
+      if (selectedItem) onSelect(selectedItem);
+    },
+  });
 
-export default function ProductForm({ productId, onSaved }) {
+  const filtered = items.filter((item) =>
+    item.name.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  const canCreate =
+    inputValue &&
+    !filtered.some(
+      (item) => item.name.toLowerCase() === inputValue.toLowerCase()
+    );
+
+  return (
+    <Box position="relative">
+      <Input
+        size="sm"
+        placeholder="Type or create category"
+        {...getInputProps()}
+      />
+      <Box
+        {...getMenuProps()}
+        borderWidth={isOpen ? "1px" : 0}
+        borderRadius="md"
+        mt={1}
+        bg="white"
+        zIndex={10}
+        position="absolute"
+        w="full"
+        maxH="200px"
+        overflowY="auto"
+      >
+        {isOpen && (filtered.length > 0 || canCreate) && (
+          <>
+            {filtered.map((item, index) => (
+              <Box
+                key={item.id}
+                px={3}
+                py={2}
+                bg={highlightedIndex === index ? "gray.100" : "white"}
+                cursor="pointer"
+                {...getItemProps({ item, index })}
+              >
+                {item.name}
+              </Box>
+            ))}
+            {canCreate && (
+              <Box
+                px={3}
+                py={2}
+                bg={highlightedIndex === filtered.length ? "gray.100" : "white"}
+                cursor="pointer"
+                fontStyle="italic"
+                color="blue.500"
+                {...getItemProps({
+                  item: inputValue,
+                  index: filtered.length,
+                  onClick: () => onSelect(inputValue),
+                })}
+              >
+                + Create “{inputValue}”
+              </Box>
+            )}
+          </>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+/**
+ * ---- ProductForm ----
+ */
+export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
+  const toast = useToast();
   const [product, setProduct] = useState({
     name: "",
     sku: "",
@@ -20,192 +127,208 @@ export default function ProductForm({ productId, onSaved }) {
     quantity: 0,
     description: "",
     categoryId: "",
-    locationId: "", // auto-assigned by backend
+    locationId: "",
   });
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(!!productId);
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const token = localStorage.getItem("token");
-
-  // Fetch categories
+  // Fetch categories & locations when modal opens
   useEffect(() => {
-    async function loadCategories() {
+    if (!isOpen) return;
+    (async () => {
       try {
-        if (window.api) {
-          // offline
-          const localCats = await window.api.query("SELECT * FROM categories");
-          setCategories(localCats);
-        } else {
-          const res = await fetch(`${backendUrl}/categories`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await res.json();
-          setCategories(Array.isArray(data) ? data : []);
-        }
+        const [cats, locs] = await Promise.all([
+          fetchCategories(),
+          fetchLocations(),
+        ]);
+        setCategories(Array.isArray(cats) ? cats : []);
+        setLocations(Array.isArray(locs) ? locs : []);
       } catch (err) {
         console.error(err);
+        toast({ status: "error", description: "Failed to load data." });
       }
-    }
-    loadCategories();
-  }, [token]);
+    })();
+  }, [isOpen, toast]);
 
-  // Fetch product if editing
+  // Load product details when editing
   useEffect(() => {
-    if (!productId) return;
-    async function loadProduct() {
+    if (!isOpen) return;
+    if (!productId) {
+      setProduct({
+        name: "",
+        sku: "",
+        price: 0,
+        quantity: 0,
+        description: "",
+        categoryId: "",
+        locationId: "",
+      });
+      return;
+    }
+    setLoading(true);
+    (async () => {
       try {
-        if (window.api) {
-          const [localProduct] = await window.api.query(
-            "SELECT * FROM products WHERE id = ?",
-            [productId]
-          );
-          if (localProduct) setProduct(localProduct);
-        } else {
-          const res = await fetch(`${backendUrl}/products/${productId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Product not found");
-          const data = await res.json();
-          setProduct(data);
-        }
+        const data = await fetchProductById(productId);
+        if (data) setProduct(data);
       } catch (err) {
         console.error(err);
+        toast({ status: "error", description: "Failed to load product." });
       } finally {
         setLoading(false);
       }
-    }
-    loadProduct();
-  }, [productId, token]);
+    })();
+  }, [productId, isOpen, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProduct((prev) => ({ ...prev, [name]: value }));
+    setProduct((p) => ({ ...p, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
-    const method = productId ? "PUT" : "POST";
-    const url = productId
-      ? `${backendUrl}/products/${productId}`
-      : `${backendUrl}/products`;
-
+    const payload = {
+      ...product,
+      price: Number(product.price),
+      quantity: Number(product.quantity),
+    };
     try {
-      if (window.api) {
-        // offline insert/update
-        if (productId) {
-          await window.api.run(
-            "UPDATE products SET name=?, sku=?, price=?, quantity=?, description=?, categoryId=? WHERE id=?",
-            [
-              product.name,
-              product.sku,
-              product.price,
-              product.quantity,
-              product.description,
-              product.categoryId,
-              productId,
-            ]
-          );
-        } else {
-          await window.api.run(
-            "INSERT INTO products (name, sku, price, quantity, description, categoryId) VALUES (?, ?, ?, ?, ?, ?)",
-            [
-              product.name,
-              product.sku,
-              product.price,
-              product.quantity,
-              product.description,
-              product.categoryId,
-            ]
-          );
-        }
-      } else {
-        // online save
-        const res = await fetch(url, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(product),
-        });
-        if (!res.ok) {
-          const error = await res.json();
-          throw new Error(error?.error || "Failed to save product");
-        }
-      }
+      if (productId) await updateProduct(productId, payload);
+      else await createProduct(payload);
       onSaved();
     } catch (err) {
       console.error(err);
-      alert(err.message);
+      toast({ status: "error", description: err.message });
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <Spinner />;
-
   return (
-    <Box p={6} maxW="md">
-      <Heading mb={4}>{productId ? "Edit Product" : "Create Product"}</Heading>
-      <form onSubmit={handleSubmit}>
-        <VStack spacing={3}>
-          <Input
-            placeholder="Name"
-            name="name"
-            value={product.name}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            placeholder="SKU"
-            name="sku"
-            value={product.sku}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            placeholder="Price"
-            name="price"
-            type="number"
-            value={product.price}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            placeholder="Quantity"
-            name="quantity"
-            type="number"
-            value={product.quantity}
-            onChange={handleChange}
-            required
-          />
-          <Textarea
-            placeholder="Description"
-            name="description"
-            value={product.description || ""}
-            onChange={handleChange}
-          />
-          <Select
-            placeholder="Select category"
-            name="categoryId"
-            value={product.categoryId || ""}
-            onChange={handleChange}
-          >
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </Select>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+      <ModalOverlay />
+      <ModalContent as="form" onSubmit={handleSubmit} mx={{ base: 4, md: 0 }}>
+        <ModalHeader>
+          {productId ? "Edit Product" : "Create Product"}
+        </ModalHeader>
+        <ModalCloseButton />
 
-          <Button type="submit" isLoading={saving} colorScheme="blue">
+        <ModalBody>
+          {loading ? (
+            <Spinner />
+          ) : (
+            <VStack spacing={4} w="full">
+              <FormControl isRequired>
+                <FormLabel>Name</FormLabel>
+                <Input
+                  size="sm"
+                  name="name"
+                  value={product.name}
+                  onChange={handleChange}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>SKU</FormLabel>
+                <Input
+                  size="sm"
+                  name="sku"
+                  value={product.sku}
+                  onChange={handleChange}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Price</FormLabel>
+                <Input
+                  size="sm"
+                  type="number"
+                  name="price"
+                  value={product.price}
+                  onChange={handleChange}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Quantity</FormLabel>
+                <Input
+                  size="sm"
+                  type="number"
+                  name="quantity"
+                  value={product.quantity}
+                  onChange={handleChange}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Description</FormLabel>
+                <Textarea
+                  size="sm"
+                  name="description"
+                  value={product.description || ""}
+                  onChange={handleChange}
+                />
+              </FormControl>
+
+              {/* ✅ Searchable + creatable Category select */}
+              <FormControl isRequired>
+                <FormLabel>Category</FormLabel>
+                <ComboBox
+                  items={categories}
+                  selectedItemId={product.categoryId}
+                  onSelect={async (itemOrName) => {
+                    // User typed a new category name
+                    if (typeof itemOrName === "string") {
+                      try {
+                        const newCat = await createCategory(itemOrName);
+                        setCategories((prev) => [...prev, newCat]);
+                        setProduct((p) => ({ ...p, categoryId: newCat.id }));
+                        toast({
+                          status: "success",
+                          description: `Category "${newCat.name}" created`,
+                        });
+                      } catch (err) {
+                        console.error(err);
+                        toast({ status: "error", description: err.message });
+                      }
+                    } else {
+                      setProduct((p) => ({ ...p, categoryId: itemOrName.id }));
+                    }
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Location</FormLabel>
+                <Select
+                  size="sm"
+                  placeholder="Select location"
+                  name="locationId"
+                  value={product.locationId || ""}
+                  onChange={handleChange}
+                >
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+            </VStack>
+          )}
+        </ModalBody>
+
+        <ModalFooter>
+          <Button mr={3} onClick={onClose} variant="ghost">
+            Cancel
+          </Button>
+          <Button type="submit" colorScheme="blue" isLoading={saving}>
             {productId ? "Update" : "Create"}
           </Button>
-        </VStack>
-      </form>
-    </Box>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

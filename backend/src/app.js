@@ -13,6 +13,7 @@ import purchasesRouter from "./routes/purchases.js";
 import customersRouter from "./routes/customers.js";
 import paymentsRouter from "./routes/payments.js";
 import syncRouter from "./routes/sync.js";
+import locationsRouter from "./routes/locations.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/purchases", purchasesRouter);
 app.use("/api/customers", customersRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/sync", syncRouter);
+app.use("/api/locations", locationsRouter);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

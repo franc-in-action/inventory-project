@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Box, Heading, VStack, Input, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  VStack,
+  Input,
+  Button,
+  Text,
+  Flex,
+} from "@chakra-ui/react";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -9,7 +17,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -30,18 +37,15 @@ export default function Login() {
       });
       const data = await res.json();
       if (res.ok && data.token) {
-        localStorage.setItem("token", data.token); // ✅ persistent storage
-
-        // 🚀 Send token to Electron main
+        localStorage.setItem("token", data.token);
         if (window.electronAPI) {
           window.electronAPI.authSuccess(data.token);
         }
-
         window.location.href = "/dashboard";
       } else {
         setError(data.error || "Login failed");
       }
-    } catch (err) {
+    } catch {
       setError("Network error");
     } finally {
       setLoading(false);
@@ -49,29 +53,48 @@ export default function Login() {
   };
 
   return (
-    <Box p={6} maxW="md" mx="auto">
-      <Heading mb={4}>Login</Heading>
-      <form onSubmit={handleSubmit}>
-        <VStack spacing={3}>
-          <Input
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <Button type="submit" isLoading={loading} colorScheme="blue">
-            Login
-          </Button>
-          {error && <Box color="red.500">{error}</Box>}
-        </VStack>
-      </form>
-    </Box>
+    <Flex p={6} minH="100vh" align="center" justify="center" bg="gray.50">
+      <Box
+        w="full"
+        maxW="sm"
+        bg="white"
+        p={{ base: 6, md: 8 }}
+        borderRadius="lg"
+        boxShadow="md"
+      >
+        <Heading mb={6} textAlign="center">
+          Login
+        </Heading>
+        <form onSubmit={handleSubmit}>
+          <VStack spacing={4}>
+            <Input
+              placeholder="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              placeholder="Password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <Button
+              type="submit"
+              isLoading={loading}
+              colorScheme="blue"
+              w="full"
+            >
+              Login
+            </Button>
+            {error && <Text color="red.500">{error}</Text>}
+          </VStack>
+        </form>
+      </Box>
+    </Flex>
   );
 }
