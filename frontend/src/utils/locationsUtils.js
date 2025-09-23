@@ -3,7 +3,9 @@ import { apiFetch } from "./commonUtils.js";
 
 export async function fetchLocations() {
   if (window.api) {
-    return window.api.query("SELECT * FROM locations");
+    const rows = await window.api.query("SELECT * FROM locations");
+    return Array.isArray(rows) ? rows : [];
   }
-  return apiFetch("/locations");
+  const result = await apiFetch("/locations");
+  return result.locations || result || [];
 }

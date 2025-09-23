@@ -13,10 +13,10 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { fetchPurchases, receivePurchase } from "../utils/purchasesUtils.js";
-import { fetchLocations } from "../utils/locationsUtils.js";
-import PurchaseForm from "../components/forms/PurchaseForm.jsx";
-import PurchaseDetails from "../components/modals/PurchaseDetails.jsx";
+import { fetchPurchases, receivePurchase } from "../../utils/purchasesUtils.js";
+import { fetchLocations } from "../../utils/locationsUtils.js";
+import PurchaseForm from "./PurchaseForm.jsx";
+import PurchaseDetails from "./PurchaseDetails.jsx";
 
 export default function PurchasesPage() {
   const toast = useToast();
@@ -29,14 +29,18 @@ export default function PurchasesPage() {
 
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
+  const [totalPurchases, setTotalPurchases] = useState(0);
+
   // Load purchases
   async function loadPurchases() {
     setLoading(true);
     try {
-      const { purchases: data } = await fetchPurchases();
-      setPurchases(data || []);
+      const data = await fetchPurchases(); // { items, total }
+      setPurchases(data.items || []); // <-- use data.items
+      setTotalPurchases(data.total || 0);
     } catch (err) {
       toast({ title: "Error loading purchases", status: "error" });
+      setPurchases([]);
     } finally {
       setLoading(false);
     }
@@ -57,7 +61,8 @@ export default function PurchasesPage() {
     try {
       await receivePurchase(purchaseId);
       toast({ title: "Purchase received", status: "success" });
-      loadPurchases();
+      const data = await fetchPurchases();
+      setPurchases(data.items || []); // <-- reload properly
     } catch (err) {
       toast({ title: "Error receiving purchase", status: "error" });
     }

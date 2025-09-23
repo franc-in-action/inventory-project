@@ -6,11 +6,11 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import Login from "./pages/Login.jsx";
+import Login from "./modules/auth/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import Products from "./pages/Products.jsx";
-import SalesPage from "./pages/SalesPage.jsx"; // <-- import sales page
-import PurchasesPage from "./pages/PurchasesPage.jsx";
+import ProductsPage from "./modules/products/ProductsPage.jsx";
+import SalesPage from "./modules/sales/SalesPage.jsx"; // <-- import sales page
+import PurchasesPage from "./modules/purchases/PurchasesPage.jsx";
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import { PERMISSIONS } from "./constants/permissions.js";
@@ -91,7 +91,7 @@ export default function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
                   <ProtectedLayout>
-                    <Products />
+                    <ProductsPage />
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>

@@ -23,12 +23,12 @@ import { fetchCategories } from "../../utils/categoriesUtils.js";
 import { fetchLocations } from "../../utils/locationsUtils.js";
 
 export default function ProductsList({ onEdit, refreshKey }) {
-  const [allProducts, setAllProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔍 filters & pagination (all client-side)
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -37,45 +37,48 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  // 🔄 Load everything once, then only refresh when refreshKey changes
+  // Fetch products, categories, locations
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [products, cats, locs] = await Promise.all([
-          fetchProducts(), // get all products once
+        const [productsData, cats, locs] = await Promise.all([
+          fetchProducts({ page, limit }),
           fetchCategories(),
           fetchLocations(),
         ]);
-        setAllProducts(
-          Array.isArray(products) ? products : products.products ?? []
+
+        setProducts(
+          Array.isArray(productsData.items) ? productsData.items : []
         );
+        setTotalProducts(productsData.total || 0);
         setCategories(cats);
         setLocations(locs);
       } catch (err) {
         console.error(err);
-        setAllProducts([]);
+        setProducts([]);
+        setTotalProducts(0);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [refreshKey]);
+  }, [refreshKey, page]);
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
-      // ✅ Update local state immediately – no need to re-fetch
-      setAllProducts((prev) => prev.filter((p) => p.id !== id));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setTotalProducts((prev) => prev - 1);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🔎 Client-side filtering
+  // Client-side filters
   const filtered = useMemo(() => {
-    return allProducts.filter((p) => {
+    return products.filter((p) => {
       const matchSearch =
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.sku.toLowerCase().includes(search.toLowerCase());
@@ -83,22 +86,21 @@ export default function ProductsList({ onEdit, refreshKey }) {
       const matchLoc = locationId ? p.locationId === locationId : true;
       return matchSearch && matchCat && matchLoc;
     });
-  }, [allProducts, search, categoryId, locationId]);
+  }, [products, search, categoryId, locationId]);
 
-  // ⏩ Pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
   const paginated = useMemo(() => {
     const start = (page - 1) * limit;
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  if (loading) return <Spinner size="xl" margin={"auto"} />;
+  if (loading) return <Spinner size="xl" margin="auto" />;
 
   return (
     <Box w="full">
       <Heading mb={4}>Products</Heading>
 
-      {/* 🔍 Search & Filters */}
+      {/* Filters */}
       <HStack spacing={3} mb={4} flexWrap="wrap">
         <Input
           placeholder="Search name or SKU..."
@@ -143,6 +145,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
         </Select>
       </HStack>
 
+      {/* Desktop Table */}
       {isDesktop ? (
         <Table variant="striped" size="sm">
           <Thead>

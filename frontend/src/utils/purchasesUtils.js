@@ -1,9 +1,8 @@
+// src/utils/purchasesUtils.js
 import { apiFetch } from "./commonUtils.js";
 
-// ---------- PURCHASES API ---------- //
 export async function fetchPurchases(params = {}) {
   if (window.api) {
-    // Electron: build WHERE clauses
     const where = [];
     const values = [];
 
@@ -25,22 +24,22 @@ export async function fetchPurchases(params = {}) {
       `SELECT * FROM purchases ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
       [...values, limit, offset]
     );
+
     const [{ total }] = await window.api.query(
       `SELECT COUNT(*) as total FROM purchases ${whereClause}`,
       values
     );
 
-    return { purchases: rows, total };
+    return { items: Array.isArray(rows) ? rows : [], total: total || 0 };
   }
 
-  // Web
   const query = new URLSearchParams(params).toString();
-  return apiFetch(`/purchases?${query}`);
+  const result = await apiFetch(`/purchases?${query}`);
+  return { items: result.purchases || [], total: result.total || 0 };
 }
 
 export async function createPurchase(purchase) {
   if (window.api) {
-    // Electron: custom SQLite insert logic if needed
     return window.api.run(
       `INSERT INTO purchases (purchaseUuid, vendorId, locationId, total) VALUES (?, ?, ?, ?)`,
       [
@@ -51,7 +50,6 @@ export async function createPurchase(purchase) {
       ]
     );
   }
-
   return apiFetch("/purchases", {
     method: "POST",
     body: JSON.stringify(purchase),
@@ -59,11 +57,9 @@ export async function createPurchase(purchase) {
 }
 
 export async function receivePurchase(purchaseId) {
-  if (window.api) {
+  if (window.api)
     return window.api.run(`UPDATE purchases SET received = 1 WHERE id = ?`, [
       purchaseId,
     ]);
-  }
-
   return apiFetch(`/purchases/${purchaseId}/receive`, { method: "PUT" });
 }

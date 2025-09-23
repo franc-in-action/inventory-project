@@ -17,7 +17,7 @@ import {
   FormLabel,
   useToast,
 } from "@chakra-ui/react";
-import ComboBox from "../ComboBox.jsx";
+import ComboBox from "../../components/ComboBox.jsx";
 import {
   fetchProductById,
   createProduct,

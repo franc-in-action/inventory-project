@@ -12,9 +12,9 @@ import {
   useDisclosure,
   Text,
 } from "@chakra-ui/react";
-import { fetchSales } from "../utils/salesUtils.js";
-import CashierForm from "../components/forms/CashierForm.jsx";
-import SalesList from "../components/lists/SalesList.jsx";
+import { fetchSales } from "../../utils/salesUtils.js";
+import CashierForm from "./SalesForm.jsx";
+import SalesList from "./SalesList.jsx";
 
 export default function SalesPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -32,7 +32,7 @@ export default function SalesPage() {
       setLoading(true);
       try {
         const data = await fetchSales();
-        setAllSales(data);
+        setAllSales(data.items || []); // <-- use data.items
       } catch (err) {
         console.error(err);
         setAllSales([]);
@@ -107,7 +107,7 @@ export default function SalesPage() {
           setLoading(true);
           try {
             const data = await fetchSales();
-            setAllSales(data);
+            setAllSales(data.items || []); // <-- use data.items
           } finally {
             setLoading(false);
           }

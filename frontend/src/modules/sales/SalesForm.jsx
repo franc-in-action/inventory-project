@@ -15,7 +15,7 @@ import {
   Text,
   useToast,
 } from "@chakra-ui/react";
-import ComboBox from "../ComboBox.jsx";
+import ComboBox from "../../components/ComboBox.jsx";
 import { getCustomers, createCustomer } from "../../utils/customersUtils.js";
 import { fetchProducts, createProduct } from "../../utils/productsUtils.js";
 import { createSale } from "../../utils/salesUtils.js";
