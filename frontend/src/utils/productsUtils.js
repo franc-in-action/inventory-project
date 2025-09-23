@@ -3,11 +3,50 @@
 import { apiFetch } from "./commonUtils.js";
 
 // ---------- PRODUCT API ---------- //
-export async function fetchProducts() {
+export async function fetchProducts(params = {}) {
   if (window.api) {
-    return window.api.query("SELECT * FROM products");
+    // ----- Electron (SQLite) -----
+    // Build WHERE clauses based on params
+    const where = [];
+    const values = [];
+
+    if (params.search) {
+      where.push("(name LIKE ? OR sku LIKE ?)");
+      values.push(`%${params.search}%`, `%${params.search}%`);
+    }
+    if (params.categoryId) {
+      where.push("categoryId = ?");
+      values.push(params.categoryId);
+    }
+    if (params.locationId) {
+      where.push("locationId = ?");
+      values.push(params.locationId);
+    }
+
+    const page = parseInt(params.page || 1, 10);
+    const limit = parseInt(params.limit || 10, 10);
+    const offset = (page - 1) * limit;
+
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    // Query rows
+    const rows = await window.api.query(
+      `SELECT * FROM products ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+      [...values, limit, offset]
+    );
+
+    // Query total count for pagination
+    const [{ total }] = await window.api.query(
+      `SELECT COUNT(*) as total FROM products ${whereClause}`,
+      values
+    );
+
+    return { products: rows, total };
   }
-  return apiFetch("/products");
+
+  // ----- Web (REST API) -----
+  const query = new URLSearchParams(params).toString();
+  return apiFetch(`/products?${query}`);
 }
 
 export async function fetchProductById(id) {

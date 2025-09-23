@@ -6,14 +6,42 @@ const router = express.Router();
 
 // GET all products
 router.get("/", authMiddleware, async (req, res) => {
+  const {
+    search = "",
+    categoryId,
+    locationId,
+    page = 1,
+    limit = 10,
+  } = req.query;
+
+  const where = {
+    AND: [
+      search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { sku: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {},
+      categoryId ? { categoryId } : {},
+      locationId ? { locationId } : {},
+    ],
+  };
+
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        category: true,
-        location: true, // ✅ include location so we can display location.name
-      },
-    });
-    res.json(products);
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: { category: true, location: true },
+        skip: (page - 1) * limit,
+        take: parseInt(limit),
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    res.json({ products, total });
   } catch (err) {
     console.error("[GET /products] Error fetching products:", err);
     res.status(500).json({ error: err.message });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Heading,
@@ -14,46 +14,134 @@ import {
   Tr,
   Th,
   Td,
+  Input,
+  Select,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { fetchProducts, deleteProduct } from "../../utils/productsUtils.js";
+import { fetchCategories } from "../../utils/categoriesUtils.js";
+import { fetchLocations } from "../../utils/locationsUtils.js";
 
 export default function ProductsList({ onEdit, refreshKey }) {
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // 🔍 filters & pagination (all client-side)
+  const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [locationId, setLocationId] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  const loadProducts = async () => {
-    try {
-      const data = await fetchProducts();
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 🔄 Load everything once, then only refresh when refreshKey changes
   useEffect(() => {
-    loadProducts();
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [products, cats, locs] = await Promise.all([
+          fetchProducts(), // get all products once
+          fetchCategories(),
+          fetchLocations(),
+        ]);
+        setAllProducts(
+          Array.isArray(products) ? products : products.products ?? []
+        );
+        setCategories(cats);
+        setLocations(locs);
+      } catch (err) {
+        console.error(err);
+        setAllProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [refreshKey]);
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
-      loadProducts();
+      // ✅ Update local state immediately – no need to re-fetch
+      setAllProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       console.error(err);
     }
   };
+
+  // 🔎 Client-side filtering
+  const filtered = useMemo(() => {
+    return allProducts.filter((p) => {
+      const matchSearch =
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.sku.toLowerCase().includes(search.toLowerCase());
+      const matchCat = categoryId ? p.categoryId === categoryId : true;
+      const matchLoc = locationId ? p.locationId === locationId : true;
+      return matchSearch && matchCat && matchLoc;
+    });
+  }, [allProducts, search, categoryId, locationId]);
+
+  // ⏩ Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
+  const paginated = useMemo(() => {
+    const start = (page - 1) * limit;
+    return filtered.slice(start, start + limit);
+  }, [filtered, page]);
 
   if (loading) return <Spinner />;
 
   return (
     <Box w="full">
       <Heading mb={4}>Products</Heading>
+
+      {/* 🔍 Search & Filters */}
+      <HStack spacing={3} mb={4} flexWrap="wrap">
+        <Input
+          placeholder="Search name or SKU..."
+          value={search}
+          onChange={(e) => {
+            setPage(1);
+            setSearch(e.target.value);
+          }}
+          w={{ base: "100%", md: "200px" }}
+        />
+
+        <Select
+          placeholder="Filter by Category"
+          value={categoryId}
+          onChange={(e) => {
+            setPage(1);
+            setCategoryId(e.target.value);
+          }}
+          w={{ base: "100%", md: "200px" }}
+        >
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          placeholder="Filter by Location"
+          value={locationId}
+          onChange={(e) => {
+            setPage(1);
+            setLocationId(e.target.value);
+          }}
+          w={{ base: "100%", md: "200px" }}
+        >
+          {locations.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </Select>
+      </HStack>
 
       {isDesktop ? (
         <Table variant="striped" size="sm">
@@ -72,13 +160,12 @@ export default function ProductsList({ onEdit, refreshKey }) {
             </Tr>
           </Thead>
           <Tbody>
-            {products.map((p) => (
+            {paginated.map((p) => (
               <Tr key={p.id}>
                 <Td>{p.sku}</Td>
                 <Td>{p.name}</Td>
                 <Td>{p.description || "—"}</Td>
                 <Td>{p.category?.name || "—"}</Td>
-                {/* ✅ Show only the location name */}
                 <Td>{p.location?.name || "—"}</Td>
                 <Td isNumeric>{p.quantity}</Td>
                 <Td isNumeric>{p.price}</Td>
@@ -108,7 +195,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
         </Table>
       ) : (
         <VStack align="stretch" spacing={3}>
-          {products.map((p) => (
+          {paginated.map((p) => (
             <Flex
               key={p.id}
               direction="column"
@@ -122,7 +209,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
               </Text>
               {p.description && <Text>Description: {p.description}</Text>}
               <Text>Category: {p.category?.name || "—"}</Text>
-              {/* ✅ Show only the location name */}
               <Text>Location: {p.location?.name || "—"}</Text>
               <Text>Quantity: {p.quantity}</Text>
               <Text>Price: ${p.price}</Text>
@@ -148,6 +234,25 @@ export default function ProductsList({ onEdit, refreshKey }) {
           ))}
         </VStack>
       )}
+
+      {/* Pagination */}
+      <HStack justify="center" mt={4}>
+        <Button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          isDisabled={page === 1}
+        >
+          Previous
+        </Button>
+        <Text>
+          Page {page} of {totalPages}
+        </Text>
+        <Button
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          isDisabled={page === totalPages}
+        >
+          Next
+        </Button>
+      </HStack>
     </Box>
   );
 }
