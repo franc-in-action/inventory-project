@@ -24,18 +24,18 @@ export default function LocalDB() {
   }, []);
 
   return (
-    <Box p={6}>
+    <Box>
       <Header />
-      <Heading mb={4}>Local DB State</Heading>
-      <Button onClick={handleSync} isLoading={syncing} colorScheme="blue">
+      <Heading>Local DB State</Heading>
+      <Button onClick={handleSync} isLoading={syncing}>
         Sync Now
       </Button>
 
-      <Divider my={4} />
+      <Divider />
 
-      <VStack align="stretch" spacing={3}>
+      <VStack>
         <Box>
-          <Heading size="sm">Products</Heading>
+          <Heading>Products</Heading>
           {dbState.products.length === 0 ? (
             <Text>No products in local DB</Text>
           ) : (
@@ -48,7 +48,7 @@ export default function LocalDB() {
         </Box>
 
         <Box>
-          <Heading size="sm">Stock Movements</Heading>
+          <Heading>Stock Movements</Heading>
           {dbState.stockMovements.length === 0 ? (
             <Text>No stock movements</Text>
           ) : (
