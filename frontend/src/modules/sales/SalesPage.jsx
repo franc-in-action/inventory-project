@@ -5,27 +5,27 @@ import {
   Button,
   Heading,
   Input,
-  VStack,
   HStack,
   Spinner,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
 import { fetchSales } from "./salesApi.js";
-import InvoiceForm from "./SalesForm.jsx";
 import SalesList from "./SalesList.jsx";
-import SaleDetails from "./SaleDetails.jsx";
+import InvoiceDetails from "./InvoiceDetails.jsx";
+import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
 
 export default function SalesPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [allSales, setAllSales] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSale, setSelectedSale] = useState(null);
-  const [detailOpen, setDetailOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [thermalOpen, setThermalOpen] = useState(false);
 
   useEffect(() => {
     const loadSales = async () => {
@@ -43,15 +43,13 @@ export default function SalesPage() {
     loadSales();
   }, []);
 
-  const filtered = useMemo(
-    () =>
-      allSales.filter(
-        (s) =>
-          s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.id.toString().includes(search)
-      ),
-    [allSales, search]
-  );
+  const filtered = useMemo(() => {
+    return allSales.filter(
+      (s) =>
+        s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.id.toString().includes(search)
+    );
+  }, [allSales, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
   const paginated = useMemo(() => {
@@ -59,9 +57,16 @@ export default function SalesPage() {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
+  // Open HTML invoice modal
   const handleSelectSale = (sale) => {
     setSelectedSale(sale);
-    setDetailOpen(true);
+    onOpen();
+  };
+
+  // Open thermal invoice modal
+  const handlePrint = (sale) => {
+    setSelectedSale(sale);
+    setThermalOpen(true);
   };
 
   if (loading) return <Spinner size="xl" margin="auto" />;
@@ -70,9 +75,6 @@ export default function SalesPage() {
     <Box w="full" maxW="container.lg" mx="auto" p={4}>
       <Flex justify="space-between" align="center" mb={4}>
         <Heading size="md">Sales</Heading>
-        <Button colorScheme="blue" onClick={onOpen}>
-          + New
-        </Button>
       </Flex>
 
       <Input
@@ -85,7 +87,11 @@ export default function SalesPage() {
         }}
       />
 
-      <SalesList sales={paginated} onSelectSale={handleSelectSale} />
+      <SalesList
+        sales={paginated}
+        onSelectSale={handleSelectSale}
+        onPrint={handlePrint} // ✅ pass the print handler
+      />
 
       <HStack justify="center" mt={4}>
         <Button
@@ -105,26 +111,17 @@ export default function SalesPage() {
         </Button>
       </HStack>
 
-      {/* Modals */}
-      <InvoiceForm
-        isOpen={isOpen}
-        onClose={onClose}
-        onInvoiceCreated={async () => {
-          setLoading(true);
-          try {
-            const data = await fetchSales();
-            setAllSales(data.items || []);
-          } finally {
-            setLoading(false);
-          }
-        }}
-      />
-
+      {/* HTML Invoice Modal */}
       {selectedSale && (
-        <SaleDetails
+        <InvoiceDetails sale={selectedSale} isOpen={isOpen} onClose={onClose} />
+      )}
+
+      {/* Thermal Invoice Modal */}
+      {selectedSale && (
+        <SaleInvoiceThermal
           sale={selectedSale}
-          isOpen={detailOpen}
-          onClose={() => setDetailOpen(false)}
+          isOpen={thermalOpen}
+          onClose={() => setThermalOpen(false)}
         />
       )}
     </Box>

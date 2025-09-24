@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { fetchProducts } from "../products/productsApi.js";
 
-export default function SaleInvoice({ sale, isOpen, onClose }) {
+export default function InvoiceDetails({ sale, isOpen, onClose }) {
   const [items, setItems] = useState([]);
   const [productsMap, setProductsMap] = useState({});
   const toast = useToast();
@@ -47,6 +47,7 @@ export default function SaleInvoice({ sale, isOpen, onClose }) {
         console.error("Failed to fetch products", err);
       }
     };
+
     loadProducts();
   }, [sale, isOpen]);
 
@@ -57,10 +58,8 @@ export default function SaleInvoice({ sale, isOpen, onClose }) {
       toast({ status: "error", description: "Printing not available" });
       return;
     }
-
     const htmlContent = invoiceRef.current.innerHTML;
-
-    window.api.printHTML(htmlContent); // Electron IPC to print HTML to thermal printer
+    window.api.printHTML(htmlContent);
     toast({ status: "success", description: "Sent to printer" });
   };
 
@@ -79,17 +78,16 @@ export default function SaleInvoice({ sale, isOpen, onClose }) {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch" ref={invoiceRef}>
-            {/* Header */}
             <VStack spacing={1} align="stretch">
               <Text fontSize="lg" fontWeight="bold">
                 My Store
               </Text>
-              <Spacer></Spacer>
-              <Text fontSize="lg">Invoice No </Text>{" "}
+              <Spacer />
+              <Text fontSize="lg">Invoice No </Text>
               <Text fontSize="sm" fontWeight="bold">
                 {sale?.saleUuid || sale?.id}
               </Text>
-              <Spacer></Spacer>
+              <Spacer />
               <Text>Customer: {sale?.customer?.name || "Walk-in"}</Text>
               <Text fontSize="sm">
                 Date: {new Date(sale?.createdAt).toLocaleString()}
@@ -97,7 +95,6 @@ export default function SaleInvoice({ sale, isOpen, onClose }) {
               <Divider />
             </VStack>
 
-            {/* Items Table */}
             <Table variant="simple" size="sm">
               <Thead>
                 <Tr>
@@ -110,7 +107,8 @@ export default function SaleInvoice({ sale, isOpen, onClose }) {
               <Tbody>
                 {items.map((item, idx) => (
                   <Tr key={idx}>
-                    <Td>{productsMap[item.productId] || item.productId}</Td>
+                    <Td>{productsMap[item.productId] || item.productId}</Td>{" "}
+                    {/* ✅ use name */}
                     <Td>{item.qty}</Td>
                     <Td>{item.price.toFixed(2)}</Td>
                     <Td>{(item.qty * item.price).toFixed(2)}</Td>
@@ -125,7 +123,6 @@ export default function SaleInvoice({ sale, isOpen, onClose }) {
               </Tbody>
             </Table>
 
-            {/* Payments */}
             {sale.payments?.length > 0 && (
               <VStack align="stretch" mt={2}>
                 <Text fontWeight="bold">Payments</Text>
