@@ -24,7 +24,7 @@ import {
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function InvoiceDetails({ sale, isOpen, onClose }) {
-  const { productsMap } = useProducts(); // ✅ context for product names
+  const { productsMap } = useProducts();
   const toast = useToast();
   const invoiceRef = useRef();
 
@@ -44,38 +44,25 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="md"
-      p={2}
-      isCentered
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Invoice Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} align="stretch" ref={invoiceRef}>
-            <VStack spacing={1} align="stretch">
-              <Text fontSize="lg" fontWeight="bold">
-                My Store
-              </Text>
+          <VStack ref={invoiceRef}>
+            <VStack>
+              <Text>My Store</Text>
               <Spacer />
-              <Text fontSize="lg">Invoice No</Text>
-              <Text fontSize="sm" fontWeight="bold">
-                {sale?.saleUuid || sale?.id}
-              </Text>
+              <Text>Invoice No</Text>
+              <Text>{sale?.saleUuid || sale?.id}</Text>
               <Spacer />
               <Text>Customer: {sale?.customer?.name || "Walk-in"}</Text>
-              <Text fontSize="sm">
-                Date: {new Date(sale?.createdAt).toLocaleString()}
-              </Text>
+              <Text>Date: {new Date(sale?.createdAt).toLocaleString()}</Text>
               <Divider />
             </VStack>
 
-            <Table variant="simple" size="sm">
+            <Table>
               <Thead>
                 <Tr>
                   <Th>Product</Th>
@@ -94,17 +81,15 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
                   </Tr>
                 ))}
                 <Tr>
-                  <Td colSpan={3} fontWeight="bold" textAlign="right">
-                    TOTAL
-                  </Td>
-                  <Td fontWeight="bold">{totalAmount.toFixed(2)}</Td>
+                  <Td colSpan={3}>TOTAL</Td>
+                  <Td>{totalAmount.toFixed(2)}</Td>
                 </Tr>
               </Tbody>
             </Table>
 
             {sale.payments?.length > 0 && (
-              <VStack align="stretch" mt={2}>
-                <Text fontWeight="bold">Payments</Text>
+              <VStack>
+                <Text>Payments</Text>
                 {sale.payments.map((p, i) => (
                   <Text key={i}>
                     {p.amount.toFixed(2)} via {p.method}
@@ -114,20 +99,14 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
             )}
 
             <Divider />
-            <Text fontSize="sm" textAlign="center">
-              Thank you for your purchase!
-            </Text>
+            <Text>Thank you for your purchase!</Text>
           </VStack>
         </ModalBody>
 
         <ModalFooter>
-          <HStack spacing={2}>
-            <Button variant="ghost" onClick={onClose}>
-              Close
-            </Button>
-            <Button colorScheme="blue" onClick={handlePrint}>
-              Print
-            </Button>
+          <HStack>
+            <Button onClick={onClose}>Close</Button>
+            <Button onClick={handlePrint}>Print</Button>
           </HStack>
         </ModalFooter>
       </ModalContent>

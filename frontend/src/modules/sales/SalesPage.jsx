@@ -57,29 +57,26 @@ export default function SalesPage() {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  // Open HTML invoice modal
   const handleSelectSale = (sale) => {
     setSelectedSale(sale);
     onOpen();
   };
 
-  // Open thermal invoice modal
   const handlePrint = (sale) => {
     setSelectedSale(sale);
     setThermalOpen(true);
   };
 
-  if (loading) return <Spinner size="xl" margin="auto" />;
+  if (loading) return <Spinner />;
 
   return (
-    <Box w="full" maxW="container.lg" mx="auto" p={4}>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="md">Invoices</Heading>
+    <Box>
+      <Flex>
+        <Heading>Invoices</Heading>
       </Flex>
 
       <Input
         placeholder="Search by customer or sale ID..."
-        mb={4}
         value={search}
         onChange={(e) => {
           setPage(1);
@@ -90,10 +87,10 @@ export default function SalesPage() {
       <SalesList
         sales={paginated}
         onSelectSale={handleSelectSale}
-        onPrint={handlePrint} // ✅ pass the print handler
+        onPrint={handlePrint}
       />
 
-      <HStack justify="center" mt={4}>
+      <HStack>
         <Button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           isDisabled={page === 1}
@@ -111,12 +108,10 @@ export default function SalesPage() {
         </Button>
       </HStack>
 
-      {/* HTML Invoice Modal */}
       {selectedSale && (
         <InvoiceDetails sale={selectedSale} isOpen={isOpen} onClose={onClose} />
       )}
 
-      {/* Thermal Invoice Modal */}
       {selectedSale && (
         <SaleInvoiceThermal
           sale={selectedSale}

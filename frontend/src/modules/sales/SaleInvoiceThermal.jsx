@@ -14,7 +14,7 @@ import {
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
-  const { productsMap } = useProducts(); // ✅ get product names from context
+  const { productsMap } = useProducts();
   const toast = useToast();
 
   const generateReceiptText = () => {
@@ -56,37 +56,24 @@ export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
       toast({ status: "error", description: "Printing not available" });
       return;
     }
-    const text = generateReceiptText();
-    window.api.printText(text);
+    window.api.printText(generateReceiptText());
     toast({ status: "success", description: "Sent to printer" });
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="sm"
-      isCentered
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Invoice - {sale?.saleUuid || sale?.id}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack align="stretch" spacing={2}>
-            <Text whiteSpace="pre" fontFamily="monospace">
-              {generateReceiptText()}
-            </Text>
+          <VStack>
+            <Text>{generateReceiptText()}</Text>
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
-          <Button colorScheme="blue" onClick={handlePrint}>
-            Print
-          </Button>
+          <Button onClick={onClose}>Close</Button>
+          <Button onClick={handlePrint}>Print</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

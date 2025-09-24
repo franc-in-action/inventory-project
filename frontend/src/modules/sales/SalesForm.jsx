@@ -30,11 +30,11 @@ import {
   createCustomer,
 } from "../customers/customersApi.js";
 import { createSale } from "./salesApi.js";
-import { useProducts } from "../products/ProductsContext.jsx"; // ✅ context
+import { useProducts } from "../products/ProductsContext.jsx";
 
 export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const toast = useToast();
-  const { products, stockMap } = useProducts(); // ✅ get products & stock
+  const { products, stockMap } = useProducts();
 
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -46,9 +46,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const [loading, setLoading] = useState(false);
   const [isCashSale, setIsCashSale] = useState(false);
 
-  // ---------------------------
-  // Load customers
-  // ---------------------------
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
@@ -65,9 +62,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     })();
   }, [isOpen, toast]);
 
-  // ---------------------------
-  // Fetch full customer data
-  // ---------------------------
   useEffect(() => {
     if (!selectedCustomer) return setCustomerData(null);
     (async () => {
@@ -80,19 +74,16 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     })();
   }, [selectedCustomer]);
 
-  // ---------------------------
-  // Sync cart with product context & stock
-  // ---------------------------
   useEffect(() => {
-    setCart((prevCart) =>
-      prevCart.map((item) => {
+    setCart((prev) =>
+      prev.map((item) => {
         const product = products.find((p) => p.id === item.productId);
         if (!product) return item;
         return {
           ...item,
           price: product.price || 0,
           locationId: product.locationId || "",
-          stockQty: stockMap[product.id] || 0, // ✅ use stockMap
+          stockQty: stockMap[product.id] || 0,
         };
       })
     );
@@ -103,26 +94,19 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     0
   );
 
-  // ---------------------------
-  // Auto-fill payment if cash sale
-  // ---------------------------
   useEffect(() => {
     if (isCashSale) setPayment((prev) => ({ ...prev, amount: totalAmount }));
   }, [isCashSale, totalAmount]);
 
-  // ---------------------------
-  // Cart operations
-  // ---------------------------
   const handleCartChange = (index, field, value) => {
     setCart((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
-
       if (field === "productId") {
         const product = products.find((p) => p.id === value);
         copy[index].locationId = product?.locationId || "";
         copy[index].price = product?.price || 0;
-        copy[index].stockQty = stockMap[product?.id] || 0; // ✅ update stock
+        copy[index].stockQty = stockMap[product?.id] || 0;
       }
       return copy;
     });
@@ -133,16 +117,11 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       ...prev,
       { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
     ]);
+  const removeCartRow = (i) =>
+    setCart((prev) => prev.filter((_, idx) => idx !== i));
 
-  const removeCartRow = (index) =>
-    setCart((prev) => prev.filter((_, i) => i !== index));
-
-  // ---------------------------
-  // Handle invoice submission
-  // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (
       !selectedCustomer ||
       cart.length === 0 ||
@@ -153,7 +132,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         description: "Select customer and fill all product rows",
       });
     }
-
     const locationId = cart[0].locationId;
     if (cart.some((item) => item.locationId !== locationId)) {
       return toast({
@@ -161,8 +139,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         description: "All products must belong to the same location",
       });
     }
-
-    // Validate stock using stockMap
     const insufficient = cart.find(
       (item) => item.qty > (stockMap[item.productId] || 0)
     );
@@ -170,11 +146,9 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       const product = products.find((p) => p.id === insufficient.productId);
       return toast({
         status: "error",
-        description: `Insufficient stock for product "${product?.name}"`,
+        description: `Insufficient stock for "${product?.name}"`,
       });
     }
-
-    // Check credit limit if not cash sale
     if (!isCashSale && customerData) {
       const remainingCredit = customerData.credit_limit - customerData.balance;
       const creditRequired = totalAmount - (payment.amount || 0);
@@ -187,7 +161,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         });
       }
     }
-
     setLoading(true);
     try {
       await createSale({
@@ -201,7 +174,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         payment,
         total: totalAmount,
       });
-
       toast({ status: "success", description: "Invoice created successfully" });
       setCart([
         { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
@@ -219,28 +191,16 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     }
   };
 
-  // ---------------------------
-  // Render
-  // ---------------------------
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="xl"
-      isCentered
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>Generate Invoice</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} align="stretch">
-            {/* Customer */}
+          <VStack>
             <Box>
-              <Text fontWeight="bold" mb={1}>
-                Customer
-              </Text>
+              <Text>Customer</Text>
               <ComboBox
                 items={customers}
                 selectedItemId={selectedCustomer?.id}
@@ -253,18 +213,15 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                 }}
               />
               {customerData && (
-                <Text fontSize="sm" color="gray.600" mt={1}>
+                <Text>
                   Credit Limit: {customerData.credit_limit.toFixed(2)}, Balance:{" "}
                   {customerData.balance.toFixed(2)}
                 </Text>
               )}
             </Box>
 
-            {/* Cash Sale Toggle */}
-            <FormControl display="flex" alignItems="center">
-              <FormLabel htmlFor="cash-sale" mb="0">
-                Cash Sale
-              </FormLabel>
+            <FormControl>
+              <FormLabel htmlFor="cash-sale">Cash Sale</FormLabel>
               <Switch
                 id="cash-sale"
                 isChecked={isCashSale}
@@ -272,26 +229,22 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
               />
             </FormControl>
 
-            {/* Cart */}
             <Box>
-              <Text fontWeight="bold" mb={2}>
-                Products
-              </Text>
-              <VStack spacing={2} align="stretch">
+              <Text>Products</Text>
+              <VStack>
                 {cart.map((item, idx) => {
                   const stockExceeded = item.qty > item.stockQty;
                   const product = products.find((p) => p.id === item.productId);
-
                   return (
                     <Box key={idx}>
-                      <HStack spacing={2}>
+                      <HStack>
                         <Select
                           placeholder="Select Product"
                           value={item.productId}
                           onChange={(e) =>
                             handleCartChange(idx, "productId", e.target.value)
                           }
-                          isRequired
+                          required
                         >
                           {products.map((p) => (
                             <option key={p.id} value={p.id}>
@@ -301,7 +254,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                         </Select>
 
                         <NumberInput
-                          size="sm"
                           min={1}
                           value={item.qty}
                           onChange={(v) =>
@@ -312,7 +264,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                         </NumberInput>
 
                         <NumberInput
-                          size="sm"
                           min={0}
                           value={item.price}
                           onChange={(v) =>
@@ -324,14 +275,12 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
 
                         <IconButton
                           icon={<DeleteIcon />}
-                          size="sm"
-                          colorScheme="red"
                           onClick={() => removeCartRow(idx)}
                         />
                       </HStack>
 
                       {stockExceeded && product && (
-                        <Text color="red.500" fontSize="sm">
+                        <Text>
                           Only {item.stockQty} units of "{product.name}"
                           available.
                         </Text>
@@ -339,7 +288,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                     </Box>
                   );
                 })}
-                <Button leftIcon={<AddIcon />} size="sm" onClick={addCartRow}>
+                <Button leftIcon={<AddIcon />} onClick={addCartRow}>
                   Add Item
                 </Button>
               </VStack>
@@ -347,7 +296,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
 
             <Divider />
 
-            {/* Payment */}
             <HStack>
               <NumberInput
                 min={0}
@@ -370,17 +318,13 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
               </Select>
             </HStack>
 
-            <Text fontWeight="bold" mt={2}>
-              Total: {totalAmount.toFixed(2)}
-            </Text>
+            <Text>Total: {totalAmount.toFixed(2)}</Text>
           </VStack>
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" isLoading={loading}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" isLoading={loading}>
             Generate Invoice
           </Button>
         </ModalFooter>

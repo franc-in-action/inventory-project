@@ -16,13 +16,13 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
   if (!sales || sales.length === 0) return <Text>No sales found.</Text>;
 
   return (
-    <Table variant="striped" size="sm">
+    <Table>
       <Thead>
         <Tr>
           <Th>Sale ID</Th>
           <Th>Customer</Th>
           <Th>Date</Th>
-          <Th isNumeric>Total ($)</Th>
+          <Th>Total ($)</Th>
           <Th>Payment Method</Th>
           <Th>Status</Th>
           <Th>Actions</Th>
@@ -33,21 +33,20 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
           <Tr key={s.id}>
             <Td>{s.id}</Td>
             <Td>
-              <Link color="blue.500" onClick={() => onSelectSale(s)}>
+              <Link onClick={() => onSelectSale(s)}>
                 {s.customer?.name || "—"}
               </Link>
             </Td>
             <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
-            <Td isNumeric>{s.total}</Td>
+            <Td>{s.total}</Td>
             <Td>{s.payments?.[0]?.method || "—"}</Td>
             <Td>{s.status || "Completed"}</Td>
             <Td>
-              <HStack spacing={1}>
+              <HStack>
                 <IconButton
                   aria-label="Print Invoice"
                   icon={<FiPrinter />}
-                  size="sm"
-                  onClick={() => onPrint && onPrint(s)} // ✅ safe call
+                  onClick={() => onPrint && onPrint(s)}
                 />
               </HStack>
             </Td>
