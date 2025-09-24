@@ -18,16 +18,17 @@ import {
   Select,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { fetchProducts, deleteProduct } from "./productsApi.js";
+import { deleteProduct } from "./productsApi.js";
 import { fetchCategories } from "./categoriesApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
 import {
   fetchStockForProducts,
   fetchTotalStockForProducts,
 } from "../../utils/stockApi.js";
+import { useProducts } from "../../contexts/ProductsContext.jsx"; // ✅ use context
 
 export default function ProductsList({ onEdit, refreshKey }) {
-  const [products, setProducts] = useState([]);
+  const { products } = useProducts(); // ✅ get products from context
   const [totalProducts, setTotalProducts] = useState(0);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -43,58 +44,43 @@ export default function ProductsList({ onEdit, refreshKey }) {
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
   // -----------------------
-  // Fetch products, categories, locations
+  // Fetch categories & locations
   // -----------------------
   useEffect(() => {
-    const loadProducts = async () => {
-      setLoading(true);
+    const loadMeta = async () => {
       try {
-        const [productsData, cats, locs] = await Promise.all([
-          fetchProducts({ page, limit }),
+        const [cats, locs] = await Promise.all([
           fetchCategories(),
           fetchLocations(),
         ]);
-
-        const items = Array.isArray(productsData.items)
-          ? productsData.items
-          : [];
-        setProducts(items);
-        setTotalProducts(productsData.total || 0);
         setCategories(cats);
         setLocations(locs);
       } catch (err) {
-        console.error(err);
-        setProducts([]);
-        setTotalProducts(0);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch meta:", err);
       }
     };
-    loadProducts();
-  }, [refreshKey, page]);
+    loadMeta();
+  }, []);
+
+  // -----------------------
+  // Update total products count
+  // -----------------------
+  useEffect(() => {
+    setTotalProducts(products.length);
+    setLoading(false);
+  }, [products]);
 
   // -----------------------
   // Fetch stock whenever products or location change
   // -----------------------
   useEffect(() => {
     const loadStock = async () => {
-      if (products.length === 0) {
-        setStockByProduct({});
-        return;
-      }
-
+      if (!products.length) return setStockByProduct({});
       try {
-        let stock;
-        if (locationId) {
-          // Stock for selected location
-          stock = await fetchStockForProducts(
-            products.map((p) => p.id),
-            locationId
-          );
-        } else {
-          // Total stock across all locations
-          stock = await fetchTotalStockForProducts(products.map((p) => p.id));
-        }
+        const productIds = products.map((p) => p.id);
+        const stock = locationId
+          ? await fetchStockForProducts(productIds, locationId)
+          : await fetchTotalStockForProducts(productIds);
         setStockByProduct(stock);
       } catch (err) {
         console.error("Failed to fetch stock:", err);
@@ -111,8 +97,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
     if (!confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      setTotalProducts((prev) => prev - 1);
     } catch (err) {
       console.error(err);
     }
