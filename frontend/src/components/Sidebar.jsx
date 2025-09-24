@@ -63,19 +63,47 @@ export default function Sidebar({ isOpen, onClose }) {
   ].filter((link) => userHasRole(link.roles));
 
   const SidebarContent = (
-    <Box as="nav">
+    <Box
+      as="nav"
+      bg="gray.800"
+      color="white"
+      w={{ base: "full", md: 60 }}
+      pos="fixed"
+      h="full"
+      p={4}
+    >
       {user && (
-        <Box>
-          {user.location && <Text>{user.location}</Text>}
-          <Text>{user.name}</Text>
-          <Text>{user.role}</Text>
+        <Box mb={6} textAlign="center">
+          {user.location && (
+            <Text fontSize="sm" color="gray.400">
+              {user.location}
+            </Text>
+          )}
+          <Text fontWeight="bold">{user.name}</Text>
+          <Text fontSize="sm" color="gray.400">
+            {user.role}
+          </Text>
         </Box>
       )}
-      <Divider />
-      <VStack>
+      <Divider borderColor="gray.700" mb={4} />
+      <VStack spacing={2} align="stretch">
         {links.map((link) => (
-          <NavLink key={link.to} to={link.to} onClick={onClose}>
-            <Icon as={link.icon} />
+          <NavLink
+            key={link.to}
+            to={link.to}
+            style={({ isActive }) => ({
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "10px 12px",
+              borderRadius: "8px",
+              fontWeight: isActive ? "bold" : "normal",
+              backgroundColor: isActive ? "#2D3748" : "transparent",
+              color: isActive ? "#63B3ED" : "#A0AEC0",
+            })}
+            onClick={onClose}
+          >
+            <Icon as={link.icon} w={5} h={5} />
             {link.label}
           </NavLink>
         ))}
@@ -85,7 +113,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      <Box>{SidebarContent}</Box>
+      <Box display={{ base: "none", md: "block" }}>{SidebarContent}</Box>
       <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>{SidebarContent}</DrawerContent>
