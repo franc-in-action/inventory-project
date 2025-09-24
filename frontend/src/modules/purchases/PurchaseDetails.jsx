@@ -22,7 +22,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { createPurchase } from "./purchaseApi.js";
-import { useProducts } from "../../contexts/ProductsContext.jsx"; // ✅ context
+import { useProducts } from "../products/contexts/ProductsContext.jsx"; // ✅ context
 
 export default function PurchaseDetails({
   purchase,

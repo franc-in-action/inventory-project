@@ -25,7 +25,7 @@ import {
 // Admin Tools Pages
 import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 
-import { ProductsProvider } from "./contexts/ProductsContext.jsx";
+import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;

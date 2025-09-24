@@ -25,7 +25,7 @@ import {
   fetchStockForProducts,
   fetchTotalStockForProducts,
 } from "../../utils/stockApi.js";
-import { useProducts } from "../../contexts/ProductsContext.jsx"; // ✅ use context
+import { useProducts } from "./contexts/ProductsContext.jsx"; // ✅ use context
 
 export default function ProductsList({ onEdit, refreshKey }) {
   const { products } = useProducts(); // ✅ get products from context

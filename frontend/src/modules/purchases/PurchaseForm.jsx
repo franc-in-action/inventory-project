@@ -21,7 +21,7 @@ import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { fetchLocations } from "../locations/locationsApi.js";
 import { fetchStockForProducts } from "../../utils/stockApi.js";
 import { createPurchase } from "./purchaseApi.js";
-import { useProducts } from "../../contexts/ProductsContext.jsx"; // ✅ context
+import { useProducts } from "../products/contexts/ProductsContext.jsx"; // ✅ context
 
 export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   const toast = useToast();

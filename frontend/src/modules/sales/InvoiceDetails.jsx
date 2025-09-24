@@ -21,7 +21,7 @@ import {
   Spacer,
   useToast,
 } from "@chakra-ui/react";
-import { useProducts } from "../../contexts/ProductsContext.jsx";
+import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function InvoiceDetails({ sale, isOpen, onClose }) {
   const { productsMap } = useProducts(); // ✅ context for product names

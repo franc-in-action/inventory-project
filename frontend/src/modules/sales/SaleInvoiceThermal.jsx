@@ -11,7 +11,7 @@ import {
   VStack,
   Text,
 } from "@chakra-ui/react";
-import { useProducts } from "../../contexts/ProductsContext.jsx";
+import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
   const { productsMap } = useProducts(); // ✅ get product names from context

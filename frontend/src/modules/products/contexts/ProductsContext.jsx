@@ -1,7 +1,7 @@
 // src/contexts/ProductsContext.jsx
 import { createContext, useState, useEffect, useContext } from "react";
-import { fetchProducts } from "../modules/products/productsApi.js";
-import { fetchTotalStockForProducts } from "../utils/stockApi.js";
+import { fetchProducts } from "../productsApi.js";
+import { fetchTotalStockForProducts } from "../../../utils/stockApi.js";
 
 const ProductsContext = createContext();
 
