@@ -167,7 +167,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
                 <FormLabel>Description</FormLabel>
                 <Textarea
                   name="description"
-                  value={product.description}
+                  value={product.description || ""}
                   onChange={handleChange}
                 />
               </FormControl>
