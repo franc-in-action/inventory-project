@@ -1,4 +1,3 @@
-// src/modules/admin/BackupModal.jsx
 import { useState } from "react";
 import {
   Modal,
@@ -23,10 +22,10 @@ export default function BackupModal({ isOpen, onClose }) {
   const handleBackup = async () => {
     setLoading(true);
     try {
+      // raw response now correctly returned
       const res = await adminApi.triggerBackup();
-
-      // Convert response blob to download
       const blob = await res.blob();
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -38,6 +37,7 @@ export default function BackupModal({ isOpen, onClose }) {
 
       toast({ title: "Backup created and downloaded", status: "success" });
     } catch (err) {
+      console.error(err);
       toast({ title: "Failed to create backup", status: "error" });
     } finally {
       setLoading(false);
@@ -48,10 +48,16 @@ export default function BackupModal({ isOpen, onClose }) {
     if (!file) return;
     setLoading(true);
     try {
-      await adminApi.restoreBackup(file);
-      toast({ title: "Backup restored", status: "success" });
-      setFile(null);
+      // restoreBackup returns JSON now
+      const data = await adminApi.restoreBackup(file);
+      if (data.ok) {
+        toast({ title: "Backup restored successfully", status: "success" });
+        setFile(null);
+      } else {
+        throw new Error(data.error || "Restore failed");
+      }
     } catch (err) {
+      console.error(err);
       toast({ title: "Failed to restore backup", status: "error" });
     } finally {
       setLoading(false);
@@ -73,7 +79,11 @@ export default function BackupModal({ isOpen, onClose }) {
             >
               Create Backup
             </Button>
-            <Input type="file" onChange={(e) => setFile(e.target.files[0])} />
+            <Input
+              type="file"
+              onChange={(e) => setFile(e.target.files[0])}
+              accept=".json"
+            />
             <Button
               colorScheme="green"
               onClick={handleRestore}

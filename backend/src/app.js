@@ -1,6 +1,7 @@
 // src/app.js
 
 import express from "express";
+import fileUpload from "express-fileupload";
 import bodyParser from "body-parser";
 import cors from "cors"; // <--- add this
 import authRoutes from "./routes/auth.js";
@@ -29,6 +30,15 @@ app.use(
 );
 
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Add this BEFORE your routes
+app.use(
+  fileUpload({
+    createParentPath: true,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB limit
+  })
+);
 
 // Routes
 app.use("/api/auth", authRoutes);
