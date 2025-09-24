@@ -29,7 +29,7 @@ export default function Header({ onOpenSidebar, onRefresh }) {
           mr={2}
         />
 
-        <Heading size={{ base: "sm", md: "md" }}>Inventory App</Heading>
+        <Heading>Inventory App</Heading>
 
         <Spacer />
 
@@ -49,13 +49,13 @@ export default function Header({ onOpenSidebar, onRefresh }) {
           <IconButton
             aria-label="Refresh content"
             icon={<RepeatIcon />}
-            size={{ base: "sm", md: "md" }}
+            // size={{ base: "sm", md: "md" }}
             colorScheme="blue"
             onClick={onRefresh}
           />
 
           <Button
-            size={{ base: "sm", md: "md" }}
+            // size={{ base: "sm", md: "md" }}
             colorScheme="red"
             onClick={() => logout(navigate)}
           >

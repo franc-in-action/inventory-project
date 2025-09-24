@@ -6,8 +6,6 @@ const Button = {
     borderRadius: "6px",
     fontWeight: "500",
     lineHeight: "20px",
-    px: "16px",
-    py: "6px",
     cursor: "pointer",
     transition: "background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1)",
     _focus: {
@@ -34,7 +32,7 @@ const Button = {
       _active: { bg: "#D1D5DB" },
     },
     danger: {
-      bg: "#E53E3E",
+      bg: "red",
       color: "white",
       _hover: { bg: "#C53030" },
       _active: { bg: "#9B2C2C" },
@@ -54,13 +52,25 @@ const Button = {
     },
   },
   sizes: {
-    sm: { fontSize: "12px", px: "12px", py: "4px" },
-    md: { fontSize: "14px", px: "16px", py: "6px" },
-    lg: { fontSize: "16px", px: "20px", py: "8px" },
+    sm: {
+      fontSize: ["10px", "12px"], // mobile -> larger screens
+      px: ["8px", "12px"],
+      py: ["2px", "4px"],
+    },
+    md: {
+      fontSize: ["12px", "14px"],
+      px: ["12px", "16px"],
+      py: ["4px", "6px"],
+    },
+    lg: {
+      fontSize: ["14px", "16px"],
+      px: ["16px", "20px"],
+      py: ["6px", "8px"],
+    },
   },
   defaultProps: {
     size: "md",
-    variant: "primary", // default variant
+    variant: "primary",
   },
 };
 
