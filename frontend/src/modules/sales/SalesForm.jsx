@@ -21,7 +21,11 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import ComboBox from "../../components/ComboBox.jsx";
-import { getCustomers, createCustomer } from "../customers/customersApi.js";
+import {
+  getCustomers,
+  getCustomerById,
+  createCustomer,
+} from "../customers/customersApi.js";
 import { fetchProducts } from "../products/productsApi.js";
 import { createSale } from "./salesApi.js";
 import { fetchStockForProducts } from "../../utils/stockApi.js";
@@ -32,15 +36,14 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerData, setCustomerData] = useState(null); // full customer info
   const [cart, setCart] = useState([
     { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
   ]);
   const [payment, setPayment] = useState({ amount: 0, method: "cash" });
   const [loading, setLoading] = useState(false);
 
-  // ---------------------------
   // Load customers and products
-  // ---------------------------
   useEffect(() => {
     if (!isOpen) return;
     const normalizeArray = (data) =>
@@ -62,9 +65,25 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     })();
   }, [isOpen, toast]);
 
-  // ---------------------------
-  // Update stockQty whenever cart products change
-  // ---------------------------
+  // Fetch full customer data whenever selected customer changes
+  useEffect(() => {
+    if (!selectedCustomer) {
+      setCustomerData(null);
+      return;
+    }
+
+    (async () => {
+      try {
+        const data = await getCustomerById(selectedCustomer.id);
+        setCustomerData(data);
+      } catch (err) {
+        console.error("Failed to fetch customer data:", err);
+        setCustomerData(null);
+      }
+    })();
+  }, [selectedCustomer]);
+
+  // Update stockQty whenever cart changes
   useEffect(() => {
     const fetchCartStock = async () => {
       const productIds = cart
@@ -88,9 +107,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     fetchCartStock();
   }, [cart.map((i) => i.productId).join(","), cart[0]?.locationId]);
 
-  // ---------------------------
   // Handle cart changes
-  // ---------------------------
   const handleCartChange = (index, field, value) => {
     setCart((prev) => {
       const copy = [...prev];
@@ -120,9 +137,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     0
   );
 
-  // ---------------------------
   // Handle invoice submission
-  // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -147,10 +162,9 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       return;
     }
 
-    // Validate stock before submission
+    // Validate stock
     const productIds = cart.map((i) => i.productId);
     const stockMap = await fetchStockForProducts(productIds, locationId);
-
     const insufficient = cart.find(
       (item) => item.qty > (stockMap[item.productId] || 0)
     );
@@ -163,6 +177,21 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         }"`,
       });
       return;
+    }
+
+    // Check credit limit
+    if (customerData) {
+      const remainingCredit = customerData.credit_limit - customerData.balance;
+      const creditRequired = totalAmount - (payment.amount || 0);
+      if (creditRequired > remainingCredit) {
+        toast({
+          status: "error",
+          description: `Credit limit exceeded. Available credit: ${remainingCredit.toFixed(
+            2
+          )}`,
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -184,6 +213,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
       ]);
       setSelectedCustomer(null);
+      setCustomerData(null);
       setPayment({ amount: 0, method: "cash" });
       onInvoiceCreated();
       onClose();
@@ -194,9 +224,6 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     }
   };
 
-  // ---------------------------
-  // Render
-  // ---------------------------
   return (
     <Modal
       isOpen={isOpen}
@@ -227,6 +254,12 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                   return newCust;
                 }}
               />
+              {customerData && (
+                <Text fontSize="sm" color="gray.600" mt={1}>
+                  Credit Limit: {customerData.credit_limit.toFixed(2)}, Balance:{" "}
+                  {customerData.balance.toFixed(2)}
+                </Text>
+              )}
             </Box>
 
             {/* Cart */}
