@@ -7,11 +7,11 @@ import {
   IconButton,
   Text,
 } from "@chakra-ui/react";
-import { HamburgerIcon } from "@chakra-ui/icons";
+import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons"; // Add RepeatIcon
 import { useNavigate } from "react-router-dom";
 import { getUserFromToken, logout } from "../modules/auth/authApi.js";
 
-export default function Header({ onOpenSidebar }) {
+export default function Header({ onOpenSidebar, onRefresh }) {
   const navigate = useNavigate();
   const user = getUserFromToken();
 
@@ -39,9 +39,19 @@ export default function Header({ onOpenSidebar }) {
         )}
         {user?.location && (
           <Text fontSize="sm" color="gray.400">
-            {user.location} {/* Show location first */}
+            {user.location}
           </Text>
         )}
+
+        {/* Refresh Button */}
+        <IconButton
+          aria-label="Refresh content"
+          icon={<RepeatIcon />}
+          size={{ base: "sm", md: "md" }}
+          colorScheme="blue"
+          onClick={onRefresh}
+          mr={2}
+        />
 
         <Button
           size={{ base: "sm", md: "md" }}

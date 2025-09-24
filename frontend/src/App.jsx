@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { ChakraProvider, Box, useDisclosure } from "@chakra-ui/react";
 import {
   BrowserRouter as Router,
@@ -36,8 +37,14 @@ function RoleRoute({ children, allowedRoles }) {
   );
 }
 
-function ProtectedLayout({ children }) {
+export function ProtectedLayout({ children }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((prev) => prev + 1); // Increment key to force re-render children
+  }, []);
 
   const links = [
     { to: "/dashboard", label: "Dashboard" },
@@ -67,8 +74,11 @@ function ProtectedLayout({ children }) {
         gap={2}
         transition="margin-left 0.2s ease"
       >
-        <Header onOpenSidebar={onOpen} />
-        {children}
+        <Header onOpenSidebar={onOpen} onRefresh={handleRefresh} />
+        {/* Key triggers children re-render */}
+        <Box key={refreshKey} flex="1">
+          {children}
+        </Box>
       </Box>
     </Box>
   );
