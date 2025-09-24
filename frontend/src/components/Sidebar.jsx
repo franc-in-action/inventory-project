@@ -71,6 +71,7 @@ export default function Sidebar({ isOpen, onClose }) {
       pos="fixed"
       h="full"
       p={4}
+      zIndex={20}
     >
       {user && (
         <Box mb={6} textAlign="center">
