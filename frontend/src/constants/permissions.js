@@ -7,4 +7,5 @@ export const PERMISSIONS = {
   PURCHASES: ["Admin", "Manager"],
   LOCATIONS: ["Admin", "Manager"],
   CUSTOMERS: ["Admin", "Manager", "Staff"],
+  VENDORS: ["Admin", "Manager"],
 };

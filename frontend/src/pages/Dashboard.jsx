@@ -6,7 +6,8 @@ import {
   FaShoppingCart,
   FaMapMarkerAlt,
   FaTools,
-  FaUsers, // new icon for Customers
+  FaUsers,
+  FaTruck,
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
 
@@ -16,6 +17,7 @@ const dashboardLinks = [
   { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
   { label: "Customers", href: "/customers", icon: FaUsers }, // added
+  { label: "Vendors", href: "/vendors", icon: FaTruck }, // added
   { label: "Admin Tools", href: "/admin-tools", icon: FaTools },
 ];
 
@@ -24,6 +26,7 @@ const totalSales = 54;
 const totalPurchases = 30;
 const totalLocations = 5;
 const totalCustomers = 80; // example
+const totalVendors = 25; // example count
 
 const summaryData = [
   { label: "Total Products", value: totalProducts, icon: FaBox },
@@ -31,6 +34,7 @@ const summaryData = [
   { label: "Total Purchases", value: totalPurchases, icon: FaShoppingCart },
   { label: "Total Locations", value: totalLocations, icon: FaMapMarkerAlt },
   { label: "Total Customers", value: totalCustomers, icon: FaUsers }, // added
+  { label: "Total Vendors", value: totalVendors, icon: FaTruck }, // added
 ];
 
 export default function Dashboard() {

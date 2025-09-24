@@ -19,6 +19,7 @@ import {
   FaShoppingCart,
   FaMapMarkerAlt,
   FaTools,
+  FaTruck,
 } from "react-icons/fa";
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -61,6 +62,12 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: FaUsers, // added
       roles: PERMISSIONS.CUSTOMERS,
     },
+    {
+      to: "/vendors",
+      label: "Vendors",
+      icon: FaTruck,
+      roles: PERMISSIONS.VENDORS,
+    }, // added
     {
       to: "/admin-tools",
       label: "Admin Tools",

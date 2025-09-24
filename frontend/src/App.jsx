@@ -11,6 +11,7 @@ import Login from "./modules/auth/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
+import VendorsPage from "./modules/vendors/VendorsPage.jsx"; // import vendors
 import SalesPage from "./modules/sales/SalesPage.jsx";
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
@@ -95,7 +96,6 @@ export default function App() {
           <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
-
             {/* Protected Routes */}
             <Route
               path="/dashboard"
@@ -128,6 +128,19 @@ export default function App() {
                   <RoleRoute allowedRoles={PERMISSIONS.CUSTOMERS}>
                     <ProtectedLayout>
                       <CustomersPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            +{" "}
+            <Route
+              path="/vendors"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.VENDORS}>
+                    <ProtectedLayout>
+                      <VendorsPage />
                     </ProtectedLayout>
                   </RoleRoute>
                 </ProtectedRoute>
@@ -169,7 +182,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             {/* Admin Tools */}
             <Route
               path="/admin-tools"
@@ -183,7 +195,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             {/* Catch-all */}
             <Route
               path="*"
