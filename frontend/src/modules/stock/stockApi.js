@@ -63,12 +63,12 @@ export async function fetchTotalStockForProducts(productIds = []) {
  * @returns {Promise<Object[]>} movements
  */
 export async function fetchStockMovements(productId, locationId) {
-  if (!productId) return [];
   try {
     const q = new URLSearchParams({
-      productId,
+      ...(productId ? { productId } : {}),
       ...(locationId ? { locationId } : {}),
     }).toString();
+
     const res = await apiFetch(`/stock/movements?${q}`);
     return res.movements || [];
   } catch (err) {

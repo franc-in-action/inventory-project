@@ -17,6 +17,7 @@ import PaymentsPage from "./modules/payments/PaymentsPage.jsx";
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
 import StockPage from "./modules/stock/StockPage.jsx"; // <- Stock module
+import StockAdjustmentsPage from "./modules/stock/StockAdjustmentsPage.jsx"; // <- import page
 import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 
 import Header from "./components/Header.jsx";
@@ -116,6 +117,19 @@ export default function App() {
                   <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
                     <ProtectedLayout>
                       <StockPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/stock-adjustments"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
+                    <ProtectedLayout>
+                      <StockAdjustmentsPage />
                     </ProtectedLayout>
                   </RoleRoute>
                 </ProtectedRoute>

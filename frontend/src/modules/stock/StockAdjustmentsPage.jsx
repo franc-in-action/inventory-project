@@ -23,7 +23,7 @@ export default function StockAdjustmentsPage() {
   const loadMovements = async () => {
     setLoading(true);
     try {
-      const res = await fetchStockMovements(""); // Fetch all movements
+      const res = await fetchStockMovements(); // fetch all movements
       setMovements(res);
     } catch (err) {
       console.error("[StockAdjustmentsPage] Failed to load movements:", err);
