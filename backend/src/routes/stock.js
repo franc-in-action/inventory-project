@@ -165,7 +165,6 @@ router.get("/total", authMiddleware, async (req, res) => {
  * GET /api/stock/movements?productId=...&locationId=...
  * Returns list of stock movements for a product (and optional location)
  */
-// GET /api/stock/movements?productId=...&locationId=...
 router.get("/movements", authMiddleware, async (req, res) => {
   const { productId, locationId } = req.query;
 
@@ -179,7 +178,7 @@ router.get("/movements", authMiddleware, async (req, res) => {
       include: {
         product: { select: { name: true } },
         location: { select: { name: true } },
-        user: { select: { name: true, email: true } }, // <-- fixed here
+        user: { select: { name: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -193,7 +192,7 @@ router.get("/movements", authMiddleware, async (req, res) => {
       delta: m.delta,
       reason: m.reason,
       refId: m.refId,
-      performedBy: m.user?.name || m.performedBy, // <-- use user relation
+      performedBy: m.user?.name || m.performedBy,
       createdAt: m.createdAt,
     }));
 
