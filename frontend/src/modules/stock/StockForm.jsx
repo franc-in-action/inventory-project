@@ -38,13 +38,16 @@ export default function StockForm({
     try {
       await apiFetch("/stock/movements", {
         method: "POST",
-        body: {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           movementUuid: uuidv4(),
           productId,
           locationId,
           delta: Number(delta),
           reason,
-        },
+        }),
       });
       toast({ status: "success", description: "Stock updated" });
       onSaved();

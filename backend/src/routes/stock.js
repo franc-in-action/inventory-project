@@ -20,26 +20,38 @@ router.post(
 
     try {
       const result = await prisma.$transaction(async (tx) => {
+        // Check if movement already exists
         const existing = await tx.stockMovement.findUnique({
           where: { movementUuid },
         });
         if (existing) return existing;
 
+        // Create stock movement with proper relations
         const movement = await tx.stockMovement.create({
-          data: { movementUuid, productId, locationId, delta, reason, refId },
+          data: {
+            movementUuid,
+            delta,
+            reason,
+            refId,
+            product: { connect: { id: productId } },
+            location: { connect: { id: locationId } },
+            user: { connect: { id: userId } }, // ← correct way to set performedBy
+          },
         });
 
-        const stockLevel = await tx.stockLevel.upsert({
+        // Upsert stock level
+        await tx.stockLevel.upsert({
           where: { productId_locationId: { productId, locationId } },
           update: { quantity: { increment: delta } },
           create: { productId, locationId, quantity: delta },
         });
 
+        // Audit log
         await tx.auditLog.create({
           data: {
             action: "STOCK_MOVEMENT",
             entity: "StockMovement",
-            entityId: movement.id,
+            entityId: movement.id.toString(),
             performedBy: userId,
             metadata: { delta, reason, refId },
           },
@@ -50,6 +62,7 @@ router.post(
 
       res.status(201).json(result);
     } catch (err) {
+      console.error("[POST /stock/movements] Error:", err);
       res.status(400).json({ error: err.message });
     }
   }

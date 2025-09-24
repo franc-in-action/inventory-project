@@ -57,13 +57,13 @@ export default function StockPage() {
         </Box>
         <Spacer />
         <ButtonGroup>
-          <Button
+          {/* <Button
             variant="primary"
             leftIcon={<AddIcon />}
             onClick={() => setModalOpen(true)}
           >
             Add Stock
-          </Button>
+          </Button> */}
           {/* Button to go to Stock Adjustments page */}
           <Button
             variant="outline"
