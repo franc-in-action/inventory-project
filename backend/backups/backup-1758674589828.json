@@ -1,0 +1,99 @@
+[
+  [
+    {
+      "id": "cmfq2oa710002kly9lbhngs4v",
+      "email": "admin@example.com",
+      "password": "$2b$10$4xPTDHadihkPgDA9RsJEeeN9L0OfKQw4Uviu7cQqCKqm1HzmCI4jW",
+      "name": "System Admin",
+      "role": "ADMIN",
+      "createdAt": "2025-09-18T23:59:17.917Z",
+      "updatedAt": "2025-09-23T23:05:57.134Z",
+      "locationId": "cmfq2oa4c0000kly9pdys9sk0"
+    },
+    {
+      "id": "cmfx7gnh00000kl9e9dbj45tb",
+      "email": "francisshirima6@gmail.com",
+      "password": "$2b$10$rInJBNJ7nD.o3tpvAjOdLe9j8JwFtSBM0ANBHJtGx2wWRiDxpONVy",
+      "name": "Francis Shirima",
+      "role": "MANAGER",
+      "createdAt": "2025-09-23T23:47:43.188Z",
+      "updatedAt": "2025-09-24T00:01:30.615Z",
+      "locationId": null
+    },
+    {
+      "id": "cmfx7k3bk0001kl9ee2nieiur",
+      "email": "reality.ds6@gmail.com",
+      "password": "$2b$10$l3qaDWmDH8zeSUNqo72NIuH147E0Nlqbey2fzOb7GXKYZ28aYVXKO",
+      "name": "Reality DS",
+      "role": "STAFF",
+      "createdAt": "2025-09-23T23:50:23.695Z",
+      "updatedAt": "2025-09-24T00:26:15.414Z",
+      "locationId": null
+    }
+  ],
+  [
+    {
+      "id": "prod1",
+      "name": "Test Product",
+      "sku": "SKU1",
+      "description": null,
+      "quantity": 10,
+      "price": 50,
+      "createdAt": "2025-09-18T23:59:18.127Z",
+      "updatedAt": "2025-09-18T23:59:18.127Z",
+      "locationId": "cmfq2oa4c0000kly9pdys9sk0",
+      "categoryId": null
+    },
+    {
+      "id": "cmfwjeoej0002kl141o7be5dp",
+      "name": "Plug 001",
+      "sku": "Plug-001",
+      "description": "Plug 001",
+      "quantity": 100,
+      "price": 200,
+      "createdAt": "2025-09-23T12:34:20.299Z",
+      "updatedAt": "2025-09-23T17:59:16.367Z",
+      "locationId": "cmfq2oa4c0000kly9pdys9sk0",
+      "categoryId": "cmfwjeh8c0000kl149nunc8sa"
+    }
+  ],
+  [
+    {
+      "id": "cmfwjeh8c0000kl149nunc8sa",
+      "name": "Spark Plugs",
+      "createdAt": "2025-09-23T12:34:11.002Z",
+      "updatedAt": "2025-09-23T12:34:11.002Z"
+    },
+    {
+      "id": "cmfwsvxnc0000klq2smswbic7",
+      "name": "Air",
+      "createdAt": "2025-09-23T16:59:41.976Z",
+      "updatedAt": "2025-09-23T16:59:41.976Z"
+    },
+    {
+      "id": "cmfwt22hu0001klq2zikmgk63",
+      "name": "Water",
+      "createdAt": "2025-09-23T17:04:28.139Z",
+      "updatedAt": "2025-09-23T17:04:28.139Z"
+    },
+    {
+      "id": "cmfwthwy60002klq2inqz0hk6",
+      "name": "F",
+      "createdAt": "2025-09-23T17:16:47.501Z",
+      "updatedAt": "2025-09-23T17:16:47.501Z"
+    }
+  ],
+  [],
+  [],
+  [
+    {
+      "id": 6,
+      "purchaseUuid": "13a9c967-b89c-428c-91e5-df3be8c1f77d",
+      "vendorId": 1,
+      "locationId": "cmfq2oa4c0000kly9pdys9sk0",
+      "total": 11000,
+      "received": false,
+      "createdAt": "2025-09-23T19:26:59.292Z"
+    }
+  ]
+]

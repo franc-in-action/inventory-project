@@ -25,17 +25,21 @@ export const adminApi = {
     return res.logs || [];
   },
 
-  // Backup
-  triggerBackup: () => apiFetch("/backup", { method: "POST" }),
+  // Backup (FIXED: point to /admin namespace)
+  triggerBackup: () => apiFetch("/admin/backup", { method: "POST", raw: true }), // raw: true returns the fetch Response
+
   restoreBackup: (file) => {
     const formData = new FormData();
     formData.append("file", file);
-    return apiFetch("/backup/restore", { method: "POST", body: formData });
+    return apiFetch("/admin/backup/restore", {
+      method: "POST",
+      body: formData,
+    });
   },
 
-  // Export
+  // Export paths FIXED
   exportData: (type, filters) =>
-    apiFetch(`/export/${type}`, {
+    apiFetch(`/admin/export/${type}`, {
       method: "POST",
       body: JSON.stringify(filters),
     }),

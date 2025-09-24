@@ -23,8 +23,20 @@ export default function BackupModal({ isOpen, onClose }) {
   const handleBackup = async () => {
     setLoading(true);
     try {
-      await adminApi.triggerBackup();
-      toast({ title: "Backup created", status: "success" });
+      const res = await adminApi.triggerBackup();
+
+      // Convert response blob to download
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `backup-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: "Backup created and downloaded", status: "success" });
     } catch (err) {
       toast({ title: "Failed to create backup", status: "error" });
     } finally {

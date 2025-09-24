@@ -16,6 +16,7 @@ import paymentsRouter from "./routes/payments.js";
 import syncRouter from "./routes/sync.js";
 import locationsRouter from "./routes/locations.js";
 import logsRouter from "./routes/logs.js";
+import adminRouter from "./routes/admin.js";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/payments", paymentsRouter);
 app.use("/api/sync", syncRouter);
 app.use("/api/locations", locationsRouter);
 app.use("/api/logs", logsRouter);
+app.use("/api/admin", adminRouter);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
