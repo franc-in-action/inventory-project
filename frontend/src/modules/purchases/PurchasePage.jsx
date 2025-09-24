@@ -103,7 +103,7 @@ export default function PurchasesPage() {
             colorScheme="blue"
             onClick={() => setShowForm(true)}
           >
-            New Purchase
+            Purchase
           </Button>
         </ButtonGroup>
       </Flex>
