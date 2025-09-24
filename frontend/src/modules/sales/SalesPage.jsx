@@ -1,4 +1,3 @@
-// src/pages/SalesPage.jsx
 import { useState, useEffect, useMemo } from "react";
 import {
   Box,
@@ -9,30 +8,31 @@ import {
   VStack,
   HStack,
   Spinner,
-  useDisclosure,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { fetchSales } from "./salesApi.js";
 import InvoiceForm from "./SalesForm.jsx";
 import SalesList from "./SalesList.jsx";
+import SaleDetails from "./SaleDetails.jsx";
 
 export default function SalesPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [allSales, setAllSales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
-  // Pagination & filters
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  // Load sales
   useEffect(() => {
     const loadSales = async () => {
       setLoading(true);
       try {
         const data = await fetchSales();
-        setAllSales(data.items || []); // <-- use data.items
+        setAllSales(data.items || []);
       } catch (err) {
         console.error(err);
         setAllSales([]);
@@ -43,13 +43,15 @@ export default function SalesPage() {
     loadSales();
   }, []);
 
-  const filtered = useMemo(() => {
-    return allSales.filter(
-      (s) =>
-        s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.id.toString().includes(search)
-    );
-  }, [allSales, search]);
+  const filtered = useMemo(
+    () =>
+      allSales.filter(
+        (s) =>
+          s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
+          s.id.toString().includes(search)
+      ),
+    [allSales, search]
+  );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
   const paginated = useMemo(() => {
@@ -57,7 +59,12 @@ export default function SalesPage() {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  if (loading) return <Spinner size="xl" margin={"auto"} />;
+  const handleSelectSale = (sale) => {
+    setSelectedSale(sale);
+    setDetailOpen(true);
+  };
+
+  if (loading) return <Spinner size="xl" margin="auto" />;
 
   return (
     <Box w="full" maxW="container.lg" mx="auto" p={4}>
@@ -78,9 +85,8 @@ export default function SalesPage() {
         }}
       />
 
-      <SalesList sales={paginated} />
+      <SalesList sales={paginated} onSelectSale={handleSelectSale} />
 
-      {/* Pagination */}
       <HStack justify="center" mt={4}>
         <Button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -99,7 +105,7 @@ export default function SalesPage() {
         </Button>
       </HStack>
 
-      {/* Cashier Modal */}
+      {/* Modals */}
       <InvoiceForm
         isOpen={isOpen}
         onClose={onClose}
@@ -113,6 +119,14 @@ export default function SalesPage() {
           }
         }}
       />
+
+      {selectedSale && (
+        <SaleDetails
+          sale={selectedSale}
+          isOpen={detailOpen}
+          onClose={() => setDetailOpen(false)}
+        />
+      )}
     </Box>
   );
 }

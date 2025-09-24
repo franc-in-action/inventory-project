@@ -1,6 +1,6 @@
-import { Table, Thead, Tbody, Tr, Th, Td, Text } from "@chakra-ui/react";
+import { Table, Thead, Tbody, Tr, Th, Td, Text, Link } from "@chakra-ui/react";
 
-export default function SalesList({ sales }) {
+export default function SalesList({ sales, onSelectSale }) {
   if (!sales || sales.length === 0) return <Text>No sales found.</Text>;
 
   return (
@@ -19,7 +19,11 @@ export default function SalesList({ sales }) {
         {sales.map((s) => (
           <Tr key={s.id}>
             <Td>{s.id}</Td>
-            <Td>{s.customer?.name || "—"}</Td>
+            <Td>
+              <Link color="blue.500" onClick={() => onSelectSale(s)}>
+                {s.customer?.name || "—"}
+              </Link>
+            </Td>
             <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
             <Td isNumeric>{s.total}</Td>
             <Td>{s.payments?.[0]?.method || "—"}</Td>
