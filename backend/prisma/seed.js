@@ -13,7 +13,7 @@ async function main() {
 
   // --- 2. Admin User ---
   const hashedAdminPassword = await bcrypt.hash("adminpassword", 10);
-  await prisma.user.create({
+  const adminUser = await prisma.user.create({
     data: {
       email: "admin@example.com",
       password: hashedAdminPassword,
@@ -25,8 +25,9 @@ async function main() {
 
   // --- 3. 2 Managers ---
   const hashedManagerPassword = await bcrypt.hash("managerpassword", 10);
+  const managers = [];
   for (let i = 1; i <= 2; i++) {
-    await prisma.user.create({
+    const manager = await prisma.user.create({
       data: {
         email: `manager${i}@example.com`,
         password: hashedManagerPassword,
@@ -35,12 +36,14 @@ async function main() {
         locationId: location.id,
       },
     });
+    managers.push(manager);
   }
 
   // --- 4. 3 Staff ---
   const hashedStaffPassword = await bcrypt.hash("staffpassword", 10);
+  const staffUsers = [];
   for (let i = 1; i <= 3; i++) {
-    await prisma.user.create({
+    const staff = await prisma.user.create({
       data: {
         email: `staff${i}@example.com`,
         password: hashedStaffPassword,
@@ -49,7 +52,10 @@ async function main() {
         locationId: location.id,
       },
     });
+    staffUsers.push(staff);
   }
+
+  const allUsers = [...managers, ...staffUsers];
 
   // --- 5. 10 Categories ---
   const categories = [];
@@ -97,6 +103,11 @@ async function main() {
     const qty = chance.integer({ min: 1, max: 20 });
     const received = chance.bool();
 
+    // If received, pick a random staff or manager as receiver
+    const receivedByUser = received
+      ? allUsers[chance.integer({ min: 0, max: allUsers.length - 1 })]
+      : null;
+
     const purchase = await prisma.purchase.create({
       data: {
         purchaseUuid: `PUR-${i.toString().padStart(3, "0")}`,
@@ -104,6 +115,7 @@ async function main() {
         locationId: location.id,
         total: qty * product.price,
         received,
+        receivedBy: receivedByUser?.id,
         items: {
           create: [{ productId: product.id, qty, price: product.price }],
         },
@@ -216,7 +228,7 @@ async function main() {
     saleCounter++;
   }
 
-  console.log("Seed data inserted successfully using Chance.js!");
+  console.log("Seed data inserted successfully with receivedBy!");
 }
 
 main()
