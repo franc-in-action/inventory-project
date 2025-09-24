@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import {
+  useToast,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -10,33 +10,12 @@ import {
   Button,
   VStack,
   Text,
-  useToast,
 } from "@chakra-ui/react";
-import { fetchProducts } from "../products/productsApi.js";
+import { useProducts } from "../../contexts/ProductsContext.jsx";
 
 export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
-  const [productsMap, setProductsMap] = useState({});
+  const { productsMap } = useProducts(); // ✅ get product names from context
   const toast = useToast();
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const loadProducts = async () => {
-      try {
-        const result = await fetchProducts();
-        const productsArray = Array.isArray(result)
-          ? result
-          : result.products || [];
-        const map = {};
-        productsArray.forEach((p) => (map[p.id] = p.name));
-        setProductsMap(map);
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      }
-    };
-
-    loadProducts();
-  }, [sale, isOpen]);
 
   const generateReceiptText = () => {
     const lines = [];
@@ -48,7 +27,7 @@ export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
 
     let total = 0;
     (sale.items || []).forEach((item) => {
-      const name = productsMap[item.productId] || item.productId; // ✅ use name
+      const name = productsMap[item.productId] || item.productId;
       const lineTotal = item.qty * item.price;
       total += lineTotal;
       lines.push(`${name} x${item.qty}`);
@@ -77,7 +56,6 @@ export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
       toast({ status: "error", description: "Printing not available" });
       return;
     }
-
     const text = generateReceiptText();
     window.api.printText(text);
     toast({ status: "success", description: "Sent to printer" });

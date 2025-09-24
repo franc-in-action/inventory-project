@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -18,40 +18,20 @@ import {
   Td,
   Divider,
   HStack,
-  useToast,
   Spacer,
+  useToast,
 } from "@chakra-ui/react";
-import { fetchProducts } from "../products/productsApi.js";
+import { useProducts } from "../../contexts/ProductsContext.jsx";
 
 export default function InvoiceDetails({ sale, isOpen, onClose }) {
-  const [items, setItems] = useState([]);
-  const [productsMap, setProductsMap] = useState({});
+  const { productsMap } = useProducts(); // ✅ context for product names
   const toast = useToast();
   const invoiceRef = useRef();
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    setItems(sale?.items || []);
-
-    const loadProducts = async () => {
-      try {
-        const result = await fetchProducts();
-        const productsArray = Array.isArray(result)
-          ? result
-          : result.products || [];
-        const map = {};
-        productsArray.forEach((p) => (map[p.id] = p.name));
-        setProductsMap(map);
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      }
-    };
-
-    loadProducts();
-  }, [sale, isOpen]);
-
-  const totalAmount = items.reduce((sum, i) => sum + i.qty * i.price, 0);
+  const totalAmount = (sale?.items || []).reduce(
+    (sum, i) => sum + i.qty * i.price,
+    0
+  );
 
   const handlePrint = () => {
     if (!window.api || !invoiceRef.current) {
@@ -83,7 +63,7 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
                 My Store
               </Text>
               <Spacer />
-              <Text fontSize="lg">Invoice No </Text>
+              <Text fontSize="lg">Invoice No</Text>
               <Text fontSize="sm" fontWeight="bold">
                 {sale?.saleUuid || sale?.id}
               </Text>
@@ -105,10 +85,9 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
                 </Tr>
               </Thead>
               <Tbody>
-                {items.map((item, idx) => (
+                {(sale?.items || []).map((item, idx) => (
                   <Tr key={idx}>
-                    <Td>{productsMap[item.productId] || item.productId}</Td>{" "}
-                    {/* ✅ use name */}
+                    <Td>{productsMap[item.productId] || item.productId}</Td>
                     <Td>{item.qty}</Td>
                     <Td>{item.price.toFixed(2)}</Td>
                     <Td>{(item.qty * item.price).toFixed(2)}</Td>
@@ -140,6 +119,7 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
             </Text>
           </VStack>
         </ModalBody>
+
         <ModalFooter>
           <HStack spacing={2}>
             <Button variant="ghost" onClick={onClose}>

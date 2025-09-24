@@ -29,15 +29,14 @@ import {
   getCustomerById,
   createCustomer,
 } from "../customers/customersApi.js";
-import { fetchProducts } from "../products/productsApi.js";
 import { createSale } from "./salesApi.js";
-import { fetchStockForProducts } from "../../utils/stockApi.js";
+import { useProducts } from "../products/ProductsContext.jsx"; // ✅ context
 
 export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const toast = useToast();
+  const { products, stockMap } = useProducts(); // ✅ get products & stock
 
   const [customers, setCustomers] = useState([]);
-  const [products, setProducts] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerData, setCustomerData] = useState(null);
   const [cart, setCart] = useState([
@@ -48,22 +47,17 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const [isCashSale, setIsCashSale] = useState(false);
 
   // ---------------------------
-  // Load customers and products
+  // Load customers
   // ---------------------------
   useEffect(() => {
     if (!isOpen) return;
-    const normalizeArray = (data) =>
-      Array.isArray(data) ? data : data?.items || [];
-
     (async () => {
       try {
         const custs = await getCustomers();
-        const prods = await fetchProducts();
-        setCustomers(normalizeArray(custs));
-        setProducts(normalizeArray(prods));
+        setCustomers(Array.isArray(custs) ? custs : custs.items || []);
       } catch (err) {
         toast({
-          title: "Error loading data",
+          title: "Error loading customers",
           description: err.message,
           status: "error",
         });
@@ -71,50 +65,41 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     })();
   }, [isOpen, toast]);
 
+  // ---------------------------
   // Fetch full customer data
+  // ---------------------------
   useEffect(() => {
-    if (!selectedCustomer) {
-      setCustomerData(null);
-      return;
-    }
-
+    if (!selectedCustomer) return setCustomerData(null);
     (async () => {
       try {
         const data = await getCustomerById(selectedCustomer.id);
         setCustomerData(data);
-      } catch (err) {
-        console.error("Failed to fetch customer data:", err);
+      } catch {
         setCustomerData(null);
       }
     })();
   }, [selectedCustomer]);
 
-  // Update stockQty whenever cart changes
+  // ---------------------------
+  // Sync cart with product context & stock
+  // ---------------------------
   useEffect(() => {
-    const fetchCartStock = async () => {
-      const productIds = cart
-        .filter((item) => item.productId && item.locationId)
-        .map((item) => item.productId);
-      const locationId = cart[0]?.locationId;
-      if (!productIds.length || !locationId) return;
-
-      try {
-        const stockMap = await fetchStockForProducts(productIds, locationId);
-        setCart((prev) =>
-          prev.map((item) => ({
-            ...item,
-            stockQty: stockMap[item.productId] || 0,
-          }))
-        );
-      } catch (err) {
-        console.error("Failed to fetch stock:", err);
-      }
-    };
-    fetchCartStock();
-  }, [cart.map((i) => i.productId).join(","), cart[0]?.locationId]);
+    setCart((prevCart) =>
+      prevCart.map((item) => {
+        const product = products.find((p) => p.id === item.productId);
+        if (!product) return item;
+        return {
+          ...item,
+          price: product.price || 0,
+          locationId: product.locationId || "",
+          stockQty: stockMap[product.id] || 0, // ✅ use stockMap
+        };
+      })
+    );
+  }, [products, stockMap]);
 
   const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.qty,
+    (sum, item) => sum + item.qty * item.price,
     0
   );
 
@@ -122,13 +107,11 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   // Auto-fill payment if cash sale
   // ---------------------------
   useEffect(() => {
-    if (isCashSale) {
-      setPayment((prev) => ({ ...prev, amount: totalAmount }));
-    }
+    if (isCashSale) setPayment((prev) => ({ ...prev, amount: totalAmount }));
   }, [isCashSale, totalAmount]);
 
   // ---------------------------
-  // Handle cart changes
+  // Cart operations
   // ---------------------------
   const handleCartChange = (index, field, value) => {
     setCart((prev) => {
@@ -139,8 +122,8 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         const product = products.find((p) => p.id === value);
         copy[index].locationId = product?.locationId || "";
         copy[index].price = product?.price || 0;
+        copy[index].stockQty = stockMap[product?.id] || 0; // ✅ update stock
       }
-
       return copy;
     });
   };
@@ -165,37 +148,30 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       cart.length === 0 ||
       cart.some((i) => !i.productId || i.qty <= 0)
     ) {
-      toast({
+      return toast({
         status: "warning",
         description: "Select customer and fill all product rows",
       });
-      return;
     }
 
     const locationId = cart[0].locationId;
     if (cart.some((item) => item.locationId !== locationId)) {
-      toast({
+      return toast({
         status: "error",
         description: "All products must belong to the same location",
       });
-      return;
     }
 
-    // Validate stock
-    const productIds = cart.map((i) => i.productId);
-    const stockMap = await fetchStockForProducts(productIds, locationId);
+    // Validate stock using stockMap
     const insufficient = cart.find(
       (item) => item.qty > (stockMap[item.productId] || 0)
     );
     if (insufficient) {
       const product = products.find((p) => p.id === insufficient.productId);
-      toast({
+      return toast({
         status: "error",
-        description: `Insufficient stock for product "${
-          product?.name || insufficient.productId
-        }"`,
+        description: `Insufficient stock for product "${product?.name}"`,
       });
-      return;
     }
 
     // Check credit limit if not cash sale
@@ -203,13 +179,12 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       const remainingCredit = customerData.credit_limit - customerData.balance;
       const creditRequired = totalAmount - (payment.amount || 0);
       if (creditRequired > remainingCredit) {
-        toast({
+        return toast({
           status: "error",
           description: `Credit limit exceeded. Available credit: ${remainingCredit.toFixed(
             2
           )}`,
         });
-        return;
       }
     }
 

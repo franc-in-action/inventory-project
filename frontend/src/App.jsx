@@ -25,6 +25,8 @@ import {
 // Admin Tools Pages
 import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 
+import { ProductsProvider } from "./contexts/ProductsContext.jsx";
+
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;
 }
@@ -87,100 +89,102 @@ export function ProtectedLayout({ children }) {
 export default function App() {
   return (
     <ChakraProvider>
-      <Router>
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<Login />} />
+      <ProductsProvider>
+        <Router>
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRoles={PERMISSIONS.DASHBOARD}>
-                  <ProtectedLayout>
-                    <Dashboard />
-                  </ProtectedLayout>
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/products"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
-                  <ProtectedLayout>
-                    <ProductsPage />
-                  </ProtectedLayout>
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/sales"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRoles={PERMISSIONS.SALES}>
-                  <ProtectedLayout>
-                    <SalesPage />
-                  </ProtectedLayout>
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/purchases"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRoles={PERMISSIONS.PURCHASES}>
-                  <ProtectedLayout>
-                    <PurchasesPage />
-                  </ProtectedLayout>
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/locations"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRoles={PERMISSIONS.LOCATIONS}>
-                  <ProtectedLayout>
-                    <LocationsPage />
-                  </ProtectedLayout>
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.DASHBOARD}>
+                    <ProtectedLayout>
+                      <Dashboard />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
+                    <ProtectedLayout>
+                      <ProductsPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sales"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.SALES}>
+                    <ProtectedLayout>
+                      <SalesPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/purchases"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.PURCHASES}>
+                    <ProtectedLayout>
+                      <PurchasesPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/locations"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.LOCATIONS}>
+                    <ProtectedLayout>
+                      <LocationsPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Admin Tools */}
-          <Route
-            path="/admin-tools"
-            element={
-              <ProtectedRoute>
-                <RoleRoute allowedRoles={PERMISSIONS.ADMIN_TOOLS}>
-                  <ProtectedLayout>
-                    <AdminToolsPage />
-                  </ProtectedLayout>
-                </RoleRoute>
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin Tools */}
+            <Route
+              path="/admin-tools"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.ADMIN_TOOLS}>
+                    <ProtectedLayout>
+                      <AdminToolsPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Catch-all */}
-          <Route
-            path="*"
-            element={
-              isLoggedIn() ? (
-                <Navigate to={getDefaultPage()} replace />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-        </Routes>
-      </Router>
+            {/* Catch-all */}
+            <Route
+              path="*"
+              element={
+                isLoggedIn() ? (
+                  <Navigate to={getDefaultPage()} replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+          </Routes>
+        </Router>
+      </ProductsProvider>
     </ChakraProvider>
   );
 }
