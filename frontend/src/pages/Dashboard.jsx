@@ -1,4 +1,5 @@
-import { Flex, Heading, Text, Icon, Card } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Flex, Heading, Text, Icon, Card, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBox,
@@ -8,9 +9,11 @@ import {
   FaTools,
   FaUsers,
   FaTruck,
-  FaMoneyBillWave, // new icon for payments
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
+import { getPayments } from "../modules/payments/paymentsApi.js";
+import { apiFetch } from "../utils/commonApi.js"; // generic API fetch for other counts
 
 const dashboardLinks = [
   { label: "Products", href: "/products", icon: FaBox },
@@ -19,23 +22,74 @@ const dashboardLinks = [
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
   { label: "Customers", href: "/customers", icon: FaUsers },
   { label: "Vendors", href: "/vendors", icon: FaTruck },
-  { label: "Payments", href: "/payments", icon: FaMoneyBillWave }, // added
+  { label: "Payments", href: "/payments", icon: FaMoneyBillWave },
   { label: "Admin Tools", href: "/admin-tools", icon: FaTools },
-];
-
-const summaryData = [
-  { label: "Total Products", value: 120, icon: FaBox },
-  { label: "Total Sales", value: 54, icon: FaCashRegister },
-  { label: "Total Purchases", value: 30, icon: FaShoppingCart },
-  { label: "Total Locations", value: 5, icon: FaMapMarkerAlt },
-  { label: "Total Customers", value: 80, icon: FaUsers },
-  { label: "Total Vendors", value: 25, icon: FaTruck },
-  { label: "Total Payments", value: 45, icon: FaMoneyBillWave }, // example value
 ];
 
 export default function Dashboard() {
   const user = getUserFromToken();
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const [summaryData, setSummaryData] = useState([
+    { label: "Total Products", value: 0, icon: FaBox },
+    { label: "Total Sales", value: 0, icon: FaCashRegister },
+    { label: "Total Purchases", value: 0, icon: FaShoppingCart },
+    { label: "Total Locations", value: 0, icon: FaMapMarkerAlt },
+    { label: "Total Customers", value: 0, icon: FaUsers },
+    { label: "Total Vendors", value: 0, icon: FaTruck },
+    { label: "Total Payments", value: 0, icon: FaMoneyBillWave },
+  ]);
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        // Fetch total payments
+        const payments = await getPayments();
+        const totalPayments = payments.length;
+
+        // Fetch other counts via API (replace endpoints if needed)
+        const [products, sales, purchases, locations, customers, vendors] =
+          await Promise.all([
+            apiFetch("/products"),
+            apiFetch("/sales"),
+            apiFetch("/purchases"),
+            apiFetch("/locations"),
+            apiFetch("/customers"),
+            apiFetch("/vendors"),
+          ]);
+
+        setSummaryData([
+          { label: "Total Products", value: products.length, icon: FaBox },
+          { label: "Total Sales", value: sales.length, icon: FaCashRegister },
+          {
+            label: "Total Purchases",
+            value: purchases.length,
+            icon: FaShoppingCart,
+          },
+          {
+            label: "Total Locations",
+            value: locations.length,
+            icon: FaMapMarkerAlt,
+          },
+          { label: "Total Customers", value: customers.length, icon: FaUsers },
+          { label: "Total Vendors", value: vendors.length, icon: FaTruck },
+          {
+            label: "Total Payments",
+            value: totalPayments,
+            icon: FaMoneyBillWave,
+          },
+        ]);
+      } catch (err) {
+        toast({
+          status: "error",
+          description: "Failed to load dashboard counts",
+        });
+      }
+    };
+
+    loadCounts();
+  }, []);
 
   return (
     <Flex direction="column" align="center" justify="center" minH="100vh" p={8}>
