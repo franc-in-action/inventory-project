@@ -1,4 +1,3 @@
-// src/components/SalesList.jsx
 import { Table, Thead, Tbody, Tr, Th, Td, Text } from "@chakra-ui/react";
 
 export default function SalesList({ sales }) {
@@ -23,7 +22,7 @@ export default function SalesList({ sales }) {
             <Td>{s.customer?.name || "—"}</Td>
             <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
             <Td isNumeric>{s.total}</Td>
-            <Td>{s.payment?.method || "—"}</Td>
+            <Td>{s.payments?.[0]?.method || "—"}</Td>
             <Td>{s.status || "Completed"}</Td>
           </Tr>
         ))}

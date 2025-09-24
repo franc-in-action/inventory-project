@@ -18,6 +18,9 @@ import {
   Divider,
   useToast,
   IconButton,
+  Switch,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import ComboBox from "../../components/ComboBox.jsx";
@@ -36,14 +39,17 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customerData, setCustomerData] = useState(null); // full customer info
+  const [customerData, setCustomerData] = useState(null);
   const [cart, setCart] = useState([
     { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
   ]);
   const [payment, setPayment] = useState({ amount: 0, method: "cash" });
   const [loading, setLoading] = useState(false);
+  const [isCashSale, setIsCashSale] = useState(false);
 
+  // ---------------------------
   // Load customers and products
+  // ---------------------------
   useEffect(() => {
     if (!isOpen) return;
     const normalizeArray = (data) =>
@@ -65,7 +71,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     })();
   }, [isOpen, toast]);
 
-  // Fetch full customer data whenever selected customer changes
+  // Fetch full customer data
   useEffect(() => {
     if (!selectedCustomer) {
       setCustomerData(null);
@@ -107,7 +113,23 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     fetchCartStock();
   }, [cart.map((i) => i.productId).join(","), cart[0]?.locationId]);
 
+  const totalAmount = cart.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
+
+  // ---------------------------
+  // Auto-fill payment if cash sale
+  // ---------------------------
+  useEffect(() => {
+    if (isCashSale) {
+      setPayment((prev) => ({ ...prev, amount: totalAmount }));
+    }
+  }, [isCashSale, totalAmount]);
+
+  // ---------------------------
   // Handle cart changes
+  // ---------------------------
   const handleCartChange = (index, field, value) => {
     setCart((prev) => {
       const copy = [...prev];
@@ -132,12 +154,9 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const removeCartRow = (index) =>
     setCart((prev) => prev.filter((_, i) => i !== index));
 
-  const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  );
-
+  // ---------------------------
   // Handle invoice submission
+  // ---------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -179,8 +198,8 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       return;
     }
 
-    // Check credit limit
-    if (customerData) {
+    // Check credit limit if not cash sale
+    if (!isCashSale && customerData) {
       const remainingCredit = customerData.credit_limit - customerData.balance;
       const creditRequired = totalAmount - (payment.amount || 0);
       if (creditRequired > remainingCredit) {
@@ -215,6 +234,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
       setSelectedCustomer(null);
       setCustomerData(null);
       setPayment({ amount: 0, method: "cash" });
+      setIsCashSale(false);
       onInvoiceCreated();
       onClose();
     } catch (err) {
@@ -224,6 +244,9 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
     }
   };
 
+  // ---------------------------
+  // Render
+  // ---------------------------
   return (
     <Modal
       isOpen={isOpen}
@@ -261,6 +284,18 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                 </Text>
               )}
             </Box>
+
+            {/* Cash Sale Toggle */}
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="cash-sale" mb="0">
+                Cash Sale
+              </FormLabel>
+              <Switch
+                id="cash-sale"
+                isChecked={isCashSale}
+                onChange={(e) => setIsCashSale(e.target.checked)}
+              />
+            </FormControl>
 
             {/* Cart */}
             <Box>
@@ -343,6 +378,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                 min={0}
                 value={payment.amount}
                 onChange={(v) => setPayment({ ...payment, amount: Number(v) })}
+                isReadOnly={isCashSale}
               >
                 <NumberInputField placeholder="Payment Amount" />
               </NumberInput>

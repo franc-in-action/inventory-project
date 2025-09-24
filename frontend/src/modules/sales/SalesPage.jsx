@@ -103,11 +103,11 @@ export default function SalesPage() {
       <InvoiceForm
         isOpen={isOpen}
         onClose={onClose}
-        onSaleCreated={async () => {
+        onInvoiceCreated={async () => {
           setLoading(true);
           try {
             const data = await fetchSales();
-            setAllSales(data.items || []); // <-- use data.items
+            setAllSales(data.items || []);
           } finally {
             setLoading(false);
           }

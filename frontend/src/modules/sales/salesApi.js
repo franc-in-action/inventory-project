@@ -1,18 +1,11 @@
-// src/utils/salesApi.js
 import { apiFetch } from "../../utils/commonApi.js";
-
-// ---------- SALES API ---------- //
 
 /**
  * Create a new sale
- * @param {Object} saleData - { locationId, customerId, items, payment }
- * @returns {Promise<Object>} created sale
  */
 export async function createSale(saleData) {
   if (window.api) {
     const { locationId, customerId, items, total } = saleData;
-
-    // Example Electron insert
     return window.api.run(
       `INSERT INTO sales (saleUuid, locationId, customerId, total, createdAt)
        VALUES (?, ?, ?, ?, datetime('now'))`,
@@ -24,9 +17,7 @@ export async function createSale(saleData) {
 }
 
 /**
- * Get sales (optionally filtered by date, location, customer)
- * @param {Object} params - { startDate, endDate, locationId, customerId }
- * @returns {Promise<{ items: Array, total: number }>} normalized sales list
+ * Fetch sales (Electron or API)
  */
 export async function fetchSales(params = {}) {
   if (window.api) {
@@ -57,27 +48,40 @@ export async function fetchSales(params = {}) {
     const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
     const rows = await window.api.query(
-      `SELECT * FROM sales ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+      `SELECT s.*, c.name AS customer_name
+       FROM sales s
+       LEFT JOIN customer c ON s.customerId = c.id
+       ${whereClause} ORDER BY s.createdAt DESC LIMIT ? OFFSET ?`,
       [...values, limit, offset]
     );
+
+    // Normalize to include payments array (empty in Electron mode for now)
+    const items = rows.map((r) => ({
+      ...r,
+      customer: { name: r.customer_name || "—" },
+      payments: [],
+    }));
 
     const [{ total }] = await window.api.query(
       `SELECT COUNT(*) as total FROM sales ${whereClause}`,
       values
     );
 
-    return { items: Array.isArray(rows) ? rows : [], total: total || 0 };
+    return { items, total: total || 0 };
   }
 
+  // Fallback to HTTP API
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/sales?${query}`);
-  return { items: result.sales || [], total: result.total || 0 };
+
+  const items = Array.isArray(result) ? result : result.sales || [];
+  const total = items.length;
+
+  return { items, total };
 }
 
 /**
- * Get a single sale by ID or UUID
- * @param {string|number} saleId
- * @returns {Promise<Object|null>}
+ * Get a single sale by ID
  */
 export async function getSaleById(saleId) {
   if (window.api) {
@@ -90,9 +94,7 @@ export async function getSaleById(saleId) {
 }
 
 /**
- * Delete a sale (if supported)
- * @param {string|number} saleId
- * @returns {Promise<Object>}
+ * Delete a sale
  */
 export async function deleteSale(saleId) {
   if (window.api) {
@@ -103,8 +105,6 @@ export async function deleteSale(saleId) {
 
 /**
  * Format a sale receipt
- * @param {Object} sale
- * @returns {string}
  */
 export function formatReceipt(sale) {
   const lines = [
@@ -114,7 +114,7 @@ export function formatReceipt(sale) {
     `Items:`,
   ];
 
-  sale.items.forEach((item) => {
+  sale.items?.forEach((item) => {
     lines.push(
       `${item.qty} x ${item.product?.name || item.productId} @ ${
         item.price
@@ -123,11 +123,9 @@ export function formatReceipt(sale) {
   });
 
   lines.push(`Total: ${sale.total}`);
-  if (sale.payments?.length) {
-    sale.payments.forEach((p) =>
-      lines.push(`Paid: ${p.amount} via ${p.method}`)
-    );
-  }
+  sale.payments?.forEach((p) =>
+    lines.push(`Paid: ${p.amount} via ${p.method}`)
+  );
 
   return lines.join("\n");
 }

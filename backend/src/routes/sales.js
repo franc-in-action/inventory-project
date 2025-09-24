@@ -124,7 +124,7 @@ router.post(
           data: {
             action: "SALE_CREATED",
             entity: "Sale",
-            entityId: newSale.id,
+            entityId: newSale.id.toString(), // convert Int → String
             performedBy: userId,
             metadata: { items, payment },
           },
