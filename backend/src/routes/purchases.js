@@ -7,7 +7,6 @@ const router = express.Router();
 
 /**
  * POST /api/purchases
- * Body: { vendorId, locationId, items: [{ productId, qty, price }] }
  */
 router.post(
   "/",
@@ -23,7 +22,6 @@ router.post(
     try {
       const finalUuid = purchaseUuid || uuidv4();
 
-      // Check if UUID already exists
       const existing = await prisma.purchase.findUnique({
         where: { purchaseUuid: finalUuid },
       });
@@ -33,10 +31,8 @@ router.post(
           .json({ error: "Purchase with this UUID already exists" });
 
       const purchase = await prisma.$transaction(async (tx) => {
-        // Calculate total
         const total = items.reduce((sum, i) => sum + i.qty * i.price, 0);
 
-        // Create purchase
         const newPurchase = await tx.purchase.create({
           data: {
             purchaseUuid: finalUuid,
@@ -46,7 +42,6 @@ router.post(
           },
         });
 
-        // Create purchase items
         for (const item of items) {
           await tx.purchaseItem.create({
             data: {
@@ -58,12 +53,11 @@ router.post(
           });
         }
 
-        // Audit log
         await tx.auditLog.create({
           data: {
             action: "PURCHASE_CREATED",
             entity: "Purchase",
-            entityId: newPurchase.id.toString(), // <-- convert to string
+            entityId: newPurchase.id.toString(),
             performedBy: userId,
             metadata: { items },
           },
@@ -81,7 +75,6 @@ router.post(
 
 /**
  * PUT /api/purchases/:id/receive
- * Marks a purchase as received -> updates stock levels & creates stock movements
  */
 router.put(
   "/:id/receive",
@@ -99,23 +92,19 @@ router.put(
 
       if (!purchase)
         return res.status(404).json({ error: "Purchase not found" });
-
       if (!purchase.purchaseUuid)
         return res
           .status(400)
           .json({ error: "Purchase UUID missing, cannot receive" });
-
       if (purchase.received)
         return res.status(400).json({ error: "Purchase already received" });
 
       await prisma.$transaction(async (tx) => {
-        // Update purchase as received
         await tx.purchase.update({
           where: { id: purchaseId },
           data: { received: true },
         });
 
-        // Update stock levels and create stock movements
         for (const item of purchase.items) {
           await tx.stockLevel.upsert({
             where: {
@@ -144,7 +133,6 @@ router.put(
           });
         }
 
-        // Audit log
         await tx.auditLog.create({
           data: {
             action: "PURCHASE_RECEIVED",
@@ -166,7 +154,7 @@ router.put(
   }
 );
 
-// GET /api/purchases?locationId=1&vendorId=2&page=1&limit=10&productId=...
+// GET /api/purchases?locationId=&vendorId=&page=&limit=&productId=
 router.get(
   "/",
   authMiddleware,
@@ -178,11 +166,7 @@ router.get(
       const where = {};
       if (locationId) where.locationId = parseInt(locationId);
       if (vendorId) where.vendorId = parseInt(vendorId);
-
-      if (productId) {
-        // Return purchases that include the product
-        where.items = { some: { productId } };
-      }
+      if (productId) where.items = { some: { productId } };
 
       const purchases = await prisma.purchase.findMany({
         where,
@@ -192,20 +176,24 @@ router.get(
         take: parseInt(limit),
       });
 
-      // If productId provided compute qtyPurchased
       let qtyPurchased = 0;
+      let purchasesWithQty = purchases;
       if (productId) {
-        for (const p of purchases) {
-          for (const it of p.items) {
-            if (it.productId === productId) qtyPurchased += it.qty;
-          }
-        }
+        purchasesWithQty = purchases.map((p) => {
+          const product_qty = p.items
+            .filter((it) => it.productId === productId)
+            .reduce((sum, it) => sum + it.qty, 0);
+          qtyPurchased += product_qty;
+          return { ...p, product_qty };
+        });
       }
 
       const total = await prisma.purchase.count({ where });
 
       res.json(
-        productId ? { purchases, total, qtyPurchased } : { purchases, total }
+        productId
+          ? { purchases: purchasesWithQty, total, qtyPurchased }
+          : { purchases: purchasesWithQty, total }
       );
     } catch (err) {
       res.status(400).json({ error: err.message });

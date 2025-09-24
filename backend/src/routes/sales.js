@@ -7,7 +7,6 @@ const router = express.Router();
 
 /**
  * POST /api/sales
- * Body: { saleUuid, locationId, customerId, items: [{productId, qty, price}], payment }
  */
 router.post(
   "/",
@@ -22,14 +21,12 @@ router.post(
 
     try {
       const sale = await prisma.$transaction(async (tx) => {
-        // Check stock availability before creating sale
         for (const item of items) {
           const stockLevel = await tx.stockLevel.findUnique({
             where: {
               productId_locationId: { productId: item.productId, locationId },
             },
           });
-
           if (!stockLevel || stockLevel.quantity < item.qty) {
             const product = await tx.product.findUnique({
               where: { id: item.productId },
@@ -40,10 +37,8 @@ router.post(
           }
         }
 
-        // Calculate total amount
         const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-        // Create sale record
         const newSale = await tx.sale.create({
           data: {
             saleUuid: saleUuid || uuidv4(),
@@ -53,9 +48,7 @@ router.post(
           },
         });
 
-        // Create sale items and update stock
         for (const item of items) {
-          // Create sale item
           await tx.saleItem.create({
             data: {
               saleId: newSale.id,
@@ -65,7 +58,6 @@ router.post(
             },
           });
 
-          // Create stock movement
           await tx.stockMovement.create({
             data: {
               movementUuid: uuidv4(),
@@ -77,7 +69,6 @@ router.post(
             },
           });
 
-          // Decrement stock level
           await tx.stockLevel.update({
             where: {
               productId_locationId: { productId: item.productId, locationId },
@@ -86,9 +77,7 @@ router.post(
           });
         }
 
-        // Create payment or update customer balance
         if (payment && payment.amount > 0) {
-          // Payment provided: reduce customer balance
           await tx.payment.create({
             data: {
               saleId: newSale.id,
@@ -102,29 +91,24 @@ router.post(
             data: { balance: { decrement: payment.amount } },
           });
         } else if (customerId) {
-          // Sale on credit: increase customer balance
           const customer = await tx.customer.findUnique({
             where: { id: customerId },
           });
           if (!customer) throw new Error("Customer not found");
-
-          // Check credit limit
           if (customer.balance + total > customer.credit_limit) {
             throw new Error("Credit limit exceeded");
           }
-
           await tx.customer.update({
             where: { id: customerId },
             data: { balance: { increment: total } },
           });
         }
 
-        // Create audit log
         await tx.auditLog.create({
           data: {
             action: "SALE_CREATED",
             entity: "Sale",
-            entityId: newSale.id.toString(), // convert Int → String
+            entityId: newSale.id.toString(),
             performedBy: userId,
             metadata: { items, payment },
           },
@@ -158,7 +142,6 @@ router.get(
       if (locationId) where.locationId = locationId;
       if (customerId) where.customerId = parseInt(customerId);
 
-      // If productId is present, we want sales that include at least one SaleItem for that product
       if (productId) {
         where.items = { some: { productId } };
       }
@@ -169,17 +152,19 @@ router.get(
         orderBy: { createdAt: "desc" },
       });
 
-      // If productId provided compute aggregated qtySold for that product
       let qtySold = 0;
+      let salesWithQty = sales;
       if (productId) {
-        for (const s of sales) {
-          for (const si of s.items) {
-            if (si.productId === productId) qtySold += si.qty;
-          }
-        }
+        salesWithQty = sales.map((s) => {
+          const product_qty = s.items
+            .filter((it) => it.productId === productId)
+            .reduce((sum, it) => sum + it.qty, 0);
+          qtySold += product_qty;
+          return { ...s, product_qty };
+        });
       }
 
-      res.json(productId ? { sales, qtySold } : sales);
+      res.json(productId ? { sales: salesWithQty, qtySold } : salesWithQty);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

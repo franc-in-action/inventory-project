@@ -127,7 +127,7 @@ export default function ProductDetails({
               <Tab flexShrink={0}>Overview</Tab>
               <Tab flexShrink={0}>Sales</Tab>
               <Tab flexShrink={0}>Purchases</Tab>
-              <Tab flexShrink={0}>Stock Movement</Tab>
+              <Tab flexShrink={0}>Movement</Tab>
             </TabList>
 
             <TabPanels>
@@ -195,6 +195,7 @@ export default function ProductDetails({
                         <Tr>
                           <Th>Date</Th>
                           <Th>Customer</Th>
+                          <Th isNumeric>Qty</Th> {/* ✅ NEW */}
                           <Th isNumeric>Total ($)</Th>
                         </Tr>
                       </Thead>
@@ -207,6 +208,8 @@ export default function ProductDetails({
                             <Td>
                               {s.customer?.name || s.customer_name || "—"}
                             </Td>
+                            <Td isNumeric>{s.product_qty ?? "—"}</Td>{" "}
+                            {/* ✅ NEW */}
                             <Td isNumeric>{s.total}</Td>
                           </Tr>
                         ))}
@@ -237,6 +240,7 @@ export default function ProductDetails({
                         <Tr>
                           <Th>Date</Th>
                           <Th>Vendor</Th>
+                          <Th isNumeric>Qty</Th> {/* ✅ NEW */}
                           <Th isNumeric>Total ($)</Th>
                         </Tr>
                       </Thead>
@@ -247,6 +251,8 @@ export default function ProductDetails({
                               {new Date(p.createdAt).toLocaleDateString()}
                             </Td>
                             <Td>{p.vendorId || p.vendor_name || "—"}</Td>
+                            <Td isNumeric>{p.product_qty ?? "—"}</Td>{" "}
+                            {/* ✅ NEW */}
                             <Td isNumeric>{p.total}</Td>
                           </Tr>
                         ))}
