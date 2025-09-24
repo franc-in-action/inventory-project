@@ -38,8 +38,8 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
           const total = (s.total || 0).toFixed(2);
           const unpaid = (s.total - paid).toFixed(2);
 
-          // Highlight if unpaid balance > 0
-          const bgColor = parseFloat(unpaid) > 0 ? "red.50" : "white";
+          // Keep only unpaid row highlighting
+          const bgColor = parseFloat(unpaid) > 0 ? "red.50" : undefined;
 
           return (
             <Tr key={s.id} bg={bgColor}>
@@ -52,9 +52,7 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
               <Td>{s.customer?.name || "—"}</Td>
               <Td>{total}</Td>
               <Td>{paid}</Td>
-              <Td color={"red"} fontWeight={"bold"}>
-                {unpaid}
-              </Td>
+              <Td>{unpaid}</Td>
               <Td>{s.payments?.[0]?.method || "—"}</Td>
               <Td>{s.status || "Completed"}</Td>
               <Td>
