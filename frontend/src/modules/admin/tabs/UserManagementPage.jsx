@@ -14,6 +14,7 @@ import {
   Spinner,
   Text,
   useToast,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
 import UserForm from "../forms/UserForm.jsx";
@@ -134,7 +135,7 @@ export default function UserManagementPage() {
                   <Td>{user.email}</Td>
                   <Td>{user.role}</Td>
                   <Td>
-                    <Flex>
+                    <ButtonGroup>
                       <Button onClick={() => openForm(user.id)}>Edit</Button>
                       <Button onClick={() => handleDelete(user.id)}>
                         Delete
@@ -142,7 +143,7 @@ export default function UserManagementPage() {
                       <Button onClick={() => handleResetPassword(user.id)}>
                         Reset
                       </Button>
-                    </Flex>
+                    </ButtonGroup>
                   </Td>
                 </Tr>
               ))}

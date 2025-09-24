@@ -6,6 +6,7 @@ import {
   Heading,
   IconButton,
   Text,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons"; // Add RepeatIcon
 import { useNavigate } from "react-router-dom";
@@ -43,23 +44,24 @@ export default function Header({ onOpenSidebar, onRefresh }) {
           </Text>
         )}
 
-        {/* Refresh Button */}
-        <IconButton
-          aria-label="Refresh content"
-          icon={<RepeatIcon />}
-          size={{ base: "sm", md: "md" }}
-          colorScheme="blue"
-          onClick={onRefresh}
-          mr={2}
-        />
+        <ButtonGroup>
+          {/* Refresh Button */}
+          <IconButton
+            aria-label="Refresh content"
+            icon={<RepeatIcon />}
+            size={{ base: "sm", md: "md" }}
+            colorScheme="blue"
+            onClick={onRefresh}
+          />
 
-        <Button
-          size={{ base: "sm", md: "md" }}
-          colorScheme="red"
-          onClick={() => logout(navigate)}
-        >
-          Logout
-        </Button>
+          <Button
+            size={{ base: "sm", md: "md" }}
+            colorScheme="red"
+            onClick={() => logout(navigate)}
+          >
+            Logout
+          </Button>
+        </ButtonGroup>
       </Flex>
     </Box>
   );

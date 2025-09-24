@@ -28,6 +28,7 @@ import {
 } from "../stock/stockApi.js";
 import { useProducts } from "./contexts/ProductsContext.jsx";
 import ProductDetails from "./ProductDetails.jsx";
+import ProductsTable from "./ProductsTable.jsx";
 
 export default function ProductsList({ onEdit, refreshKey }) {
   const { products } = useProducts();
@@ -157,55 +158,31 @@ export default function ProductsList({ onEdit, refreshKey }) {
           ))}
         </Select>
       </HStack>
-
-      {/* Desktop Table */}
       {isDesktop ? (
-        <Table>
-          <Thead>
-            <Tr>
-              <Th>SKU</Th>
-              <Th>Name</Th>
-              <Th>Description</Th>
-              <Th>Category</Th>
-              <Th>Location</Th>
-              <Th isNumeric>Quantity</Th>
-              <Th isNumeric>Price ($)</Th>
-              <Th>Created</Th>
-              <Th>Updated</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {paginated.map((p) => (
-              <Tr key={p.id}>
-                <Td>{p.sku}</Td>
-                <Td>
-                  <Button onClick={() => handleOpenDetails(p)}>{p.name}</Button>
-                </Td>
-                <Td>{p.description || "—"}</Td>
-                <Td>{p.category?.name || "—"}</Td>
-                <Td>{p.location?.name || "—"}</Td>
-                <Td isNumeric>{stockByProduct[p.id] ?? 0}</Td>
-                <Td isNumeric>{p.price}</Td>
-                <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
-                <Td>{new Date(p.updatedAt).toLocaleDateString()}</Td>
-                <Td>
-                  <HStack>
-                    <Button onClick={() => onEdit(p.id)}>Edit</Button>
-                    <Button onClick={() => handleDelete(p.id)}>Delete</Button>
-                  </HStack>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+        <ProductsTable
+          products={paginated}
+          stockByProduct={stockByProduct}
+          onEdit={onEdit}
+          onDelete={handleDelete}
+          onOpenDetails={handleOpenDetails}
+        />
       ) : (
-        <VStack>
+        // Mobile view remains the same
+        <VStack spacing={4} mt={4}>
           {paginated.map((p) => (
-            <Flex key={p.id}>
+            <Flex
+              key={p.id}
+              direction="column"
+              p={3}
+              borderWidth="1px"
+              borderRadius="md"
+              w="100%"
+            >
               <Text>
                 {p.sku} –{" "}
-                <Button onClick={() => handleOpenDetails(p)}>{p.name}</Button>
+                <Button variant="link" onClick={() => handleOpenDetails(p)}>
+                  {p.name}
+                </Button>
               </Text>
               {p.description && <Text>Description: {p.description}</Text>}
               <Text>Category: {p.category?.name || "—"}</Text>
@@ -214,15 +191,22 @@ export default function ProductsList({ onEdit, refreshKey }) {
               <Text>Price: ${p.price}</Text>
               <Text>Created: {new Date(p.createdAt).toLocaleDateString()}</Text>
               <Text>Updated: {new Date(p.updatedAt).toLocaleDateString()}</Text>
-              <HStack>
-                <Button onClick={() => onEdit(p.id)}>Edit</Button>
-                <Button onClick={() => handleDelete(p.id)}>Delete</Button>
+              <HStack mt={2}>
+                <Button size="sm" onClick={() => onEdit(p.id)}>
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => handleDelete(p.id)}
+                >
+                  Delete
+                </Button>
               </HStack>
             </Flex>
           ))}
         </VStack>
       )}
-
       {/* Pagination */}
       <HStack>
         <Button
@@ -241,7 +225,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
           Next
         </Button>
       </HStack>
-
       {selectedProduct && (
         <ProductDetails
           isOpen={isOpen}
