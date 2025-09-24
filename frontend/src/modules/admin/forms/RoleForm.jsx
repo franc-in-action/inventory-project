@@ -1,5 +1,4 @@
-// src/modules/admin/RoleForm.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -10,7 +9,6 @@ import {
   ModalCloseButton,
   Button,
   VStack,
-  Input,
   Select,
   useToast,
   FormControl,
@@ -19,55 +17,35 @@ import {
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
 
-export default function RoleForm({ roleId, isOpen, onClose, onSaved }) {
+export default function RoleForm({ user, isOpen, onClose, onSaved }) {
   const toast = useToast();
-  const [role, setRole] = useState({ userName: "", role: "Staff" });
+  const [role, setRole] = useState("STAFF");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load role details when editing
   useEffect(() => {
-    if (!isOpen) return;
-    if (!roleId) {
-      setRole({ userName: "", role: "Staff" });
-      return;
-    }
-    setLoading(true);
-    (async () => {
-      try {
-        const res = await adminApi.getRoles();
-        const r = res.data.find((x) => x.id === roleId);
-        if (r) setRole(r);
-      } catch (err) {
-        console.error("[RoleForm] Failed to load role:", err);
-        toast({ status: "error", description: "Failed to load role." });
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [roleId, isOpen, toast]);
+    if (!isOpen || !user) return;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setRole((r) => ({ ...r, [name]: value }));
-  };
+    setLoading(true);
+    // Use the correct property `role`
+    setRole(user.role.toUpperCase());
+    setLoading(false);
+  }, [user, isOpen]);
+
+  const handleChange = (e) => setRole(e.target.value);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user?.id) return; // cannot update if user ID is missing
+
     setSaving(true);
     try {
-      if (roleId) {
-        await adminApi.updateRole(roleId, role);
-        toast({ status: "success", description: "Role updated" });
-      } else {
-        // replace with createRole API if exists
-        await adminApi.updateRole(null, role);
-        toast({ status: "success", description: "Role created" });
-      }
+      await adminApi.updateRole(user.id, { role });
+      toast({ status: "success", description: "Role updated" });
       onSaved();
       onClose();
     } catch (err) {
-      console.error("[RoleForm] Error saving role:", err);
+      console.error("Failed to save role:", err);
       toast({ status: "error", description: err.message });
     } finally {
       setSaving(false);
@@ -78,41 +56,37 @@ export default function RoleForm({ roleId, isOpen, onClose, onSaved }) {
     <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
-        <ModalHeader>{roleId ? "Edit Role" : "Create Role"}</ModalHeader>
+        <ModalHeader>Edit User Role</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
             <Spinner size="xl" margin="auto" />
           ) : (
             <VStack spacing={4} w="full">
-              <FormControl isRequired>
+              <FormControl>
                 <FormLabel>User</FormLabel>
-                <Input
-                  name="userName"
-                  value={role.userName}
-                  onChange={handleChange}
-                  placeholder="User name"
-                  disabled={!!roleId} // cannot change user name when editing
-                />
+                <Select value={user?.name} isDisabled>
+                  <option>{user?.name}</option>
+                </Select>
               </FormControl>
 
               <FormControl isRequired>
                 <FormLabel>Role</FormLabel>
-                <Select name="role" value={role.role} onChange={handleChange}>
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Staff">Staff</option>
+                <Select value={role} onChange={handleChange}>
+                  <option value="ADMIN">Admin</option>
+                  <option value="MANAGER">Manager</option>
+                  <option value="STAFF">Staff</option>
                 </Select>
               </FormControl>
             </VStack>
           )}
         </ModalBody>
         <ModalFooter>
-          <Button mr={3} onClick={onClose} variant="ghost">
+          <Button variant="ghost" mr={3} onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" colorScheme="blue" isLoading={saving}>
-            {roleId ? "Update" : "Create"}
+            Update
           </Button>
         </ModalFooter>
       </ModalContent>

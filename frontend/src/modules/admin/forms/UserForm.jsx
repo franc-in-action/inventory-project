@@ -1,4 +1,3 @@
-// src/modules/admin/UserForm.jsx
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -21,23 +20,25 @@ import { adminApi } from "../adminApi.js";
 
 export default function UserForm({ userId, isOpen, onClose, onSaved }) {
   const toast = useToast();
-  const [user, setUser] = useState({ name: "", email: "", role: "Staff" });
+  const [user, setUser] = useState({ name: "", email: "", role: "STAFF" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load user details when editing
   useEffect(() => {
     if (!isOpen) return;
     if (!userId) {
-      setUser({ name: "", email: "", role: "Staff" });
+      setUser({ name: "", email: "", role: "STAFF" });
       return;
     }
+
     setLoading(true);
     (async () => {
       try {
         const users = await adminApi.getUsers();
         const u = users.find((x) => x.id === userId);
-        if (u) setUser(u);
+        if (u) {
+          setUser({ ...u, role: u.role.toUpperCase() });
+        }
       } catch (err) {
         console.error("[UserForm] Failed to load user:", err);
         toast({ status: "error", description: "Failed to load user." });
@@ -56,14 +57,17 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
+      // convert role to uppercase enum
+      const userData = { ...user, role: user.role.toUpperCase() };
+
       if (userId) {
-        await adminApi.updateUser(userId, user);
+        await adminApi.updateUser(userId, userData);
         toast({ status: "success", description: "User updated" });
       } else {
-        // create user
-        await adminApi.updateUser(null, user); // replace with createUser API if exists
+        await adminApi.createUser(userData); // make sure createUser exists
         toast({ status: "success", description: "User created" });
       }
+
       onSaved();
       onClose();
     } catch (err) {
@@ -87,7 +91,12 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
             <VStack spacing={4} w="full">
               <FormControl isRequired>
                 <FormLabel>Name</FormLabel>
-                <Input name="name" value={user.name} onChange={handleChange} />
+                <Input
+                  name="name"
+                  autoComplete="name"
+                  value={user.name}
+                  onChange={handleChange}
+                />
               </FormControl>
 
               <FormControl isRequired>
@@ -95,6 +104,7 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
                 <Input
                   name="email"
                   type="email"
+                  autoComplete="email"
                   value={user.email}
                   onChange={handleChange}
                   disabled={!!userId} // cannot change email when editing
@@ -104,9 +114,9 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
               <FormControl isRequired>
                 <FormLabel>Role</FormLabel>
                 <Select name="role" value={user.role} onChange={handleChange}>
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Staff">Staff</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="MANAGER">Manager</option>
+                  <option value="STAFF">Staff</option>
                 </Select>
               </FormControl>
             </VStack>

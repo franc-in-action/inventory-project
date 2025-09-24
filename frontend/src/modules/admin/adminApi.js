@@ -3,6 +3,8 @@ import { apiFetch } from "../../utils/commonApi.js";
 export const adminApi = {
   // Users
   getUsers: () => apiFetch("/users"),
+  createUser: (data) =>
+    apiFetch("/users", { method: "POST", body: JSON.stringify(data) }), // <-- added
   updateUser: (id, data) =>
     apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteUser: (id) => apiFetch(`/users/${id}`, { method: "DELETE" }),
@@ -12,7 +14,7 @@ export const adminApi = {
   // Roles
   getRoles: async () => {
     const res = await apiFetch("/roles");
-    return res.roles || []; // handle backend object
+    return res || [];
   },
   updateRole: (id, data) =>
     apiFetch(`/roles/${id}`, { method: "PUT", body: JSON.stringify(data) }),
@@ -20,7 +22,7 @@ export const adminApi = {
   // Logs
   getLogs: async (params) => {
     const res = await apiFetch(`/logs?${new URLSearchParams(params)}`);
-    return res.logs || []; // handle backend object
+    return res.logs || [];
   },
 
   // Backup

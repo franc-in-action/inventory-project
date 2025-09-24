@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
 import UserForm from "../forms/UserForm.jsx";
+import NewPasswordModal from "../modals/NewPasswordModal.jsx";
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
@@ -26,6 +27,9 @@ export default function UserManagementPage() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const toast = useToast();
+
+  const [newPassword, setNewPassword] = useState(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -60,8 +64,11 @@ export default function UserManagementPage() {
 
   const handleResetPassword = async (userId) => {
     try {
-      await adminApi.resetPassword(userId);
-      toast({ title: "Password reset", status: "success" });
+      const res = await adminApi.resetPassword(userId);
+      if (res?.newPassword) {
+        setNewPassword(res.newPassword);
+        setIsPasswordModalOpen(true);
+      }
     } catch (err) {
       console.error("Failed to reset password:", err);
       toast({ title: "Failed to reset password", status: "error" });
@@ -169,6 +176,12 @@ export default function UserManagementPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSaved={fetchUsers}
+      />
+
+      <NewPasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        password={newPassword}
       />
     </Box>
   );
