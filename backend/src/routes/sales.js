@@ -140,13 +140,13 @@ router.post(
   }
 );
 
-// GET /api/sales?startDate=&endDate=&locationId=&customerId=
+// GET /api/sales?startDate=&endDate=&locationId=&customerId=&productId=
 router.get(
   "/",
   authMiddleware,
   requireRole(["ADMIN", "MANAGER", "STAFF"]),
   async (req, res) => {
-    const { startDate, endDate, locationId, customerId } = req.query;
+    const { startDate, endDate, locationId, customerId, productId } = req.query;
 
     try {
       const where = {};
@@ -158,13 +158,28 @@ router.get(
       if (locationId) where.locationId = locationId;
       if (customerId) where.customerId = parseInt(customerId);
 
+      // If productId is present, we want sales that include at least one SaleItem for that product
+      if (productId) {
+        where.items = { some: { productId } };
+      }
+
       const sales = await prisma.sale.findMany({
         where,
         include: { customer: true, items: true, payments: true },
         orderBy: { createdAt: "desc" },
       });
 
-      res.json(sales);
+      // If productId provided compute aggregated qtySold for that product
+      let qtySold = 0;
+      if (productId) {
+        for (const s of sales) {
+          for (const si of s.items) {
+            if (si.productId === productId) qtySold += si.qty;
+          }
+        }
+      }
+
+      res.json(productId ? { sales, qtySold } : sales);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

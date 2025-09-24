@@ -166,18 +166,23 @@ router.put(
   }
 );
 
-// GET /api/purchases?locationId=1&vendorId=2&page=1&limit=10
+// GET /api/purchases?locationId=1&vendorId=2&page=1&limit=10&productId=...
 router.get(
   "/",
   authMiddleware,
   requireRole(["ADMIN", "MANAGER", "STAFF"]),
   async (req, res) => {
-    const { locationId, vendorId, page = 1, limit = 10 } = req.query;
+    const { locationId, vendorId, page = 1, limit = 10, productId } = req.query;
 
     try {
       const where = {};
       if (locationId) where.locationId = parseInt(locationId);
       if (vendorId) where.vendorId = parseInt(vendorId);
+
+      if (productId) {
+        // Return purchases that include the product
+        where.items = { some: { productId } };
+      }
 
       const purchases = await prisma.purchase.findMany({
         where,
@@ -187,9 +192,21 @@ router.get(
         take: parseInt(limit),
       });
 
+      // If productId provided compute qtyPurchased
+      let qtyPurchased = 0;
+      if (productId) {
+        for (const p of purchases) {
+          for (const it of p.items) {
+            if (it.productId === productId) qtyPurchased += it.qty;
+          }
+        }
+      }
+
       const total = await prisma.purchase.count({ where });
 
-      res.json({ purchases, total });
+      res.json(
+        productId ? { purchases, total, qtyPurchased } : { purchases, total }
+      );
     } catch (err) {
       res.status(400).json({ error: err.message });
     }

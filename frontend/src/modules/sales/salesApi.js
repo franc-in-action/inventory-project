@@ -18,6 +18,8 @@ export async function createSale(saleData) {
 
 /**
  * Fetch sales (Electron or API)
+ * Supports params.productId to filter sales that include that product.
+ * When productId is used the HTTP API returns { sales, qtySold }
  */
 export async function fetchSales(params = {}) {
   if (window.api) {
@@ -25,20 +27,28 @@ export async function fetchSales(params = {}) {
     const values = [];
 
     if (params.locationId) {
-      where.push("locationId = ?");
+      where.push("s.locationId = ?");
       values.push(params.locationId);
     }
     if (params.customerId) {
-      where.push("customerId = ?");
+      where.push("s.customerId = ?");
       values.push(params.customerId);
     }
     if (params.startDate) {
-      where.push("createdAt >= ?");
+      where.push("s.createdAt >= ?");
       values.push(params.startDate);
     }
     if (params.endDate) {
-      where.push("createdAt <= ?");
+      where.push("s.createdAt <= ?");
       values.push(params.endDate);
+    }
+
+    // If productId is provided, join with saleItem table and filter
+    let join = "";
+    if (params.productId) {
+      join = "JOIN saleItem si ON si.saleId = s.id";
+      where.push("si.productId = ?");
+      values.push(params.productId);
     }
 
     const page = parseInt(params.page || 1, 10);
@@ -51,28 +61,54 @@ export async function fetchSales(params = {}) {
       `SELECT s.*, c.name AS customer_name
        FROM sales s
        LEFT JOIN customer c ON s.customerId = c.id
+       ${join}
        ${whereClause} ORDER BY s.createdAt DESC LIMIT ? OFFSET ?`,
       [...values, limit, offset]
     );
 
-    // Normalize to include payments array (empty in Electron mode for now)
-    const items = rows.map((r) => ({
+    // When productId is present in Electron mode we also want qty per saleItem; attempt to fetch item details
+    let itemsNormalized = rows.map((r) => ({
       ...r,
       customer: { name: r.customer_name || "—" },
       payments: [],
+      items: [], // electron mode - not joining sale items details here for simplicity
     }));
 
+    // compute total count (simple count query)
     const [{ total }] = await window.api.query(
-      `SELECT COUNT(*) as total FROM sales ${whereClause}`,
+      `SELECT COUNT(DISTINCT s.id) as total
+       FROM sales s
+       ${join}
+       ${whereClause}`,
       values
     );
 
-    return { items, total: total || 0 };
+    // compute qtySold for productId (if provided)
+    let qtySold = 0;
+    if (params.productId) {
+      const qtyRows = await window.api.query(
+        `SELECT SUM(si.qty) as qtySold FROM saleItem si
+         JOIN sales s ON s.id = si.saleId
+         WHERE si.productId = ?`,
+        [params.productId]
+      );
+      qtySold = qtyRows?.[0]?.qtySold || 0;
+      return { items: itemsNormalized, total: total || 0, qtySold };
+    }
+
+    return { items: itemsNormalized, total: total || 0 };
   }
 
   // Fallback to HTTP API
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/sales?${query}`);
+
+  if (params.productId) {
+    // server returns { sales, qtySold }
+    const sales = result.sales || result;
+    const qtySold = result.qtySold || 0;
+    return { items: sales, total: sales.length, qtySold };
+  }
 
   const items = Array.isArray(result) ? result : result.sales || [];
   const total = items.length;

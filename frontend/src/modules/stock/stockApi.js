@@ -1,5 +1,3 @@
-// utils/stockApi.js
-
 import { apiFetch } from "../../utils/commonApi.js";
 
 /**
@@ -55,5 +53,26 @@ export async function fetchTotalStockForProducts(productIds = []) {
   } catch (err) {
     console.error("[stockApi] fetchTotalStockForProducts error:", err);
     return {};
+  }
+}
+
+/**
+ * Fetch stock movements for a product (and optional location)
+ * @param {string} productId
+ * @param {string} [locationId]
+ * @returns {Promise<Object[]>} movements
+ */
+export async function fetchStockMovements(productId, locationId) {
+  if (!productId) return [];
+  try {
+    const q = new URLSearchParams({
+      productId,
+      ...(locationId ? { locationId } : {}),
+    }).toString();
+    const res = await apiFetch(`/stock/movements?${q}`);
+    return res.movements || [];
+  } catch (err) {
+    console.error("[stockApi] fetchStockMovements error:", err);
+    return [];
   }
 }

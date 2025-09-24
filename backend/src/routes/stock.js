@@ -1,5 +1,3 @@
-// backend/src/routes/stock.js
-
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
@@ -133,6 +131,30 @@ router.get("/total", authMiddleware, async (req, res) => {
     res.json({ stock: stockMap });
   } catch (err) {
     console.error("[GET /stock/total] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/stock/movements?productId=...&locationId=...
+ * Returns list of stock movements for a product (and optional location)
+ */
+router.get("/movements", authMiddleware, async (req, res) => {
+  const { productId, locationId } = req.query;
+  if (!productId) return res.status(400).json({ error: "productId required" });
+
+  try {
+    const where = { productId };
+    if (locationId) where.locationId = locationId;
+
+    const movements = await prisma.stockMovement.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json({ movements });
+  } catch (err) {
+    console.error("[GET /stock/movements] Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
