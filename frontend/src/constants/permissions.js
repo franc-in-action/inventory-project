@@ -1,4 +1,3 @@
-// src/utils/permissions.js
 export const PERMISSIONS = {
   DASHBOARD: ["Admin", "Manager", "Staff"],
   PRODUCTS: ["Admin", "Manager"],
@@ -8,4 +7,5 @@ export const PERMISSIONS = {
   LOCATIONS: ["Admin", "Manager"],
   CUSTOMERS: ["Admin", "Manager", "Staff"],
   VENDORS: ["Admin", "Manager"],
+  PAYMENTS: ["Admin", "Manager", "Staff"], // added
 };

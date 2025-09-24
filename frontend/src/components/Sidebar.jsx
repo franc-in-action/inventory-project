@@ -20,6 +20,7 @@ import {
   FaMapMarkerAlt,
   FaTools,
   FaTruck,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -50,6 +51,12 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: FaShoppingCart,
       roles: PERMISSIONS.PURCHASES,
     },
+    {
+      to: "/payments",
+      label: "Payments",
+      icon: FaMoneyBillWave,
+      roles: PERMISSIONS.PAYMENTS,
+    }, // added
     {
       to: "/locations",
       label: "Locations",

@@ -13,6 +13,7 @@ import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
 import VendorsPage from "./modules/vendors/VendorsPage.jsx"; // import vendors
 import SalesPage from "./modules/sales/SalesPage.jsx";
+import PaymentsPage from "./modules/payments/PaymentsPage.jsx"; // new
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
 import Header from "./components/Header.jsx";
@@ -153,6 +154,18 @@ export default function App() {
                   <RoleRoute allowedRoles={PERMISSIONS.SALES}>
                     <ProtectedLayout>
                       <SalesPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payments"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.PAYMENTS}>
+                    <ProtectedLayout>
+                      <PaymentsPage />
                     </ProtectedLayout>
                   </RoleRoute>
                 </ProtectedRoute>

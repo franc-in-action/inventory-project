@@ -1,4 +1,4 @@
-import { Flex, Heading, Text, Icon, Card } from "@chakra-ui/react"; // import Card
+import { Flex, Heading, Text, Icon, Card } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBox,
@@ -8,6 +8,7 @@ import {
   FaTools,
   FaUsers,
   FaTruck,
+  FaMoneyBillWave, // new icon for payments
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
 
@@ -16,25 +17,20 @@ const dashboardLinks = [
   { label: "Sales", href: "/sales", icon: FaCashRegister },
   { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
-  { label: "Customers", href: "/customers", icon: FaUsers }, // added
-  { label: "Vendors", href: "/vendors", icon: FaTruck }, // added
+  { label: "Customers", href: "/customers", icon: FaUsers },
+  { label: "Vendors", href: "/vendors", icon: FaTruck },
+  { label: "Payments", href: "/payments", icon: FaMoneyBillWave }, // added
   { label: "Admin Tools", href: "/admin-tools", icon: FaTools },
 ];
 
-const totalProducts = 120;
-const totalSales = 54;
-const totalPurchases = 30;
-const totalLocations = 5;
-const totalCustomers = 80; // example
-const totalVendors = 25; // example count
-
 const summaryData = [
-  { label: "Total Products", value: totalProducts, icon: FaBox },
-  { label: "Total Sales", value: totalSales, icon: FaCashRegister },
-  { label: "Total Purchases", value: totalPurchases, icon: FaShoppingCart },
-  { label: "Total Locations", value: totalLocations, icon: FaMapMarkerAlt },
-  { label: "Total Customers", value: totalCustomers, icon: FaUsers }, // added
-  { label: "Total Vendors", value: totalVendors, icon: FaTruck }, // added
+  { label: "Total Products", value: 120, icon: FaBox },
+  { label: "Total Sales", value: 54, icon: FaCashRegister },
+  { label: "Total Purchases", value: 30, icon: FaShoppingCart },
+  { label: "Total Locations", value: 5, icon: FaMapMarkerAlt },
+  { label: "Total Customers", value: 80, icon: FaUsers },
+  { label: "Total Vendors", value: 25, icon: FaTruck },
+  { label: "Total Payments", value: 45, icon: FaMoneyBillWave }, // example value
 ];
 
 export default function Dashboard() {
@@ -82,6 +78,7 @@ export default function Dashboard() {
         ))}
       </Flex>
 
+      {/* Navigation Cards */}
       <Flex flexWrap="wrap" justify="center" w="100%" maxW="1200px" gap={6}>
         {dashboardLinks.map((link) => (
           <Card
