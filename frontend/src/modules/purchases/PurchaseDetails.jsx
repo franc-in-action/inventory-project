@@ -22,7 +22,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { createPurchase } from "./purchaseApi.js";
-import { useProducts } from "../products/contexts/ProductsContext.jsx"; // ✅ context
+import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function PurchaseDetails({
   purchase,
@@ -33,7 +33,7 @@ export default function PurchaseDetails({
   locations,
 }) {
   const toast = useToast();
-  const { productsMap } = useProducts(); // ✅ use context
+  const { productsMap } = useProducts();
   const [items, setItems] = useState([]);
   const [vendorId, setVendorId] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -77,20 +77,13 @@ export default function PurchaseDetails({
   const totalAmount = items.reduce((sum, i) => sum + i.qty * i.price, 0);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="xl"
-      isCentered
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Purchase Details - {purchase?.purchaseUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} align="stretch">
-            {/* Vendor & Location */}
+          <VStack>
             <Select
               value={vendorId}
               onChange={(e) => setVendorId(e.target.value)}
@@ -115,9 +108,8 @@ export default function PurchaseDetails({
               ))}
             </Select>
 
-            {/* Purchase Items Table */}
-            <Text fontWeight="bold">Items</Text>
-            <Table variant="simple" size="sm">
+            <Text>Items</Text>
+            <Table>
               <Thead>
                 <Tr>
                   <Th>Product</Th>
@@ -132,7 +124,6 @@ export default function PurchaseDetails({
                     <Td>{productsMap[item.productId] || item.productId}</Td>
                     <Td>
                       <NumberInput
-                        size="sm"
                         min={1}
                         value={item.qty}
                         onChange={(val) =>
@@ -144,7 +135,6 @@ export default function PurchaseDetails({
                     </Td>
                     <Td>
                       <NumberInput
-                        size="sm"
                         min={0}
                         value={item.price}
                         onChange={(val) =>
@@ -158,20 +148,16 @@ export default function PurchaseDetails({
                   </Tr>
                 ))}
                 <Tr>
-                  <Td colSpan={3} fontWeight="bold" textAlign="right">
-                    Total
-                  </Td>
-                  <Td fontWeight="bold">{totalAmount.toLocaleString()}</Td>
+                  <Td colSpan={3}>Total</Td>
+                  <Td>{totalAmount.toLocaleString()}</Td>
                 </Tr>
               </Tbody>
             </Table>
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Close
-          </Button>
-          <Button colorScheme="blue" onClick={handleSubmit} isLoading={saving}>
+          <Button onClick={onClose}>Close</Button>
+          <Button onClick={handleSubmit} isLoading={saving}>
             Save
           </Button>
         </ModalFooter>

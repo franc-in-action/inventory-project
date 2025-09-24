@@ -21,11 +21,11 @@ import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { fetchLocations } from "../locations/locationsApi.js";
 import { fetchStockForProducts } from "../stock/stockApi.js";
 import { createPurchase } from "./purchaseApi.js";
-import { useProducts } from "../products/contexts/ProductsContext.jsx"; // ✅ context
+import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   const toast = useToast();
-  const { products } = useProducts(); // ✅ get products from context
+  const { products } = useProducts();
   const [locationId, setLocationId] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
@@ -33,20 +33,18 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   const [stockByProduct, setStockByProduct] = useState({});
   const [saving, setSaving] = useState(false);
 
-  // Load locations
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
       try {
         const locs = await fetchLocations();
         setLocations(locs || []);
-      } catch (err) {
+      } catch {
         toast({ status: "error", description: "Failed to load locations" });
       }
     })();
   }, [isOpen, toast]);
 
-  // Fetch stock when location or products change
   useEffect(() => {
     if (!isOpen || !products.length) return;
     (async () => {
@@ -70,13 +68,10 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
     setItems((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
-
-      // auto-fill purchase price if product changes
       if (field === "productId") {
         const product = products.find((p) => p.id === value);
         if (product) copy[index].price = product.purchasePrice || 0;
       }
-
       return copy;
     });
   };
@@ -107,19 +102,13 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="xl"
-      isCentered
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>Create Purchase</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} align="stretch">
+          <VStack>
             <Select
               placeholder="Select Vendor"
               value={vendorId}
@@ -146,10 +135,10 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
               ))}
             </Select>
 
-            <Text fontWeight="bold">Items</Text>
-            <VStack spacing={2} align="stretch">
+            <Text>Items</Text>
+            <VStack>
               {items.map((item, idx) => (
-                <HStack key={idx} spacing={2}>
+                <HStack key={idx}>
                   <Select
                     placeholder="Select Product"
                     value={item.productId}
@@ -168,7 +157,6 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                   </Select>
 
                   <NumberInput
-                    size="sm"
                     min={1}
                     value={item.qty}
                     onChange={(val) =>
@@ -179,7 +167,6 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                   </NumberInput>
 
                   <NumberInput
-                    size="sm"
                     min={0}
                     value={item.price}
                     onChange={(val) =>
@@ -191,23 +178,19 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
 
                   <IconButton
                     icon={<DeleteIcon />}
-                    size="sm"
-                    colorScheme="red"
                     onClick={() => removeItemRow(idx)}
                   />
                 </HStack>
               ))}
-              <Button leftIcon={<AddIcon />} size="sm" onClick={addItemRow}>
+              <Button leftIcon={<AddIcon />} onClick={addItemRow}>
                 Add Item
               </Button>
             </VStack>
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" isLoading={saving}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" isLoading={saving}>
             Create Purchase
           </Button>
         </ModalFooter>

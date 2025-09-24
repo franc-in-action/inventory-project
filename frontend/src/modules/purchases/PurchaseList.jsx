@@ -10,7 +10,6 @@ import {
   Td,
   Button,
   Spinner,
-  VStack,
   Text,
 } from "@chakra-ui/react";
 import { fetchPurchases, receivePurchase } from "../utils/purchasesApi.js";
@@ -25,7 +24,7 @@ export default function PurchasesList() {
   const vendors = [
     { id: 1, name: "Vendor A" },
     { id: 2, name: "Vendor B" },
-  ]; // Example, fetch from backend in real app
+  ];
 
   const loadPurchases = async () => {
     setLoading(true);
@@ -49,18 +48,16 @@ export default function PurchasesList() {
   }, []);
 
   return (
-    <Box p={4}>
-      <Heading mb={4}>Purchases</Heading>
-      <Button colorScheme="blue" mb={4} onClick={() => setShowForm(true)}>
-        New Purchase
-      </Button>
+    <Box>
+      <Heading>Purchases</Heading>
+      <Button onClick={() => setShowForm(true)}>New Purchase</Button>
 
       {loading ? (
-        <Spinner size="xl" margin="auto" />
+        <Spinner />
       ) : purchases.length === 0 ? (
         <Text>No purchases found</Text>
       ) : (
-        <Table variant="striped">
+        <Table>
           <Thead>
             <Tr>
               <Th>UUID</Th>
@@ -75,28 +72,17 @@ export default function PurchasesList() {
             {purchases.map((p) => (
               <Tr key={p.id}>
                 <Td>
-                  <Button
-                    variant="link"
-                    colorScheme="blue"
-                    onClick={() => setSelectedPurchase(p)}
-                  >
+                  <Button variant="link" onClick={() => setSelectedPurchase(p)}>
                     {p.purchaseUuid}
                   </Button>
                 </Td>
-
                 <Td>{p.vendorId}</Td>
                 <Td>{p.locationId}</Td>
                 <Td>{p.total}</Td>
                 <Td>{p.received ? "Yes" : "No"}</Td>
                 <Td>
                   {!p.received && (
-                    <Button
-                      size="sm"
-                      colorScheme="green"
-                      onClick={() => handleReceive(p.id)}
-                    >
-                      Receive
-                    </Button>
+                    <Button onClick={() => handleReceive(p.id)}>Receive</Button>
                   )}
                 </Td>
               </Tr>
