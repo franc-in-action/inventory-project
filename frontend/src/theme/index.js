@@ -10,6 +10,7 @@ import Heading from "./components/heading";
 import Text from "./components/text";
 import ButtonGroup from "./components/buttongroup";
 import Table from "./components/table";
+import Card from "./components/card";
 
 // Define a custom color palette
 const colors = {
@@ -39,6 +40,7 @@ const theme = extendTheme({
     Text,
     ButtonGroup,
     Table,
+    Card,
   },
   // Optionally set default color scheme for certain components
   // e.g., Buttons and Tabs use 'brand'

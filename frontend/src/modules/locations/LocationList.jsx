@@ -8,6 +8,7 @@ import {
   Td,
   IconButton,
   Link,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import LocationDetails from "./LocationDetails.jsx";
@@ -46,16 +47,18 @@ export default function LocationList({ locations, onEdit, onDelete }) {
               </Td>
               <Td>{loc.address}</Td>
               <Td>
-                <IconButton
-                  icon={<EditIcon />}
-                  aria-label="Edit"
-                  onClick={() => onEdit(loc.id)}
-                />
-                <IconButton
-                  icon={<DeleteIcon />}
-                  aria-label="Delete"
-                  onClick={() => onDelete(loc.id)}
-                />
+                <ButtonGroup>
+                  <IconButton
+                    icon={<EditIcon />}
+                    aria-label="Edit"
+                    onClick={() => onEdit(loc.id)}
+                  />
+                  <IconButton
+                    icon={<DeleteIcon />}
+                    aria-label="Delete"
+                    onClick={() => onDelete(loc.id)}
+                  />
+                </ButtonGroup>
               </Td>
             </Tr>
           ))}
