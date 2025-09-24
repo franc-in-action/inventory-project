@@ -1,5 +1,3 @@
-// routes/customers.js
-
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
@@ -43,7 +41,7 @@ router.get("/", authMiddleware, async (req, res) => {
 
 // -------------------- READ ONE --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id; // UUID string
   try {
     const customer = await prisma.customer.findUnique({ where: { id } });
     if (!customer) return res.status(404).json({ error: "Customer not found" });
@@ -59,7 +57,7 @@ router.put(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = req.params.id; // UUID string
     const { name, email, phone, credit_limit } = req.body;
 
     try {
@@ -80,7 +78,7 @@ router.delete(
   authMiddleware,
   requireRole(["ADMIN"]),
   async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = req.params.id; // UUID string
     try {
       await prisma.customer.delete({ where: { id } });
       res.json({ message: "Customer deleted" });
