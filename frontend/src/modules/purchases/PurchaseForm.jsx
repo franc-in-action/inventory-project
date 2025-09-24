@@ -31,8 +31,10 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
   const [locations, setLocations] = useState([]);
   const [stockByProduct, setStockByProduct] = useState({});
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
+  // Load locations when modal opens
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
@@ -45,31 +47,38 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
     })();
   }, [isOpen, toast]);
 
+  // Load stock when location changes
   useEffect(() => {
-    if (!isOpen || !products.length) return;
+    if (!isOpen || !products.length || !locationId) return;
     (async () => {
       try {
-        if (locationId) {
-          const stock = await fetchStockForProducts(
-            products.map((p) => p.id),
-            locationId
-          );
-          setStockByProduct(stock);
-        } else {
-          setStockByProduct({});
-        }
+        const stock = await fetchStockForProducts(
+          products.map((p) => p.id),
+          locationId
+        );
+        setStockByProduct(stock);
       } catch (err) {
         console.error("Failed to fetch stock:", err);
       }
     })();
   }, [products, locationId, isOpen]);
 
+  // Filter products by selected vendor
+  useEffect(() => {
+    if (!vendorId) return setFilteredProducts([]);
+    setFilteredProducts(
+      products.filter((p) => p.vendorId === Number(vendorId))
+    );
+  }, [vendorId, products]);
+
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
+
+      // Update price automatically if product changes
       if (field === "productId") {
-        const product = products.find((p) => p.id === value);
+        const product = filteredProducts.find((p) => p.id === Number(value));
         if (product) copy[index].price = product.purchasePrice || 0;
       }
       return copy;
@@ -108,7 +117,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
         <ModalHeader>Create Purchase</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack>
+          <VStack spacing={4}>
             <Select
               placeholder="Select Vendor"
               value={vendorId}
@@ -136,7 +145,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
             </Select>
 
             <Text>Items</Text>
-            <VStack>
+            <VStack spacing={2} align="stretch">
               {items.map((item, idx) => (
                 <HStack key={idx}>
                   <Select
@@ -147,10 +156,10 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                     }
                     isRequired
                   >
-                    {products.map((p) => (
+                    {filteredProducts.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name} (SKU: {p.sku}) - Stock:{" "}
-                        {stockByProduct[p.id] ?? 0} - Purchase: $
+                        {stockByProduct[p.id] ?? 0} - Price: $
                         {p.purchasePrice ?? 0}
                       </option>
                     ))}
@@ -173,7 +182,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                       handleItemChange(idx, "price", Number(val))
                     }
                   >
-                    <NumberInputField placeholder="Purchase Price" />
+                    <NumberInputField placeholder="Price" />
                   </NumberInput>
 
                   <IconButton
@@ -182,6 +191,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                   />
                 </HStack>
               ))}
+
               <Button leftIcon={<AddIcon />} onClick={addItemRow}>
                 Add Item
               </Button>
@@ -190,7 +200,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" isLoading={saving}>
+          <Button type="submit" isLoading={saving} colorScheme="blue">
             Create Purchase
           </Button>
         </ModalFooter>

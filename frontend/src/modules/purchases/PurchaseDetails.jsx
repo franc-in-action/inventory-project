@@ -33,10 +33,11 @@ export default function PurchaseDetails({
   locations,
 }) {
   const toast = useToast();
-  const { productsMap } = useProducts();
+  const { products } = useProducts();
   const [items, setItems] = useState([]);
   const [vendorId, setVendorId] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -46,10 +47,22 @@ export default function PurchaseDetails({
     setLocationId(purchase?.locationId || "");
   }, [purchase, isOpen]);
 
+  // Filter products based on selected vendor
+  useEffect(() => {
+    if (!vendorId) return setFilteredProducts([]);
+    setFilteredProducts(
+      products.filter((p) => p.vendorId === Number(vendorId))
+    );
+  }, [vendorId, products]);
+
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
+      if (field === "productId") {
+        const product = filteredProducts.find((p) => p.id === Number(value));
+        if (product) copy[index].price = product.purchasePrice || 0;
+      }
       return copy;
     });
   };
@@ -83,7 +96,7 @@ export default function PurchaseDetails({
         <ModalHeader>Purchase Details - {purchase?.purchaseUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack>
+          <VStack spacing={4}>
             <Select
               value={vendorId}
               onChange={(e) => setVendorId(e.target.value)}
@@ -121,7 +134,10 @@ export default function PurchaseDetails({
               <Tbody>
                 {items.map((item, idx) => (
                   <Tr key={idx}>
-                    <Td>{productsMap[item.productId] || item.productId}</Td>
+                    <Td>
+                      {filteredProducts.find((p) => p.id === item.productId)
+                        ?.name || item.productId}
+                    </Td>
                     <Td>
                       <NumberInput
                         min={1}
@@ -157,7 +173,7 @@ export default function PurchaseDetails({
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose}>Close</Button>
-          <Button onClick={handleSubmit} isLoading={saving}>
+          <Button onClick={handleSubmit} isLoading={saving} colorScheme="blue">
             Save
           </Button>
         </ModalFooter>

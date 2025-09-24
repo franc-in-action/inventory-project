@@ -5,9 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();
 
-/**
- * POST /api/purchases
- */
+// CREATE PURCHASE
 router.post(
   "/",
   authMiddleware,
@@ -16,10 +14,16 @@ router.post(
     const { vendorId, locationId, items, purchaseUuid } = req.body;
     const userId = req.user.userId;
 
-    if (!items || items.length === 0)
+    if (!items?.length)
       return res.status(400).json({ error: "No items provided" });
 
     try {
+      // Ensure vendor exists
+      const vendor = await prisma.vendor.findUnique({
+        where: { id: parseInt(vendorId) },
+      });
+      if (!vendor) return res.status(400).json({ error: "Invalid vendor" });
+
       const finalUuid = purchaseUuid || uuidv4();
 
       const existing = await prisma.purchase.findUnique({
@@ -36,8 +40,8 @@ router.post(
         const newPurchase = await tx.purchase.create({
           data: {
             purchaseUuid: finalUuid,
-            vendorId,
-            locationId,
+            vendorId: parseInt(vendorId),
+            locationId: parseInt(locationId),
             total,
           },
         });
@@ -46,9 +50,9 @@ router.post(
           await tx.purchaseItem.create({
             data: {
               purchaseId: newPurchase.id,
-              productId: item.productId,
-              qty: item.qty,
-              price: item.price,
+              productId: parseInt(item.productId),
+              qty: parseInt(item.qty),
+              price: parseFloat(item.price),
             },
           });
         }
@@ -73,9 +77,7 @@ router.post(
   }
 );
 
-/**
- * PUT /api/purchases/:id/receive
- */
+// RECEIVE PURCHASE
 router.put(
   "/:id/receive",
   authMiddleware,
@@ -89,13 +91,8 @@ router.put(
         where: { id: purchaseId },
         include: { items: true },
       });
-
       if (!purchase)
         return res.status(404).json({ error: "Purchase not found" });
-      if (!purchase.purchaseUuid)
-        return res
-          .status(400)
-          .json({ error: "Purchase UUID missing, cannot receive" });
       if (purchase.received)
         return res.status(400).json({ error: "Purchase already received" });
 
@@ -154,7 +151,7 @@ router.put(
   }
 );
 
-// GET /api/purchases?locationId=&vendorId=&page=&limit=&productId=
+// GET PURCHASES WITH FILTERS
 router.get(
   "/",
   authMiddleware,
@@ -166,11 +163,11 @@ router.get(
       const where = {};
       if (locationId) where.locationId = parseInt(locationId);
       if (vendorId) where.vendorId = parseInt(vendorId);
-      if (productId) where.items = { some: { productId } };
+      if (productId) where.items = { some: { productId: parseInt(productId) } };
 
       const purchases = await prisma.purchase.findMany({
         where,
-        include: { items: true },
+        include: { items: true, vendor: true, location: true },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: parseInt(limit),
@@ -181,7 +178,7 @@ router.get(
       if (productId) {
         purchasesWithQty = purchases.map((p) => {
           const product_qty = p.items
-            .filter((it) => it.productId === productId)
+            .filter((it) => it.productId === parseInt(productId))
             .reduce((sum, it) => sum + it.qty, 0);
           qtyPurchased += product_qty;
           return { ...p, product_qty };
@@ -189,7 +186,6 @@ router.get(
       }
 
       const total = await prisma.purchase.count({ where });
-
       res.json(
         productId
           ? { purchases: purchasesWithQty, total, qtyPurchased }

@@ -9,15 +9,16 @@ import {
   Td,
   Button,
   Flex,
-  useToast,
-  Spinner,
   Spacer,
   ButtonGroup,
+  Spinner,
+  useToast,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import { fetchPurchases, receivePurchase } from "./purchaseApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
+import { fetchVendors } from "../vendors/vendorsApi.js"; // <-- dynamic vendor fetch
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
 
@@ -25,78 +26,89 @@ export default function PurchasesPage() {
   const toast = useToast();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [vendors, setVendors] = useState([]);
   const [locations, setLocations] = useState([]);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
-  const [totalPurchases, setTotalPurchases] = useState(0);
 
-  async function loadPurchases() {
+  // Load all purchases
+  const loadPurchases = async () => {
     setLoading(true);
     try {
       const data = await fetchPurchases();
       setPurchases(data.items || []);
-      setTotalPurchases(data.total || 0);
-    } catch {
-      toast({ title: "Error loading purchases", status: "error" });
+    } catch (err) {
+      toast({
+        title: "Error loading purchases",
+        status: "error",
+        description: err.message,
+      });
       setPurchases([]);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function loadLocations() {
+  // Load vendors dynamically from API
+  const loadVendors = async () => {
+    try {
+      const vens = await fetchVendors();
+      setVendors(vens || []);
+    } catch {
+      toast({ title: "Error loading vendors", status: "error" });
+      setVendors([]);
+    }
+  };
+
+  // Load locations dynamically
+  const loadLocations = async () => {
     try {
       const locs = await fetchLocations();
       setLocations(locs || []);
     } catch {
       toast({ title: "Error loading locations", status: "error" });
+      setLocations([]);
     }
-  }
+  };
 
-  async function handleReceive(purchaseId) {
+  // Handle receiving a purchase
+  const handleReceive = async (purchaseId) => {
     try {
       await receivePurchase(purchaseId);
       toast({ title: "Purchase received", status: "success" });
-      const data = await fetchPurchases();
-      setPurchases(data.items || []);
+      await loadPurchases();
     } catch {
       toast({ title: "Error receiving purchase", status: "error" });
     }
-  }
+  };
 
   useEffect(() => {
     loadPurchases();
+    loadVendors();
     loadLocations();
-    setVendors([
-      { id: 1, name: "Vendor A" },
-      { id: 2, name: "Vendor B" },
-    ]);
   }, []);
 
+  const getVendorName = (id) => vendors.find((v) => v.id === id)?.name || id;
   const getLocationName = (id) =>
     locations.find((l) => l.id === id)?.name || id;
-  const getVendorName = (id) => vendors.find((v) => v.id === id)?.name || id;
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
-        <Box p="2">
-          <Heading size="md">Purchases</Heading>
-        </Box>
+      <Flex align="center" mb={4}>
+        <Heading size="md">Purchases</Heading>
         <Spacer />
-        <ButtonGroup gap="2">
+        <ButtonGroup>
           <Button
-            variant={"primary"}
             leftIcon={<AddIcon />}
-            onClick={() => setShowModal(true)}
+            colorScheme="blue"
+            onClick={() => setShowForm(true)}
           >
-            Purchase
+            New Purchase
           </Button>
         </ButtonGroup>
       </Flex>
 
-      <Table>
+      <Table variant="striped" size="sm">
         <Thead>
           <Tr>
             <Th>UUID</Th>
@@ -110,13 +122,15 @@ export default function PurchasesPage() {
         <Tbody>
           {loading ? (
             <Tr>
-              <Td colSpan={6}>
+              <Td colSpan={6} textAlign="center">
                 <Spinner />
               </Td>
             </Tr>
           ) : purchases.length === 0 ? (
             <Tr>
-              <Td colSpan={6}>No purchases found</Td>
+              <Td colSpan={6} textAlign="center">
+                No purchases found
+              </Td>
             </Tr>
           ) : (
             purchases.map((p) => (
@@ -128,11 +142,17 @@ export default function PurchasesPage() {
                 </Td>
                 <Td>{getVendorName(p.vendorId)}</Td>
                 <Td>{getLocationName(p.locationId)}</Td>
-                <Td>{p.total}</Td>
+                <Td>${p.total.toFixed(2)}</Td>
                 <Td>{p.received ? "Yes" : "No"}</Td>
                 <Td>
                   {!p.received && (
-                    <Button onClick={() => handleReceive(p.id)}>Receive</Button>
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      onClick={() => handleReceive(p.id)}
+                    >
+                      Receive
+                    </Button>
                   )}
                 </Td>
               </Tr>
@@ -142,8 +162,8 @@ export default function PurchasesPage() {
       </Table>
 
       <PurchaseForm
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
         onSaved={loadPurchases}
         vendors={vendors}
         locations={locations}

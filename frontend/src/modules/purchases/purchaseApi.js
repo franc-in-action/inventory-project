@@ -39,3 +39,7 @@ export async function receivePurchase(purchaseId) {
     ]);
   return apiFetch(`/purchases/${purchaseId}/receive`, { method: "PUT" });
 }
+
+export async function fetchVendors() {
+  return apiFetch("/vendors"); // new backend endpoint
+}
