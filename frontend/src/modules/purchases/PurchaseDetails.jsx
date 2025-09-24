@@ -21,8 +21,8 @@ import {
   NumberInputField,
   useToast,
 } from "@chakra-ui/react";
-import { fetchProducts } from "../products/productsApi.js";
 import { createPurchase } from "./purchaseApi.js";
+import { useProducts } from "../../contexts/ProductsContext.jsx"; // ✅ context
 
 export default function PurchaseDetails({
   purchase,
@@ -33,41 +33,17 @@ export default function PurchaseDetails({
   locations,
 }) {
   const toast = useToast();
+  const { productsMap } = useProducts(); // ✅ use context
   const [items, setItems] = useState([]);
   const [vendorId, setVendorId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [saving, setSaving] = useState(false);
-  const [productsMap, setProductsMap] = useState({}); // map productId => productName
 
   useEffect(() => {
     if (!isOpen) return;
-
-    // Set initial values
     setItems(purchase?.items || []);
     setVendorId(purchase?.vendorId || "");
     setLocationId(purchase?.locationId || "");
-
-    // Load products
-    const loadProducts = async () => {
-      try {
-        const result = await fetchProducts();
-        let productsArray = [];
-
-        // Normalize results: Electron returns rows directly, Web returns { products }
-        if (Array.isArray(result)) {
-          productsArray = result; // Electron mode
-        } else if (result.products && Array.isArray(result.products)) {
-          productsArray = result.products; // Web mode
-        }
-
-        const map = {};
-        productsArray.forEach((p) => (map[p.id] = p.name));
-        setProductsMap(map);
-      } catch (err) {
-        console.error("Failed to fetch products", err);
-      }
-    };
-    loadProducts();
   }, [purchase, isOpen]);
 
   const handleItemChange = (index, field, value) => {
@@ -139,7 +115,7 @@ export default function PurchaseDetails({
               ))}
             </Select>
 
-            {/* Purchase Order Table */}
+            {/* Purchase Items Table */}
             <Text fontWeight="bold">Items</Text>
             <Table variant="simple" size="sm">
               <Thead>
