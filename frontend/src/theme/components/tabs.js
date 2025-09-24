@@ -9,10 +9,10 @@ const Tabs = {
       tablist: {
         overflowX: "auto",
         whiteSpace: "nowrap",
-        // hide scrollbar globally if you want
         "&::-webkit-scrollbar": { display: "none" },
       },
     },
   },
 };
+
 export default Tabs;

@@ -1,4 +1,9 @@
 const Flex = {
+  baseStyle: {
+    // Default Flex layout can stay minimal
+    align: "center",
+    justify: "center",
+  },
   variants: {
     dashboardCard: {
       bg: "gray.50",

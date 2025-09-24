@@ -21,7 +21,6 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect logged-in users safely
     const defaultPage = getDefaultPage();
     if (isLoggedIn() && window.location.pathname !== defaultPage) {
       navigate(defaultPage, { replace: true });
@@ -51,20 +50,11 @@ export default function Login() {
   };
 
   return (
-    <Flex p={6} minH="100vh" align="center" justify="center" bg="gray.50">
-      <Box
-        w="full"
-        maxW="sm"
-        bg="white"
-        p={{ base: 6, md: 8 }}
-        borderRadius="lg"
-        boxShadow="md"
-      >
-        <Heading mb={6} textAlign="center">
-          Login
-        </Heading>
+    <Flex>
+      <Box>
+        <Heading>Login</Heading>
         <form onSubmit={handleSubmit}>
-          <VStack spacing={4}>
+          <VStack>
             <Input
               placeholder="Email"
               type="email"
@@ -81,15 +71,10 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <Button
-              type="submit"
-              isLoading={loading}
-              colorScheme="blue"
-              w="full"
-            >
+            <Button type="submit" isLoading={loading}>
               Login
             </Button>
-            {error && <Text color="red.500">{error}</Text>}
+            {error && <Text>{error}</Text>}
           </VStack>
         </form>
       </Box>
