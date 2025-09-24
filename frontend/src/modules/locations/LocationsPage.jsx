@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Box, Heading, Button, Flex, Input, useToast } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Button,
+  Flex,
+  Input,
+  useToast,
+  Spacer,
+  ButtonGroup,
+} from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
 import { fetchLocations } from "./locationsApi.js";
@@ -50,11 +59,20 @@ export default function LocationsPage() {
 
   return (
     <Box>
-      <Flex>
-        <Heading>Branches / Locations</Heading>
-        <Button leftIcon={<AddIcon />} onClick={openCreateModal}>
-          + Location
-        </Button>
+      <Flex minWidth="max-content" alignItems="center" gap="2">
+        <Box p="2">
+          <Heading size="md">Branches / Locations</Heading>
+        </Box>
+        <Spacer />
+        <ButtonGroup gap="2">
+          <Button
+            variant={"primary"}
+            leftIcon={<AddIcon />}
+            onClick={openCreateModal}
+          >
+            Location
+          </Button>
+        </ButtonGroup>
       </Flex>
 
       <Input

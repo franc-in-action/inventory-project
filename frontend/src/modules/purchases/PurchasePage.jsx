@@ -11,7 +11,10 @@ import {
   Flex,
   useToast,
   Spinner,
+  Spacer,
+  ButtonGroup,
 } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import { fetchPurchases, receivePurchase } from "./purchaseApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
@@ -77,9 +80,20 @@ export default function PurchasesPage() {
 
   return (
     <Box>
-      <Heading>Purchases</Heading>
-      <Flex>
-        <Button onClick={() => setShowModal(true)}>+ New</Button>
+      <Flex minWidth="max-content" alignItems="center" gap="2">
+        <Box p="2">
+          <Heading size="md">Purchases</Heading>
+        </Box>
+        <Spacer />
+        <ButtonGroup gap="2">
+          <Button
+            variant={"primary"}
+            leftIcon={<AddIcon />}
+            onClick={() => setShowModal(true)}
+          >
+            Purchase
+          </Button>
+        </ButtonGroup>
       </Flex>
 
       <Table>

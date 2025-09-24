@@ -1,8 +1,10 @@
+// frontend/src/theme/components/text.js
+
 const Text = {
-  baseStyle: {
-    color: "gray.700",
-    fontSize: "md",
-  },
+  baseStyle: {}, // no custom styles
+  sizes: {}, // no sizes
+  variants: {}, // no variants
+  defaultProps: {}, // no default props
 };
 
 export default Text;

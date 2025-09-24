@@ -1,3 +1,5 @@
+// frontend/src/modules/products/ProductDetails.jsx
+
 import { useEffect, useState } from "react";
 import {
   Modal,

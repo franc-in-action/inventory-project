@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Box, Button, useDisclosure, Flex } from "@chakra-ui/react";
+import {
+  Heading,
+  Box,
+  Button,
+  useDisclosure,
+  Flex,
+  HStack,
+  ButtonGroup,
+  Spacer,
+} from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 import ProductsList from "./ProductsList.jsx";
 import ProductForm from "./ProductForm.jsx";
 
@@ -23,8 +33,23 @@ export default function Products() {
   };
 
   return (
-    <Flex>
-      <Button onClick={handleAdd}>+ New</Button>
+    <Box>
+      <Flex minWidth="max-content" alignItems="center" gap="2">
+        <Box p="2">
+          <Heading size="md">Products</Heading>
+        </Box>
+        <Spacer />
+        <ButtonGroup gap="2">
+          <Button
+            variant={"primary"}
+            leftIcon={<AddIcon />}
+            onClick={handleAdd}
+          >
+            {" "}
+            New
+          </Button>
+        </ButtonGroup>
+      </Flex>
 
       <ProductsList onEdit={handleEdit} refreshKey={isOpen} />
 
@@ -34,6 +59,6 @@ export default function Products() {
         onClose={onClose}
         onSaved={handleSaved}
       />
-    </Flex>
+    </Box>
   );
 }

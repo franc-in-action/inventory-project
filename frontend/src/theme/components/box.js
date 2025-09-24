@@ -1,11 +1,10 @@
-// Base styling for all <Box> usage
+// frontend/src/theme/components/box.js
+
 const Box = {
-  baseStyle: {
-    bg: "white",
-    borderRadius: "lg",
-    boxShadow: "sm",
-    p: 4,
-  },
+  baseStyle: {}, // no custom base styles
+  variants: {}, // no variants
+  sizes: {}, // no sizes
+  defaultProps: {}, // no default props
 };
 
 export default Box;

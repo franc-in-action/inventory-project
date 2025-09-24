@@ -9,7 +9,10 @@ import {
   Spinner,
   Text,
   useDisclosure,
+  ButtonGroup,
+  Spacer,
 } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 import { fetchSales } from "./salesApi.js";
 import SalesList from "./SalesList.jsx";
 import InvoiceDetails from "./InvoiceDetails.jsx";
@@ -71,8 +74,16 @@ export default function SalesPage() {
 
   return (
     <Box>
-      <Flex>
-        <Heading>Invoices</Heading>
+      <Flex minWidth="max-content" alignItems="center" gap="2">
+        <Box p="2">
+          <Heading size="md">Invoices</Heading>
+        </Box>
+        <Spacer />
+        <ButtonGroup gap="2">
+          <Button variant={"primary"} leftIcon={<AddIcon />}>
+            Invoice
+          </Button>
+        </ButtonGroup>
       </Flex>
 
       <Input

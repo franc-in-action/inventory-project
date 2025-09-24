@@ -118,8 +118,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   return (
     <Box>
-      <Heading>Products</Heading>
-
       {/* Filters */}
       <HStack>
         <Input
