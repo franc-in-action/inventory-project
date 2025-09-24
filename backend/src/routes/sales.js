@@ -16,11 +16,13 @@ router.post(
     const { saleUuid, locationId, customerId, items, payment } = req.body;
     const userId = req.user.userId;
 
-    if (!items || items.length === 0)
+    if (!items || items.length === 0) {
       return res.status(400).json({ error: "No items provided" });
+    }
 
     try {
       const sale = await prisma.$transaction(async (tx) => {
+        // Check stock availability
         for (const item of items) {
           const stockLevel = await tx.stockLevel.findUnique({
             where: {
@@ -37,8 +39,8 @@ router.post(
           }
         }
 
+        // Create sale record
         const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-
         const newSale = await tx.sale.create({
           data: {
             saleUuid: saleUuid || uuidv4(),
@@ -48,6 +50,7 @@ router.post(
           },
         });
 
+        // Create sale items, stock movements, and update stock
         for (const item of items) {
           await tx.saleItem.create({
             data: {
@@ -61,11 +64,12 @@ router.post(
           await tx.stockMovement.create({
             data: {
               movementUuid: uuidv4(),
-              productId: item.productId,
-              locationId,
               delta: -item.qty,
               reason: "Sale",
               refId: newSale.saleUuid,
+              product: { connect: { id: item.productId } },
+              location: { connect: { id: locationId } },
+              user: { connect: { id: userId } }, // use relation
             },
           });
 
@@ -77,7 +81,8 @@ router.post(
           });
         }
 
-        if (payment && payment.amount > 0) {
+        // Handle payment / credit
+        if (payment?.amount > 0) {
           await tx.payment.create({
             data: {
               saleId: newSale.id,
@@ -86,10 +91,12 @@ router.post(
             },
           });
 
-          await tx.customer.update({
-            where: { id: customerId },
-            data: { balance: { decrement: payment.amount } },
-          });
+          if (customerId) {
+            await tx.customer.update({
+              where: { id: customerId },
+              data: { balance: { decrement: payment.amount } },
+            });
+          }
         } else if (customerId) {
           const customer = await tx.customer.findUnique({
             where: { id: customerId },
@@ -104,6 +111,7 @@ router.post(
           });
         }
 
+        // Audit log
         await tx.auditLog.create({
           data: {
             action: "SALE_CREATED",
@@ -124,7 +132,10 @@ router.post(
   }
 );
 
-// GET /api/sales?startDate=&endDate=&locationId=&customerId=&productId=
+/**
+ * GET /api/sales
+ * Optional filters: startDate, endDate, locationId, customerId, productId
+ */
 router.get(
   "/",
   authMiddleware,
@@ -134,13 +145,15 @@ router.get(
 
     try {
       const where = {};
+
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt.gte = new Date(startDate);
         if (endDate) where.createdAt.lte = new Date(endDate);
       }
+
       if (locationId) where.locationId = locationId;
-      if (customerId) where.customerId = parseInt(customerId);
+      if (customerId) where.customerId = customerId;
 
       if (productId) {
         where.items = { some: { productId } };
@@ -154,6 +167,7 @@ router.get(
 
       let qtySold = 0;
       let salesWithQty = sales;
+
       if (productId) {
         salesWithQty = sales.map((s) => {
           const product_qty = s.items
