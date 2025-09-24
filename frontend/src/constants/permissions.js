@@ -9,4 +9,5 @@ export const PERMISSIONS = {
   VENDORS: ["Admin", "Manager"],
   PAYMENTS: ["Admin", "Manager", "Staff"], // added
   STOCK: ["Admin", "Manager", "Staff"], // added
+  STOCK_ADJUSTMENTS: ["Admin", "Manager", "Staff"], // added
 };

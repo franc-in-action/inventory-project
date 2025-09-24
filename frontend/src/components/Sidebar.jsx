@@ -50,10 +50,16 @@ export default function Sidebar({ isOpen, onClose }) {
         PERMISSIONS.STOCK,
         PERMISSIONS.PURCHASES,
         PERMISSIONS.VENDORS,
+        PERMISSIONS.STOCK_ADJUSTMENTS,
       ],
       submenu: [
         { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
         { to: "/stock", label: "Stock", roles: PERMISSIONS.STOCK },
+        {
+          to: "/stock-adjustments",
+          label: "Adjustments",
+          roles: PERMISSIONS.STOCK_ADJUSTMENTS,
+        },
         { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
         { to: "/vendors", label: "Vendors", roles: PERMISSIONS.VENDORS },
       ],
