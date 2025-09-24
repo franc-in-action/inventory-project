@@ -1,4 +1,3 @@
-// src/modules/locations/LocationList.jsx
 import { useState } from "react";
 import {
   Table,
@@ -29,7 +28,7 @@ export default function LocationList({ locations, onEdit, onDelete }) {
 
   return (
     <>
-      <Table variant="simple">
+      <Table>
         <Thead>
           <Tr>
             <Th>Name</Th>
@@ -41,10 +40,7 @@ export default function LocationList({ locations, onEdit, onDelete }) {
           {locations.map((loc) => (
             <Tr key={loc.id}>
               <Td>
-                <Link
-                  color="blue.500"
-                  onClick={() => handleOpenDetails(loc.id)}
-                >
+                <Link onClick={() => handleOpenDetails(loc.id)}>
                   {loc.name}
                 </Link>
               </Td>
@@ -52,15 +48,11 @@ export default function LocationList({ locations, onEdit, onDelete }) {
               <Td>
                 <IconButton
                   icon={<EditIcon />}
-                  size="sm"
-                  mr={2}
                   aria-label="Edit"
                   onClick={() => onEdit(loc.id)}
                 />
                 <IconButton
                   icon={<DeleteIcon />}
-                  size="sm"
-                  colorScheme="red"
                   aria-label="Delete"
                   onClick={() => onDelete(loc.id)}
                 />

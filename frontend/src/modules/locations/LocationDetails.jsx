@@ -1,4 +1,3 @@
-// src/modules/locations/LocationDetails.jsx
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -19,7 +18,6 @@ export default function LocationDetails({ locationId, isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen || !locationId) return;
-
     setLoading(true);
     (async () => {
       try {
@@ -34,16 +32,16 @@ export default function LocationDetails({ locationId, isOpen, onClose }) {
   }, [locationId, isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Location Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
-            <Spinner size="xl" margin="auto" />
+            <Spinner />
           ) : location ? (
-            <VStack spacing={3} align="start">
+            <VStack>
               <Text>
                 <strong>Name:</strong> {location.name}
               </Text>

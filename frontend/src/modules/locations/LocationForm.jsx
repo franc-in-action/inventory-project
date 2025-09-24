@@ -1,4 +1,3 @@
-// src/components/modals/LocationForm.jsx
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -21,27 +20,20 @@ import {
   fetchLocationById,
   createLocation,
   updateLocation,
-  deleteLocation,
 } from "./locationsApi.js";
 
 export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
   const toast = useToast();
-  const [location, setLocation] = useState({
-    name: "",
-    address: "",
-  });
+  const [location, setLocation] = useState({ name: "", address: "" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load location details if editing
   useEffect(() => {
     if (!isOpen) return;
-
     if (!locationId) {
       setLocation({ name: "", address: "" });
       return;
     }
-
     setLoading(true);
     (async () => {
       try {
@@ -64,7 +56,6 @@ export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       if (locationId) {
         await updateLocation(locationId, location);
@@ -84,7 +75,7 @@ export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
@@ -93,16 +84,15 @@ export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
-            <Spinner size="xl" margin="auto" />
+            <Spinner />
           ) : (
-            <VStack spacing={4} w="full">
+            <VStack>
               <FormControl isRequired>
                 <FormLabel>Name</FormLabel>
                 <Input
                   name="name"
                   value={location.name}
                   onChange={handleChange}
-                  size="sm"
                 />
               </FormControl>
 
@@ -112,18 +102,14 @@ export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
                   name="address"
                   value={location.address}
                   onChange={handleChange}
-                  size="sm"
                 />
               </FormControl>
             </VStack>
           )}
         </ModalBody>
-
         <ModalFooter>
-          <Button mr={3} onClick={onClose} variant="ghost">
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" isLoading={saving}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" isLoading={saving}>
             {locationId ? "Update" : "Create"}
           </Button>
         </ModalFooter>

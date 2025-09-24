@@ -1,4 +1,3 @@
-// src/modules/locations/LocationsPage.jsx
 import { useEffect, useState } from "react";
 import { Box, Heading, Button, Flex, Input, useToast } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
@@ -50,21 +49,16 @@ export default function LocationsPage() {
   );
 
   return (
-    <Box p={4}>
-      <Flex mb={4} justify="space-between" align="center">
-        <Heading size="md">Branches / Locations</Heading>
-        <Button
-          leftIcon={<AddIcon />}
-          colorScheme="teal"
-          onClick={openCreateModal}
-        >
-          Add Location
+    <Box>
+      <Flex>
+        <Heading>Branches / Locations</Heading>
+        <Button leftIcon={<AddIcon />} onClick={openCreateModal}>
+          + Location
         </Button>
       </Flex>
 
       <Input
         placeholder="Search locations..."
-        mb={4}
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />
