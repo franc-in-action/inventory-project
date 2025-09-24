@@ -11,6 +11,7 @@ import {
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons"; // Add RepeatIcon
 import { useNavigate } from "react-router-dom";
 import { getUserFromToken, logout } from "../modules/auth/authApi.js";
+import ColorModeSwitcher from "../components/ColorModeSwitcher.jsx";
 
 export default function Header({ onOpenSidebar, onRefresh }) {
   const navigate = useNavigate();
@@ -53,6 +54,8 @@ export default function Header({ onOpenSidebar, onRefresh }) {
             colorScheme="blue"
             onClick={onRefresh}
           />
+
+          <ColorModeSwitcher />
 
           <Button
             // size={{ base: "sm", md: "md" }}

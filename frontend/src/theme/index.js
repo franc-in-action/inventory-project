@@ -1,4 +1,3 @@
-// theme/index.js
 import { extendTheme } from "@chakra-ui/react";
 
 import Flex from "./components/flex";
@@ -28,7 +27,14 @@ const colors = {
   },
 };
 
+// Theme config for color mode
+const config = {
+  initialColorMode: "light", // default mode
+  useSystemColorMode: true, // respect system preference
+};
+
 const theme = extendTheme({
+  config,
   colors,
   components: {
     Flex,
@@ -42,14 +48,6 @@ const theme = extendTheme({
     Table,
     Card,
   },
-  // Optionally set default color scheme for certain components
-  // e.g., Buttons and Tabs use 'brand'
-  // You can also set this per component theme file
-  // Example:
-  // components: {
-  //   Tabs: { defaultProps: { colorScheme: 'brand' } },
-  //   Button: { defaultProps: { colorScheme: 'brand' } },
-  // }
 });
 
 export default theme;

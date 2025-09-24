@@ -111,7 +111,7 @@ export default function Sidebar({ isOpen, onClose }) {
       overflowY="auto"
     >
       {user && (
-        <Box mb={6} textAlign="center">
+        <Box mb={6} p={"4"} textAlign="left">
           {user.location && (
             <Text fontSize="sm" color="gray.400">
               {user.location}
