@@ -13,12 +13,17 @@ import {
   ButtonGroup,
   Spinner,
   useToast,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import { fetchPurchases, receivePurchase } from "./purchaseApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
-import { fetchVendors } from "../vendors/vendorsApi.js"; // <-- dynamic vendor fetch
+import { fetchVendors } from "../vendors/vendorsApi.js";
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
 
@@ -31,7 +36,6 @@ export default function PurchasesPage() {
   const [locations, setLocations] = useState([]);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
-  // Load all purchases
   const loadPurchases = async () => {
     setLoading(true);
     try {
@@ -49,7 +53,6 @@ export default function PurchasesPage() {
     }
   };
 
-  // Load vendors dynamically from API
   const loadVendors = async () => {
     try {
       const vens = await fetchVendors();
@@ -60,7 +63,6 @@ export default function PurchasesPage() {
     }
   };
 
-  // Load locations dynamically
   const loadLocations = async () => {
     try {
       const locs = await fetchLocations();
@@ -71,7 +73,6 @@ export default function PurchasesPage() {
     }
   };
 
-  // Handle receiving a purchase
   const handleReceive = async (purchaseId) => {
     try {
       await receivePurchase(purchaseId);
@@ -92,6 +93,63 @@ export default function PurchasesPage() {
   const getLocationName = (id) =>
     locations.find((l) => l.id === id)?.name || id;
 
+  const pendingPurchases = purchases.filter((p) => !p.received);
+  const receivedPurchases = purchases.filter((p) => p.received);
+
+  const renderPurchaseTable = (purchaseList, showReceiveButton = false) => (
+    <Table variant="striped" size="sm">
+      <Thead>
+        <Tr>
+          <Th>UUID</Th>
+          <Th>Vendor</Th>
+          <Th>Location</Th>
+          <Th>Total</Th>
+          <Th>Received</Th>
+          <Th>Received By</Th>
+          <Th>Actions</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        {purchaseList.length === 0 ? (
+          <Tr>
+            <Td colSpan={6} textAlign="center">
+              No purchases found
+            </Td>
+          </Tr>
+        ) : (
+          purchaseList.map((p) => (
+            <Tr key={p.id}>
+              <Td>
+                <Button variant="link" onClick={() => setSelectedPurchase(p)}>
+                  {p.purchaseUuid}
+                </Button>
+              </Td>
+              <Td>{getVendorName(p.vendorId)}</Td>
+              <Td>{getLocationName(p.locationId)}</Td>
+              <Td>${p.total.toFixed(2)}</Td>
+              <Td>{p.received ? "Yes" : "No"}</Td>
+              <Td>
+                {p.receivedByUser ? p.receivedByUser.name : p.receivedBy || "-"}
+              </Td>
+
+              <Td>
+                {showReceiveButton && (
+                  <Button
+                    size="sm"
+                    colorScheme="green"
+                    onClick={() => handleReceive(p.id)}
+                  >
+                    Receive
+                  </Button>
+                )}
+              </Td>
+            </Tr>
+          ))
+        )}
+      </Tbody>
+    </Table>
+  );
+
   return (
     <Box>
       <Flex align="center" mb={4}>
@@ -108,58 +166,26 @@ export default function PurchasesPage() {
         </ButtonGroup>
       </Flex>
 
-      <Table variant="striped" size="sm">
-        <Thead>
-          <Tr>
-            <Th>UUID</Th>
-            <Th>Vendor</Th>
-            <Th>Location</Th>
-            <Th>Total</Th>
-            <Th>Received</Th>
-            <Th>Actions</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {loading ? (
-            <Tr>
-              <Td colSpan={6} textAlign="center">
-                <Spinner />
-              </Td>
-            </Tr>
-          ) : purchases.length === 0 ? (
-            <Tr>
-              <Td colSpan={6} textAlign="center">
-                No purchases found
-              </Td>
-            </Tr>
-          ) : (
-            purchases.map((p) => (
-              <Tr key={p.id}>
-                <Td>
-                  <Button variant="link" onClick={() => setSelectedPurchase(p)}>
-                    {p.purchaseUuid}
-                  </Button>
-                </Td>
-                <Td>{getVendorName(p.vendorId)}</Td>
-                <Td>{getLocationName(p.locationId)}</Td>
-                <Td>${p.total.toFixed(2)}</Td>
-                <Td>{p.received ? "Yes" : "No"}</Td>
-                <Td>
-                  {!p.received && (
-                    <Button
-                      size="sm"
-                      colorScheme="green"
-                      onClick={() => handleReceive(p.id)}
-                    >
-                      Receive
-                    </Button>
-                  )}
-                </Td>
-              </Tr>
-            ))
-          )}
-        </Tbody>
-      </Table>
+      {loading ? (
+        <Spinner />
+      ) : (
+        <Tabs variant="enclosed">
+          <TabList>
+            <Tab
+              color={pendingPurchases.length > 0 ? "red.500" : "gray.500"}
+              fontWeight={pendingPurchases.length > 0 ? "bold" : "normal"}
+            >
+              Pending ({pendingPurchases.length})
+            </Tab>
+            <Tab>Received ({receivedPurchases.length})</Tab>
+          </TabList>
+
+          <TabPanels>
+            <TabPanel>{renderPurchaseTable(pendingPurchases, true)}</TabPanel>
+            <TabPanel>{renderPurchaseTable(receivedPurchases)}</TabPanel>
+          </TabPanels>
+        </Tabs>
+      )}
 
       <PurchaseForm
         isOpen={showForm}

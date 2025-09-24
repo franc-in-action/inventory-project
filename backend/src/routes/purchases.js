@@ -83,7 +83,7 @@ router.put(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER", "STAFF"]),
   async (req, res) => {
-    const purchaseId = parseInt(req.params.id);
+    const purchaseId = req.params.id; // keep as string
     const userId = req.user.userId;
 
     try {
@@ -99,7 +99,7 @@ router.put(
       await prisma.$transaction(async (tx) => {
         await tx.purchase.update({
           where: { id: purchaseId },
-          data: { received: true },
+          data: { received: true, receivedBy: userId }, // <-- add this
         });
 
         for (const item of purchase.items) {
@@ -126,6 +126,7 @@ router.put(
               delta: item.qty,
               reason: "Purchase Received",
               refId: purchase.purchaseUuid,
+              performedBy: userId,
             },
           });
         }
@@ -134,7 +135,7 @@ router.put(
           data: {
             action: "PURCHASE_RECEIVED",
             entity: "Purchase",
-            entityId: purchaseId.toString(),
+            entityId: purchaseId,
             performedBy: userId,
             metadata: { items: purchase.items },
           },
@@ -167,7 +168,12 @@ router.get(
 
       const purchases = await prisma.purchase.findMany({
         where,
-        include: { items: true, vendor: true, location: true },
+        include: {
+          items: true,
+          vendor: true,
+          location: true,
+          receivedByUser: true, // now works after generating client
+        },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: parseInt(limit),

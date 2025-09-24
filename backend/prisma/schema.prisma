@@ -10,18 +10,19 @@ datasource db {
 // --- Core models ---
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role     @default(STAFF)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  name               String
+  role               Role      @default(STAFF)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  locationId String?
-  location   Location? @relation(fields: [locationId], references: [id])
+  locationId         String?
+  location           Location? @relation(fields: [locationId], references: [id])
 
-  stockMovements StockMovement[] @relation("StockMovementPerformedBy")
+  stockMovements     StockMovement[] @relation("StockMovementPerformedBy")
+  receivedPurchases  Purchase[]      @relation("PurchaseReceivedBy")
 }
 
 model Location {
@@ -172,17 +173,20 @@ model Vendor {
 }
 
 model Purchase {
-  id           String   @id @default(uuid())
-  purchaseUuid String   @unique
-  vendorId     String
-  locationId   String
-  total        Float
-  received     Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id             String   @id @default(uuid())
+  purchaseUuid   String   @unique
+  vendorId       String
+  locationId     String
+  total          Float
+  received       Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
-  vendor   Vendor         @relation(fields: [vendorId], references: [id])
-  location Location       @relation(fields: [locationId], references: [id])
-  items    PurchaseItem[]
+  vendor         Vendor   @relation(fields: [vendorId], references: [id])
+  location       Location @relation(fields: [locationId], references: [id])
+  items          PurchaseItem[]
+
+  receivedBy     String?
+  receivedByUser User? @relation("PurchaseReceivedBy", fields: [receivedBy], references: [id])
 }
 
 model PurchaseItem {
