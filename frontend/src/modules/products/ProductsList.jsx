@@ -27,16 +27,14 @@ import {
   fetchTotalStockForProducts,
 } from "../stock/stockApi.js";
 import { useProducts } from "./contexts/ProductsContext.jsx";
-import ProductDetails from "./ProductDetails.jsx"; // ✅ import modal component
+import ProductDetails from "./ProductDetails.jsx";
 
 export default function ProductsList({ onEdit, refreshKey }) {
   const { products } = useProducts();
-  const [totalProducts, setTotalProducts] = useState(0);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stockByProduct, setStockByProduct] = useState({});
-
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -45,7 +43,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
-  // ✅ modal controls
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -54,9 +51,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
     onOpen();
   };
 
-  // -----------------------
-  // Fetch categories & locations
-  // -----------------------
   useEffect(() => {
     const loadMeta = async () => {
       try {
@@ -74,7 +68,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
   }, []);
 
   useEffect(() => {
-    setTotalProducts(products.length);
     setLoading(false);
   }, [products]);
 
@@ -82,10 +75,10 @@ export default function ProductsList({ onEdit, refreshKey }) {
     const loadStock = async () => {
       if (!products.length) return setStockByProduct({});
       try {
-        const productIds = products.map((p) => p.id);
+        const ids = products.map((p) => p.id);
         const stock = locationId
-          ? await fetchStockForProducts(productIds, locationId)
-          : await fetchTotalStockForProducts(productIds);
+          ? await fetchStockForProducts(ids, locationId)
+          : await fetchTotalStockForProducts(ids);
         setStockByProduct(stock);
       } catch (err) {
         console.error("Failed to fetch stock:", err);
@@ -121,14 +114,14 @@ export default function ProductsList({ onEdit, refreshKey }) {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  if (loading) return <Spinner size="xl" margin="auto" />;
+  if (loading) return <Spinner />;
 
   return (
-    <Box w="full">
-      <Heading mb={4}>Products</Heading>
+    <Box>
+      <Heading>Products</Heading>
 
       {/* Filters */}
-      <HStack spacing={3} mb={4} flexWrap="wrap">
+      <HStack>
         <Input
           placeholder="Search name or SKU..."
           value={search}
@@ -136,7 +129,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
             setPage(1);
             setSearch(e.target.value);
           }}
-          w={{ base: "100%", md: "200px" }}
         />
         <Select
           placeholder="Filter by Category"
@@ -145,7 +137,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
             setPage(1);
             setCategoryId(e.target.value);
           }}
-          w={{ base: "100%", md: "200px" }}
         >
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -160,7 +151,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
             setPage(1);
             setLocationId(e.target.value);
           }}
-          w={{ base: "100%", md: "200px" }}
         >
           {locations.map((l) => (
             <option key={l.id} value={l.id}>
@@ -172,7 +162,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
       {/* Desktop Table */}
       {isDesktop ? (
-        <Table variant="striped" size="sm">
+        <Table>
           <Thead>
             <Tr>
               <Th>SKU</Th>
@@ -184,22 +174,15 @@ export default function ProductsList({ onEdit, refreshKey }) {
               <Th isNumeric>Price ($)</Th>
               <Th>Created</Th>
               <Th>Updated</Th>
-              <Th textAlign="right">Actions</Th>
+              <Th>Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
             {paginated.map((p) => (
               <Tr key={p.id}>
                 <Td>{p.sku}</Td>
-                {/* ✅ Clickable product name to open modal */}
                 <Td>
-                  <Button
-                    variant="link"
-                    colorScheme="blue"
-                    onClick={() => handleOpenDetails(p)}
-                  >
-                    {p.name}
-                  </Button>
+                  <Button onClick={() => handleOpenDetails(p)}>{p.name}</Button>
                 </Td>
                 <Td>{p.description || "—"}</Td>
                 <Td>{p.category?.name || "—"}</Td>
@@ -208,22 +191,10 @@ export default function ProductsList({ onEdit, refreshKey }) {
                 <Td isNumeric>{p.price}</Td>
                 <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
                 <Td>{new Date(p.updatedAt).toLocaleDateString()}</Td>
-                <Td textAlign="right">
-                  <HStack justify="flex-end">
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      onClick={() => onEdit(p.id)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      onClick={() => handleDelete(p.id)}
-                    >
-                      Delete
-                    </Button>
+                <Td>
+                  <HStack>
+                    <Button onClick={() => onEdit(p.id)}>Edit</Button>
+                    <Button onClick={() => handleDelete(p.id)}>Delete</Button>
                   </HStack>
                 </Td>
               </Tr>
@@ -231,26 +202,12 @@ export default function ProductsList({ onEdit, refreshKey }) {
           </Tbody>
         </Table>
       ) : (
-        <VStack align="stretch" spacing={3}>
+        <VStack>
           {paginated.map((p) => (
-            <Flex
-              key={p.id}
-              direction="column"
-              borderWidth={1}
-              borderRadius="md"
-              p={3}
-              gap={2}
-            >
-              {/* ✅ Mobile clickable name */}
-              <Text fontWeight="bold">
+            <Flex key={p.id}>
+              <Text>
                 {p.sku} –{" "}
-                <Button
-                  variant="link"
-                  colorScheme="blue"
-                  onClick={() => handleOpenDetails(p)}
-                >
-                  {p.name}
-                </Button>
+                <Button onClick={() => handleOpenDetails(p)}>{p.name}</Button>
               </Text>
               {p.description && <Text>Description: {p.description}</Text>}
               <Text>Category: {p.category?.name || "—"}</Text>
@@ -259,21 +216,9 @@ export default function ProductsList({ onEdit, refreshKey }) {
               <Text>Price: ${p.price}</Text>
               <Text>Created: {new Date(p.createdAt).toLocaleDateString()}</Text>
               <Text>Updated: {new Date(p.updatedAt).toLocaleDateString()}</Text>
-              <HStack justify="flex-end" pt={2}>
-                <Button
-                  size="sm"
-                  colorScheme="blue"
-                  onClick={() => onEdit(p.id)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDelete(p.id)}
-                >
-                  Delete
-                </Button>
+              <HStack>
+                <Button onClick={() => onEdit(p.id)}>Edit</Button>
+                <Button onClick={() => handleDelete(p.id)}>Delete</Button>
               </HStack>
             </Flex>
           ))}
@@ -281,10 +226,10 @@ export default function ProductsList({ onEdit, refreshKey }) {
       )}
 
       {/* Pagination */}
-      <HStack justify="center" mt={4}>
+      <HStack>
         <Button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          isDisabled={page === 1}
+          disabled={page === 1}
         >
           Previous
         </Button>
@@ -293,13 +238,12 @@ export default function ProductsList({ onEdit, refreshKey }) {
         </Text>
         <Button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          isDisabled={page === totalPages}
+          disabled={page === totalPages}
         >
           Next
         </Button>
       </HStack>
 
-      {/* ✅ Product Details Modal */}
       {selectedProduct && (
         <ProductDetails
           isOpen={isOpen}

@@ -30,10 +30,7 @@ import {
 
 import { fetchSales } from "../sales/salesApi.js";
 import { fetchPurchases } from "../purchases/purchaseApi.js";
-import {
-  fetchStockForProducts,
-  fetchStockMovements,
-} from "../stock/stockApi.js";
+import { fetchStockMovements } from "../stock/stockApi.js";
 
 export default function ProductDetails({
   isOpen,
@@ -54,11 +51,9 @@ export default function ProductDetails({
   useEffect(() => {
     if (!product?.id || !isOpen) return;
 
-    // Fetch sales that include this product + aggregated qtySold
     setLoadingSales(true);
     fetchSales({ productId: product.id })
       .then((res) => {
-        // res may be { items, qtySold } or items array
         if (res && Array.isArray(res.items)) {
           setSales(res.items);
           setQtySold(res.qtySold || 0);
@@ -70,14 +65,12 @@ export default function ProductDetails({
           setQtySold(res.qtySold || 0);
         }
       })
-      .catch((err) => {
-        console.error("fetchSales error:", err);
+      .catch(() => {
         setSales([]);
         setQtySold(0);
       })
       .finally(() => setLoadingSales(false));
 
-    // Fetch purchases that include this product + aggregated qtyPurchased
     setLoadingPurchases(true);
     fetchPurchases({ productId: product.id })
       .then((res) => {
@@ -92,54 +85,42 @@ export default function ProductDetails({
           setQtyPurchased(res.qtyPurchased || 0);
         }
       })
-      .catch((err) => {
-        console.error("fetchPurchases error:", err);
+      .catch(() => {
         setPurchases([]);
         setQtyPurchased(0);
       })
       .finally(() => setLoadingPurchases(false));
 
-    // Fetch stock movements for this product (optionally for the current location)
     setLoadingStock(true);
     fetchStockMovements(product.id, locationId)
-      .then((movs) => {
-        setStockMovement(movs || []);
-      })
-      .catch((err) => {
-        console.error("fetchStockMovements error:", err);
-        setStockMovement([]);
-      })
+      .then((movs) => setStockMovement(movs || []))
+      .catch(() => setStockMovement([]))
       .finally(() => setLoadingStock(false));
   }, [product, isOpen, locationId]);
 
   if (!product) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Product Details</ModalHeader>
         <ModalCloseButton />
 
-        <ModalBody p={0}>
-          <Tabs isFitted variant="enclosed" colorScheme="blue">
-            <TabList overflowX="auto" flexWrap="nowrap">
-              <Tab flexShrink={0}>Overview</Tab>
-              <Tab flexShrink={0}>Sales</Tab>
-              <Tab flexShrink={0}>Purchases</Tab>
-              <Tab flexShrink={0}>Movement</Tab>
+        <ModalBody>
+          <Tabs>
+            <TabList>
+              <Tab>Overview</Tab>
+              <Tab>Sales</Tab>
+              <Tab>Purchases</Tab>
+              <Tab>Movement</Tab>
             </TabList>
 
             <TabPanels>
-              {/* Overview Tab */}
               <TabPanel>
-                <Flex
-                  direction={{ base: "column", md: "row" }}
-                  align="flex-start"
-                  gap={6}
-                >
-                  <Box flex="1">
-                    <VStack align="start" spacing={2}>
+                <Flex>
+                  <Box>
+                    <VStack>
                       <Text>
                         <b>SKU:</b> {product.sku}
                       </Text>
@@ -174,7 +155,6 @@ export default function ProductDetails({
                 </Flex>
               </TabPanel>
 
-              {/* Sales Tab */}
               <TabPanel>
                 {loadingSales ? (
                   <Spinner />
@@ -182,7 +162,7 @@ export default function ProductDetails({
                   <Text>No sales found for this product.</Text>
                 ) : (
                   <>
-                    <HStack justify="space-between" mb={2}>
+                    <HStack>
                       <Text>
                         <b>Total Qty Sold:</b> {qtySold}
                       </Text>
@@ -190,12 +170,12 @@ export default function ProductDetails({
                         <b>Sales Count:</b> {sales.length}
                       </Text>
                     </HStack>
-                    <Table size="sm" variant="simple">
+                    <Table>
                       <Thead>
                         <Tr>
                           <Th>Date</Th>
                           <Th>Customer</Th>
-                          <Th isNumeric>Qty</Th> {/* ✅ NEW */}
+                          <Th isNumeric>Qty</Th>
                           <Th isNumeric>Total ($)</Th>
                         </Tr>
                       </Thead>
@@ -208,8 +188,7 @@ export default function ProductDetails({
                             <Td>
                               {s.customer?.name || s.customer_name || "—"}
                             </Td>
-                            <Td isNumeric>{s.product_qty ?? "—"}</Td>{" "}
-                            {/* ✅ NEW */}
+                            <Td isNumeric>{s.product_qty ?? "—"}</Td>
                             <Td isNumeric>{s.total}</Td>
                           </Tr>
                         ))}
@@ -219,7 +198,6 @@ export default function ProductDetails({
                 )}
               </TabPanel>
 
-              {/* Purchases Tab */}
               <TabPanel>
                 {loadingPurchases ? (
                   <Spinner />
@@ -227,7 +205,7 @@ export default function ProductDetails({
                   <Text>No purchases found for this product.</Text>
                 ) : (
                   <>
-                    <HStack justify="space-between" mb={2}>
+                    <HStack>
                       <Text>
                         <b>Total Qty Purchased:</b> {qtyPurchased}
                       </Text>
@@ -235,12 +213,12 @@ export default function ProductDetails({
                         <b>Purchases Count:</b> {purchases.length}
                       </Text>
                     </HStack>
-                    <Table size="sm" variant="simple">
+                    <Table>
                       <Thead>
                         <Tr>
                           <Th>Date</Th>
                           <Th>Vendor</Th>
-                          <Th isNumeric>Qty</Th> {/* ✅ NEW */}
+                          <Th isNumeric>Qty</Th>
                           <Th isNumeric>Total ($)</Th>
                         </Tr>
                       </Thead>
@@ -251,8 +229,7 @@ export default function ProductDetails({
                               {new Date(p.createdAt).toLocaleDateString()}
                             </Td>
                             <Td>{p.vendorId || p.vendor_name || "—"}</Td>
-                            <Td isNumeric>{p.product_qty ?? "—"}</Td>{" "}
-                            {/* ✅ NEW */}
+                            <Td isNumeric>{p.product_qty ?? "—"}</Td>
                             <Td isNumeric>{p.total}</Td>
                           </Tr>
                         ))}
@@ -262,15 +239,14 @@ export default function ProductDetails({
                 )}
               </TabPanel>
 
-              {/* Stock Movement Tab */}
               <TabPanel>
                 {loadingStock ? (
                   <Spinner />
                 ) : stockMovement.length === 0 ? (
                   <Text>No stock movement data available.</Text>
                 ) : (
-                  <VStack align="stretch" spacing={2}>
-                    <HStack justify="space-between">
+                  <VStack>
+                    <HStack>
                       <Text>
                         <b>Movements:</b> {stockMovement.length}
                       </Text>
@@ -280,18 +256,12 @@ export default function ProductDetails({
                     </HStack>
                     <Divider />
                     {stockMovement.map((m) => (
-                      <HStack
-                        key={m.id}
-                        justify="space-between"
-                        borderWidth="1px"
-                        borderRadius="md"
-                        p={2}
-                      >
-                        <VStack align="start" spacing={0}>
+                      <HStack key={m.id}>
+                        <VStack>
                           <Text>
                             <b>Reason:</b> {m.reason}
                           </Text>
-                          <Text fontSize="sm">
+                          <Text>
                             <b>Ref:</b> {m.refId || "—"} —{" "}
                             {new Date(m.createdAt).toLocaleString()}
                           </Text>
@@ -309,9 +279,7 @@ export default function ProductDetails({
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onClose}>
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

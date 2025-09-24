@@ -1,4 +1,3 @@
-// src/components/modals/ProductForm.jsx
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -42,37 +41,25 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load categories and locations when modal opens
   useEffect(() => {
     if (!isOpen) return;
-    console.log(
-      "[ProductForm] Modal opened. Loading categories and locations..."
-    );
     (async () => {
       try {
         const [cats, locs] = await Promise.all([
           fetchCategories(),
           fetchLocations(),
         ]);
-        console.log("[ProductForm] Categories loaded:", cats);
-        console.log("[ProductForm] Locations loaded:", locs);
         setCategories(cats || []);
         setLocations(locs || []);
-      } catch (err) {
-        console.error(
-          "[ProductForm] Failed to load categories or locations:",
-          err
-        );
+      } catch {
         toast({ status: "error", description: "Failed to load data." });
       }
     })();
   }, [isOpen, toast]);
 
-  // Load product details when editing
   useEffect(() => {
     if (!isOpen) return;
     if (!productId) {
-      console.log("[ProductForm] Creating new product, resetting form...");
       setProduct({
         name: "",
         sku: "",
@@ -84,15 +71,12 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
       });
       return;
     }
-    console.log("[ProductForm] Editing product with ID:", productId);
     setLoading(true);
     (async () => {
       try {
         const data = await fetchProductById(productId);
-        console.log("[ProductForm] Product data loaded:", data);
         if (data) setProduct(data);
-      } catch (err) {
-        console.error("[ProductForm] Failed to load product:", err);
+      } catch {
         toast({ status: "error", description: "Failed to load product." });
       } finally {
         setLoading(false);
@@ -102,7 +86,6 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log("[ProductForm] Field changed:", name, value);
     setProduct((p) => ({ ...p, [name]: value }));
   };
 
@@ -114,24 +97,19 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
       price: Number(product.price),
       quantity: Number(product.quantity),
     };
-    console.log("[ProductForm] Submitting product:", payload);
     try {
       if (productId) {
-        console.log("[ProductForm] Updating existing product...");
         await updateProduct(productId, payload);
       } else {
-        console.log("[ProductForm] Creating new product...");
         await createProduct(payload);
       }
       toast({
         status: "success",
         description: `Product ${productId ? "updated" : "created"}`,
       });
-      console.log("[ProductForm] Product saved successfully.");
       onSaved();
       onClose();
     } catch (err) {
-      console.error("[ProductForm] Error saving product:", err);
       toast({ status: "error", description: err.message });
     } finally {
       setSaving(false);
@@ -139,7 +117,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
@@ -148,13 +126,12 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
-            <Spinner size="xl" margin="auto" />
+            <Spinner />
           ) : (
-            <VStack spacing={4} w="full">
+            <VStack>
               <FormControl isRequired>
                 <FormLabel>Name</FormLabel>
                 <Input
-                  size="sm"
                   name="name"
                   value={product.name}
                   onChange={handleChange}
@@ -163,18 +140,12 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
 
               <FormControl isRequired>
                 <FormLabel>SKU</FormLabel>
-                <Input
-                  size="sm"
-                  name="sku"
-                  value={product.sku}
-                  onChange={handleChange}
-                />
+                <Input name="sku" value={product.sku} onChange={handleChange} />
               </FormControl>
 
               <FormControl isRequired>
                 <FormLabel>Price</FormLabel>
                 <Input
-                  size="sm"
                   type="number"
                   name="price"
                   value={product.price}
@@ -185,7 +156,6 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
               <FormControl isRequired>
                 <FormLabel>Quantity</FormLabel>
                 <Input
-                  size="sm"
                   type="number"
                   name="quantity"
                   value={product.quantity}
@@ -196,7 +166,6 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
               <FormControl>
                 <FormLabel>Description</FormLabel>
                 <Textarea
-                  size="sm"
                   name="description"
                   value={product.description}
                   onChange={handleChange}
@@ -209,24 +178,14 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
                   items={categories}
                   selectedItemId={product.categoryId}
                   placeholder="Select or add category"
-                  createNewItem={async (name) => {
-                    console.log("[ProductForm] createNewItem called:", name);
-                    const cat = await createCategory(name);
-                    console.log("[ProductForm] Category created:", cat);
-                    return cat;
-                  }}
+                  createNewItem={createCategory}
                   onSelect={(item) => {
-                    console.log("[ProductForm] ComboBox onSelect:", item);
-                    setCategories((prev) => {
-                      if (!prev.some((c) => c.id === item.id))
-                        return [...prev, item];
-                      return prev;
-                    });
+                    setCategories((prev) =>
+                      prev.some((c) => c.id === item.id)
+                        ? prev
+                        : [...prev, item]
+                    );
                     setProduct((p) => ({ ...p, categoryId: item.id }));
-                    toast({
-                      status: "success",
-                      description: `Category "${item.name}" selected/created`,
-                    });
                   }}
                 />
               </FormControl>
@@ -237,10 +196,9 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
                   items={locations}
                   selectedItemId={product.locationId}
                   placeholder="Select location"
-                  onSelect={(item) => {
-                    console.log("[ProductForm] Location selected:", item);
-                    setProduct((p) => ({ ...p, locationId: item.id }));
-                  }}
+                  onSelect={(item) =>
+                    setProduct((p) => ({ ...p, locationId: item.id }))
+                  }
                 />
               </FormControl>
             </VStack>
@@ -248,10 +206,8 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         </ModalBody>
 
         <ModalFooter>
-          <Button mr={3} onClick={onClose} variant="ghost">
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" isLoading={saving}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" isLoading={saving}>
             {productId ? "Update" : "Create"}
           </Button>
         </ModalFooter>

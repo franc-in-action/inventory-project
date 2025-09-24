@@ -23,15 +23,8 @@ export default function Products() {
   };
 
   return (
-    <Flex direction="column" w="full" maxW="container.lg" mx="auto">
-      <Button
-        colorScheme="blue"
-        mb={4}
-        alignSelf={{ base: "stretch", sm: "flex-start" }}
-        onClick={handleAdd}
-      >
-        + New
-      </Button>
+    <Flex>
+      <Button onClick={handleAdd}>+ New</Button>
 
       <ProductsList onEdit={handleEdit} refreshKey={isOpen} />
 
