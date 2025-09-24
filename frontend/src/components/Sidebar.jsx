@@ -7,8 +7,11 @@ import {
   Text,
   Icon,
   Divider,
+  Collapse,
+  Button,
 } from "@chakra-ui/react";
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
 import { getUserFromToken, userHasRole } from "../modules/auth/authApi.js";
 import { PERMISSIONS } from "../constants/permissions.js";
 import {
@@ -26,69 +29,74 @@ import {
 
 export default function Sidebar({ isOpen, onClose }) {
   const user = getUserFromToken();
+  const [openMenu, setOpenMenu] = useState(null); // store currently open menu
+
+  const toggleMenu = (menu) => {
+    setOpenMenu((prev) => (prev === menu ? null : menu));
+  };
 
   const links = [
     {
-      to: "/dashboard",
       label: "Dashboard",
       icon: FaTachometerAlt,
       roles: PERMISSIONS.DASHBOARD,
+      to: "/dashboard",
     },
     {
-      to: "/products",
-      label: "Products",
+      label: "Inventory",
       icon: FaBox,
-      roles: PERMISSIONS.PRODUCTS,
+      roles: [
+        PERMISSIONS.PRODUCTS,
+        PERMISSIONS.STOCK,
+        PERMISSIONS.PURCHASES,
+        PERMISSIONS.VENDORS,
+      ],
+      submenu: [
+        { to: "/products", label: "Products", roles: PERMISSIONS.PRODUCTS },
+        { to: "/stock", label: "Stock", roles: PERMISSIONS.STOCK },
+        { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
+        { to: "/vendors", label: "Vendors", roles: PERMISSIONS.VENDORS },
+      ],
     },
     {
-      to: "/stock",
-      label: "Stock",
-      icon: FaWarehouse,
-      roles: PERMISSIONS.STOCK,
-    }, // <- Stock
-    {
-      to: "/sales",
       label: "Sales",
       icon: FaCashRegister,
-      roles: PERMISSIONS.SALES,
+      roles: [PERMISSIONS.SALES, PERMISSIONS.CUSTOMERS, PERMISSIONS.PAYMENTS],
+      submenu: [
+        { to: "/sales", label: "Invoices", roles: PERMISSIONS.SALES },
+        { to: "/customers", label: "Customers", roles: PERMISSIONS.CUSTOMERS },
+        { to: "/payments", label: "Payments", roles: PERMISSIONS.PAYMENTS },
+      ],
     },
     {
-      to: "/purchases",
-      label: "Purchases",
-      icon: FaShoppingCart,
-      roles: PERMISSIONS.PURCHASES,
-    },
-    {
-      to: "/payments",
-      label: "Payments",
-      icon: FaMoneyBillWave,
-      roles: PERMISSIONS.PAYMENTS,
-    },
-    {
-      to: "/locations",
-      label: "Locations",
-      icon: FaMapMarkerAlt,
-      roles: PERMISSIONS.LOCATIONS,
-    },
-    {
-      to: "/customers",
-      label: "Customers",
+      label: "Accounts",
       icon: FaUsers,
-      roles: PERMISSIONS.CUSTOMERS,
+      roles: [PERMISSIONS.CUSTOMERS, PERMISSIONS.PAYMENTS],
+      submenu: [
+        { to: "/customers", label: "Customers", roles: PERMISSIONS.CUSTOMERS },
+        { to: "/payments", label: "Payments", roles: PERMISSIONS.PAYMENTS },
+      ],
     },
     {
-      to: "/vendors",
-      label: "Vendors",
-      icon: FaTruck,
-      roles: PERMISSIONS.VENDORS,
-    },
-    {
-      to: "/admin-tools",
-      label: "Admin Tools",
+      label: "Manage",
       icon: FaTools,
-      roles: PERMISSIONS.ADMIN_TOOLS,
+      roles: [PERMISSIONS.LOCATIONS, PERMISSIONS.ADMIN_TOOLS],
+      submenu: [
+        { to: "/locations", label: "Locations", roles: PERMISSIONS.LOCATIONS },
+        {
+          to: "/admin-tools",
+          label: "Admin Tools",
+          roles: PERMISSIONS.ADMIN_TOOLS,
+        },
+      ],
     },
-  ].filter((link) => userHasRole(link.roles));
+  ].filter((link) => {
+    if (link.submenu) {
+      link.submenu = link.submenu.filter((sub) => userHasRole(sub.roles));
+      return link.submenu.length > 0;
+    }
+    return userHasRole(link.roles);
+  });
 
   const SidebarContent = (
     <Box
@@ -100,6 +108,7 @@ export default function Sidebar({ isOpen, onClose }) {
       h="full"
       p={4}
       zIndex={20}
+      overflowY="auto"
     >
       {user && (
         <Box mb={6} textAlign="center">
@@ -117,24 +126,65 @@ export default function Sidebar({ isOpen, onClose }) {
       <Divider borderColor="gray.700" mb={4} />
       <VStack spacing={2} align="stretch">
         {links.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            style={({ isActive }) => ({
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "10px 12px",
-              borderRadius: "8px",
-              fontWeight: isActive ? "bold" : "normal",
-              backgroundColor: isActive ? "#2D3748" : "transparent",
-              color: isActive ? "#63B3ED" : "#A0AEC0",
-            })}
-            onClick={onClose}
-          >
-            <Icon as={link.icon} w={5} h={5} />
-            {link.label}
-          </NavLink>
+          <Box key={link.label}>
+            {!link.submenu ? (
+              <NavLink
+                to={link.to}
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  fontWeight: isActive ? "bold" : "normal",
+                  backgroundColor: isActive ? "#2D3748" : "transparent",
+                  color: isActive ? "#63B3ED" : "#A0AEC0",
+                })}
+                onClick={onClose}
+              >
+                <Icon as={link.icon} w={5} h={5} />
+                {link.label}
+              </NavLink>
+            ) : (
+              <Box>
+                <Button
+                  variant="ghost"
+                  color="gray.400"
+                  justifyContent="space-between"
+                  w="full"
+                  onClick={() => toggleMenu(link.label)}
+                  leftIcon={<Icon as={link.icon} w={5} h={5} />}
+                  _hover={{ bg: "gray.700" }}
+                >
+                  <Text flex="1" textAlign="left">
+                    {link.label}
+                  </Text>
+                  <Text>{openMenu === link.label ? "▲" : "▼"}</Text>
+                </Button>
+
+                <Collapse in={openMenu === link.label} animateOpacity>
+                  <VStack pl={6} align="stretch" spacing={1}>
+                    {link.submenu.map((sub) => (
+                      <NavLink
+                        key={sub.to}
+                        to={sub.to}
+                        style={({ isActive }) => ({
+                          display: "block",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          fontWeight: isActive ? "bold" : "normal",
+                          color: isActive ? "#63B3ED" : "#A0AEC0",
+                        })}
+                        onClick={onClose}
+                      >
+                        {sub.label}
+                      </NavLink>
+                    ))}
+                  </VStack>
+                </Collapse>
+              </Box>
+            )}
+          </Box>
         ))}
       </VStack>
     </Box>
