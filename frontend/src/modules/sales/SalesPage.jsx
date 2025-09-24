@@ -11,13 +11,18 @@ import {
   useDisclosure,
   ButtonGroup,
   Spacer,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { fetchSales } from "./salesApi.js";
 import SalesList from "./SalesList.jsx";
 import InvoiceDetails from "./InvoiceDetails.jsx";
 import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
-import InvoiceForm from "./InvoiceForm.jsx"; // <-- import here
+import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function SalesPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -30,8 +35,6 @@ export default function SalesPage() {
 
   const [selectedSale, setSelectedSale] = useState(null);
   const [thermalOpen, setThermalOpen] = useState(false);
-
-  // State for invoice form
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
 
   const loadSales = async () => {
@@ -62,11 +65,19 @@ export default function SalesPage() {
     );
   }, [allSales, search]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-  const paginated = useMemo(() => {
+  // Split sales into paid vs unpaid/partial
+  const paidSales = filtered.filter((s) => s.status?.toLowerCase() === "paid");
+  const unpaidSales = filtered.filter(
+    (s) => s.status?.toLowerCase() !== "paid"
+  );
+
+  const totalPages = (salesArray) =>
+    Math.max(1, Math.ceil(salesArray.length / limit));
+
+  const paginated = (salesArray) => {
     const start = (page - 1) * limit;
-    return filtered.slice(start, start + limit);
-  }, [filtered, page]);
+    return salesArray.slice(start, start + limit);
+  };
 
   const handleSelectSale = (sale) => {
     setSelectedSale(sale);
@@ -82,7 +93,7 @@ export default function SalesPage() {
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
+      <Flex minWidth="max-content" alignItems="center" gap="2" mb={4}>
         <Box p="2">
           <Heading size="md">Invoices</Heading>
         </Box>
@@ -91,7 +102,7 @@ export default function SalesPage() {
           <Button
             variant={"primary"}
             leftIcon={<AddIcon />}
-            onClick={() => setInvoiceFormOpen(true)} // <-- open form
+            onClick={() => setInvoiceFormOpen(true)}
           >
             Invoice
           </Button>
@@ -99,6 +110,7 @@ export default function SalesPage() {
       </Flex>
 
       <Input
+        mb={4}
         placeholder="Search by customer or Invoice No..."
         value={search}
         onChange={(e) => {
@@ -107,29 +119,68 @@ export default function SalesPage() {
         }}
       />
 
-      <SalesList
-        sales={paginated}
-        onSelectSale={handleSelectSale}
-        onPrint={handlePrint}
-      />
+      <Tabs variant="enclosed">
+        <TabList>
+          <Tab>Paid</Tab>
+          <Tab>Unpaid / Partial / Credit</Tab>
+        </TabList>
 
-      <HStack>
-        <Button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          isDisabled={page === 1}
-        >
-          Previous
-        </Button>
-        <Text>
-          Page {page} of {totalPages}
-        </Text>
-        <Button
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          isDisabled={page === totalPages}
-        >
-          Next
-        </Button>
-      </HStack>
+        <TabPanels>
+          <TabPanel>
+            <SalesList
+              sales={paginated(paidSales)}
+              onSelectSale={handleSelectSale}
+              onPrint={handlePrint}
+            />
+            <HStack mt={2}>
+              <Button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                isDisabled={page === 1}
+              >
+                Previous
+              </Button>
+              <Text>
+                Page {page} of {totalPages(paidSales)}
+              </Text>
+              <Button
+                onClick={() =>
+                  setPage((p) => Math.min(totalPages(paidSales), p + 1))
+                }
+                isDisabled={page === totalPages(paidSales)}
+              >
+                Next
+              </Button>
+            </HStack>
+          </TabPanel>
+
+          <TabPanel>
+            <SalesList
+              sales={paginated(unpaidSales)}
+              onSelectSale={handleSelectSale}
+              onPrint={handlePrint}
+            />
+            <HStack mt={2}>
+              <Button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                isDisabled={page === 1}
+              >
+                Previous
+              </Button>
+              <Text>
+                Page {page} of {totalPages(unpaidSales)}
+              </Text>
+              <Button
+                onClick={() =>
+                  setPage((p) => Math.min(totalPages(unpaidSales), p + 1))
+                }
+                isDisabled={page === totalPages(unpaidSales)}
+              >
+                Next
+              </Button>
+            </HStack>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
 
       {/* Invoice Details Modal */}
       {selectedSale && (
@@ -151,7 +202,7 @@ export default function SalesPage() {
         onClose={() => setInvoiceFormOpen(false)}
         onInvoiceCreated={() => {
           setInvoiceFormOpen(false);
-          loadSales(); // refresh list after creating invoice
+          loadSales();
         }}
       />
     </Box>

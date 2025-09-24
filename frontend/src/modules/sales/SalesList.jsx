@@ -23,33 +23,50 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
           <Th>Invoice No</Th>
           <Th>Customer</Th>
           <Th>Total ($)</Th>
+          <Th>Paid ($)</Th>
+          <Th>Unpaid ($)</Th>
           <Th>Payment Method</Th>
           <Th>Status</Th>
           <Th>Actions</Th>
         </Tr>
       </Thead>
       <Tbody>
-        {sales.map((s) => (
-          <Tr key={s.id}>
-            <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
-            <Td>
-              <Link onClick={() => onSelectSale(s)}>{s.saleUuid || s.id}</Link>
-            </Td>
-            <Td>{s.customer?.name || "—"}</Td>
-            <Td>{s.total}</Td>
-            <Td>{s.payments?.[0]?.method || "—"}</Td>
-            <Td>{s.status || "Completed"}</Td>
-            <Td>
-              <HStack>
-                <IconButton
-                  aria-label="Print Invoice"
-                  icon={<FiPrinter />}
-                  onClick={() => onPrint && onPrint(s)}
-                />
-              </HStack>
-            </Td>
-          </Tr>
-        ))}
+        {sales.map((s) => {
+          // Calculate paid and unpaid amounts
+          const paid = (
+            s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
+          ).toFixed(2);
+          const total = (s.total || 0).toFixed(2);
+          const unpaid = (s.total - paid).toFixed(2);
+
+          return (
+            <Tr key={s.id}>
+              <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
+              <Td>
+                <Link onClick={() => onSelectSale(s)}>
+                  {s.saleUuid || s.id}
+                </Link>
+              </Td>
+              <Td>{s.customer?.name || "—"}</Td>
+              <Td>{total}</Td>
+              <Td>{paid}</Td>
+              <Td color={"red"} fontWeight={"bold"}>
+                {unpaid}
+              </Td>
+              <Td>{s.payments?.[0]?.method || "—"}</Td>
+              <Td>{s.status || "Completed"}</Td>
+              <Td>
+                <HStack>
+                  <IconButton
+                    aria-label="Print Invoice"
+                    icon={<FiPrinter />}
+                    onClick={() => onPrint && onPrint(s)}
+                  />
+                </HStack>
+              </Td>
+            </Tr>
+          );
+        })}
       </Tbody>
     </Table>
   );
