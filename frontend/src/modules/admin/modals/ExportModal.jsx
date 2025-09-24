@@ -1,4 +1,3 @@
-// src/modules/admin/ExportModal.jsx
 import { useState } from "react";
 import {
   Modal,
@@ -31,29 +30,23 @@ export default function ExportModal({ isOpen, onClose }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Export Data</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={3}>
+          <VStack>
             <Button
-              colorScheme="blue"
               onClick={() => handleExport("products")}
               isLoading={loading}
             >
               Export Products
             </Button>
-            <Button
-              colorScheme="teal"
-              onClick={() => handleExport("sales")}
-              isLoading={loading}
-            >
+            <Button onClick={() => handleExport("sales")} isLoading={loading}>
               Export Sales
             </Button>
             <Button
-              colorScheme="purple"
               onClick={() => handleExport("purchases")}
               isLoading={loading}
             >
@@ -62,9 +55,7 @@ export default function ExportModal({ isOpen, onClose }) {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

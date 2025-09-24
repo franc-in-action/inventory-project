@@ -25,9 +25,7 @@ export default function RoleForm({ user, isOpen, onClose, onSaved }) {
 
   useEffect(() => {
     if (!isOpen || !user) return;
-
     setLoading(true);
-    // Use the correct property `role`
     setRole(user.role.toUpperCase());
     setLoading(false);
   }, [user, isOpen]);
@@ -36,7 +34,7 @@ export default function RoleForm({ user, isOpen, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user?.id) return; // cannot update if user ID is missing
+    if (!user?.id) return;
 
     setSaving(true);
     try {
@@ -53,16 +51,16 @@ export default function RoleForm({ user, isOpen, onClose, onSaved }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>Edit User Role</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
-            <Spinner size="xl" margin="auto" />
+            <Spinner />
           ) : (
-            <VStack spacing={4} w="full">
+            <VStack w="full">
               <FormControl>
                 <FormLabel>User</FormLabel>
                 <Select value={user?.name} isDisabled>
@@ -82,10 +80,8 @@ export default function RoleForm({ user, isOpen, onClose, onSaved }) {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" isLoading={saving}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" isLoading={saving}>
             Update
           </Button>
         </ModalFooter>

@@ -1,4 +1,3 @@
-// src/modules/admin/LogDetailModal.jsx
 import {
   Modal,
   ModalOverlay,
@@ -21,14 +20,13 @@ export default function LogDetailModal({ logId, isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen || !logId) return;
-
     setLoading(true);
     (async () => {
       try {
         const res = await adminApi.getLogById(logId);
         setLog(res.data);
       } catch (err) {
-        console.error("[LogDetailModal] Failed to fetch log:", err);
+        console.error("Failed to fetch log:", err);
       } finally {
         setLoading(false);
       }
@@ -36,16 +34,16 @@ export default function LogDetailModal({ logId, isOpen, onClose }) {
   }, [logId, isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Log Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
-            <Spinner size="xl" margin="auto" />
+            <Spinner />
           ) : log ? (
-            <VStack spacing={3} align="start">
+            <VStack align="start">
               <Text>
                 <strong>ID:</strong> {log.id}
               </Text>
@@ -62,16 +60,14 @@ export default function LogDetailModal({ logId, isOpen, onClose }) {
               <Text>
                 <strong>Details:</strong>
               </Text>
-              <Text pl={4}>{log.details}</Text>
+              <Text>{log.details}</Text>
             </VStack>
           ) : (
             <Text>No log details found.</Text>
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} variant="ghost">
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

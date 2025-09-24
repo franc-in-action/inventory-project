@@ -33,77 +33,43 @@ export default function AdminToolsPage() {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <Box p={{ base: 2, md: 4 }}>
-      <Heading mb={4}>Admin Tools</Heading>
+    <Box>
+      <Heading>Admin Tools</Heading>
 
-      <Tabs variant="enclosed" colorScheme="blue" isFitted={false}>
-        <TabList
-          overflowX="auto"
-          whiteSpace="nowrap"
-          sx={{ "::-webkit-scrollbar": { display: "none" } }}
-        >
-          <Tab flexShrink={0}>
-            {isMobile ? <Icon as={FaUsers} boxSize={5} /> : "Users"}
-          </Tab>
-          <Tab flexShrink={0}>
-            {isMobile ? <Icon as={FaUserShield} boxSize={5} /> : "Roles"}
-          </Tab>
-          <Tab flexShrink={0}>
-            {isMobile ? <Icon as={FaClipboardList} boxSize={5} /> : "Logs"}
-          </Tab>
-          <Tab flexShrink={0}>
-            {isMobile ? (
-              <Icon as={FaDatabase} boxSize={5} />
-            ) : (
-              "Backup / Restore"
-            )}
-          </Tab>
-          <Tab flexShrink={0}>
-            {isMobile ? <Icon as={FaFileExport} boxSize={5} /> : "Export Data"}
-          </Tab>
+      <Tabs>
+        <TabList>
+          <Tab>{isMobile ? <Icon as={FaUsers} /> : "Users"}</Tab>
+          <Tab>{isMobile ? <Icon as={FaUserShield} /> : "Roles"}</Tab>
+          <Tab>{isMobile ? <Icon as={FaClipboardList} /> : "Logs"}</Tab>
+          <Tab>{isMobile ? <Icon as={FaDatabase} /> : "Backup / Restore"}</Tab>
+          <Tab>{isMobile ? <Icon as={FaFileExport} /> : "Export Data"}</Tab>
         </TabList>
 
         <TabPanels>
-          <TabPanel p={0}>
+          <TabPanel>
             <UserManagementPage />
           </TabPanel>
-          <TabPanel p={0}>
+
+          <TabPanel>
             <RolesPage />
           </TabPanel>
-          <TabPanel p={0}>
+
+          <TabPanel>
             <LogsPage />
           </TabPanel>
+
           <TabPanel>
-            <Flex justify="center" py={4}>
-              <Button
-                colorScheme="yellow"
-                size={{ base: "md", md: "lg" }}
-                border="none"
-                _hover={{ boxShadow: "none" }}
-                onClick={() => setBackupOpen(true)}
-              >
-                {isMobile ? (
-                  <Icon as={FaDatabase} boxSize={5} />
-                ) : (
-                  "Open Backup / Restore"
-                )}
+            <Flex justify="center">
+              <Button onClick={() => setBackupOpen(true)}>
+                {isMobile ? <Icon as={FaDatabase} /> : "Open Backup / Restore"}
               </Button>
             </Flex>
           </TabPanel>
+
           <TabPanel>
-            <Flex justify="center" py={4}>
-              <Button
-                colorScheme="blue"
-                size={{ base: "md", md: "lg" }}
-                border="none"
-                _hover={{ boxShadow: "none" }}
-                onClick={() => setExportOpen(true)}
-              >
-                {isMobile ? (
-                  <Icon as={FaFileExport} boxSize={5} />
-                ) : (
-                  "Open Export Data"
-                )}
+            <Flex justify="center">
+              <Button onClick={() => setExportOpen(true)}>
+                {isMobile ? <Icon as={FaFileExport} /> : "Open Export Data"}
               </Button>
             </Flex>
           </TabPanel>

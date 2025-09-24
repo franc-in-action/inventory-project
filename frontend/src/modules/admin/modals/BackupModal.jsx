@@ -22,10 +22,8 @@ export default function BackupModal({ isOpen, onClose }) {
   const handleBackup = async () => {
     setLoading(true);
     try {
-      // raw response now correctly returned
       const res = await adminApi.triggerBackup();
       const blob = await res.blob();
-
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -34,7 +32,6 @@ export default function BackupModal({ isOpen, onClose }) {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-
       toast({ title: "Backup created and downloaded", status: "success" });
     } catch (err) {
       console.error(err);
@@ -48,7 +45,6 @@ export default function BackupModal({ isOpen, onClose }) {
     if (!file) return;
     setLoading(true);
     try {
-      // restoreBackup returns JSON now
       const data = await adminApi.restoreBackup(file);
       if (data.ok) {
         toast({ title: "Backup restored successfully", status: "success" });
@@ -65,18 +61,14 @@ export default function BackupModal({ isOpen, onClose }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Backup & Restore</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4}>
-            <Button
-              colorScheme="yellow"
-              onClick={handleBackup}
-              isLoading={loading}
-            >
+          <VStack>
+            <Button onClick={handleBackup} isLoading={loading}>
               Create Backup
             </Button>
             <Input
@@ -85,7 +77,6 @@ export default function BackupModal({ isOpen, onClose }) {
               accept=".json"
             />
             <Button
-              colorScheme="green"
               onClick={handleRestore}
               isLoading={loading}
               disabled={!file}
@@ -95,9 +86,7 @@ export default function BackupModal({ isOpen, onClose }) {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

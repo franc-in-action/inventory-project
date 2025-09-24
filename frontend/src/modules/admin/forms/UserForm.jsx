@@ -26,6 +26,7 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
 
   useEffect(() => {
     if (!isOpen) return;
+
     if (!userId) {
       setUser({ name: "", email: "", role: "STAFF" });
       return;
@@ -36,9 +37,7 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
       try {
         const users = await adminApi.getUsers();
         const u = users.find((x) => x.id === userId);
-        if (u) {
-          setUser({ ...u, role: u.role.toUpperCase() });
-        }
+        if (u) setUser({ ...u, role: u.role.toUpperCase() });
       } catch (err) {
         console.error("[UserForm] Failed to load user:", err);
         toast({ status: "error", description: "Failed to load user." });
@@ -57,14 +56,13 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
-      // convert role to uppercase enum
       const userData = { ...user, role: user.role.toUpperCase() };
 
       if (userId) {
         await adminApi.updateUser(userId, userData);
         toast({ status: "success", description: "User updated" });
       } else {
-        await adminApi.createUser(userData); // make sure createUser exists
+        await adminApi.createUser(userData);
         toast({ status: "success", description: "User created" });
       }
 
@@ -79,16 +77,16 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>{userId ? "Edit User" : "Create User"}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
-            <Spinner size="xl" margin="auto" />
+            <Spinner />
           ) : (
-            <VStack spacing={4} w="full">
+            <VStack w="full">
               <FormControl isRequired>
                 <FormLabel>Name</FormLabel>
                 <Input
@@ -107,7 +105,7 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
                   autoComplete="email"
                   value={user.email}
                   onChange={handleChange}
-                  disabled={!!userId} // cannot change email when editing
+                  disabled={!!userId}
                 />
               </FormControl>
 
@@ -123,10 +121,8 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button mr={3} onClick={onClose} variant="ghost">
-            Cancel
-          </Button>
-          <Button type="submit" colorScheme="blue" isLoading={saving}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" isLoading={saving}>
             {userId ? "Update" : "Create"}
           </Button>
         </ModalFooter>

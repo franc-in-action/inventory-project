@@ -6,33 +6,15 @@ import {
   FaShoppingCart,
   FaMapMarkerAlt,
   FaTools,
-  FaClipboardList,
-  FaUsersCog,
-  FaUserShield,
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
 
 const dashboardLinks = [
-  { label: "Products", href: "/products", icon: FaBox, colorScheme: "blue" },
-  { label: "Sales", href: "/sales", icon: FaCashRegister, colorScheme: "teal" },
-  {
-    label: "Purchases",
-    href: "/purchases",
-    icon: FaShoppingCart,
-    colorScheme: "purple",
-  },
-  {
-    label: "Locations",
-    href: "/locations",
-    icon: FaMapMarkerAlt,
-    colorScheme: "orange",
-  },
-  {
-    label: "Admin Tools",
-    href: "/admin-tools",
-    icon: FaTools,
-    colorScheme: "red",
-  },
+  { label: "Products", href: "/products", icon: FaBox },
+  { label: "Sales", href: "/sales", icon: FaCashRegister },
+  { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
+  { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
+  { label: "Admin Tools", href: "/admin-tools", icon: FaTools },
 ];
 
 export default function Dashboard() {
@@ -40,22 +22,16 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      textAlign="center"
-      minH="100vh"
-      p={{ base: 4, md: 8 }}
-    >
+    <Flex direction="column" align="center" justify="center" minH="100vh" p={8}>
       <Heading mb={4}>Dashboard</Heading>
+
       {user && (
         <Text mb={6}>
           Welcome, {user.name || "User"} ({user.role})
         </Text>
       )}
 
-      <Flex flexWrap="wrap" justify="center" gap={6} w="100%" maxW="1200px">
+      <Flex flexWrap="wrap" justify="center" w="100%" maxW="1200px" gap={6}>
         {dashboardLinks.map((link) => (
           <Flex
             key={link.label}
@@ -68,20 +44,9 @@ export default function Dashboard() {
             minW="200px"
             maxW="250px"
             h="180px"
-            bg={`${link.colorScheme}.50`}
-            borderRadius="lg"
-            borderWidth="1px"
-            p={6}
-            _hover={{ bg: `${link.colorScheme}.100`, boxShadow: "md" }}
-            transition="all 0.2s"
+            variant="dashboardCard"
           >
-            <Icon
-              as={link.icon}
-              w={10}
-              h={10}
-              mb={3}
-              color={`${link.colorScheme}.500`}
-            />
+            <Icon as={link.icon} w={10} h={10} mb={3} />
             <Text fontWeight="bold">{link.label}</Text>
           </Flex>
         ))}

@@ -13,20 +13,18 @@ import {
 
 export default function NewPasswordModal({ isOpen, onClose, password }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>New Password</ModalHeader>
         <ModalBody>
-          <VStack spacing={4}>
+          <VStack>
             <Text>Copy this password and give it to the user:</Text>
             <Input value={password} isReadOnly />
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} colorScheme="blue">
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

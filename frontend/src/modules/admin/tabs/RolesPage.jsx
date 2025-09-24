@@ -11,13 +11,13 @@ import {
   Flex,
   Spinner,
   Text,
-  useToast,
   Heading,
+  useToast,
 } from "@chakra-ui/react";
 import { adminApi } from "../adminApi.js";
 import RoleForm from "../forms/RoleForm.jsx";
 
-const ROLE_ORDER = ["ADMIN", "MANAGER", "STAFF"]; // to control display order
+const ROLE_ORDER = ["ADMIN", "MANAGER", "STAFF"];
 
 export default function RolesPage() {
   const [users, setUsers] = useState([]);
@@ -29,7 +29,7 @@ export default function RolesPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await adminApi.getUsers(); // returns {id, name, role}
+      const data = await adminApi.getUsers();
       setUsers(data);
     } catch (err) {
       console.error("Failed to fetch users:", err);
@@ -48,35 +48,30 @@ export default function RolesPage() {
     setIsFormOpen(true);
   };
 
-  // Group users by role
   const groupedUsers = ROLE_ORDER.map((role) => ({
     role,
     users: users.filter((u) => u.role === role),
   }));
 
   return (
-    <Box p={{ base: 2, md: 4 }}>
-      <Text fontSize="xl" mb={4}>
-        Manage User Roles
-      </Text>
+    <Box>
+      <Text>Manage User Roles</Text>
 
       {loading ? (
-        <Flex justify="center" py={10}>
-          <Spinner size="xl" />
+        <Flex>
+          <Spinner />
         </Flex>
       ) : users.length === 0 ? (
         <Text>No users found.</Text>
       ) : (
         groupedUsers.map(({ role, users }) => (
-          <Box key={role} mb={6}>
-            <Heading size="md" mb={2}>
-              {role}
-            </Heading>
+          <Box key={role}>
+            <Heading>{role}</Heading>
             {users.length === 0 ? (
               <Text>No users in this role.</Text>
             ) : (
-              <Box overflowX="auto">
-                <Table variant="simple" size="sm">
+              <Box>
+                <Table>
                   <Thead>
                     <Tr>
                       <Th>User</Th>
@@ -88,9 +83,7 @@ export default function RolesPage() {
                       <Tr key={user.id}>
                         <Td>{user.name}</Td>
                         <Td>
-                          <Button size="sm" onClick={() => openForm(user)}>
-                            Edit
-                          </Button>
+                          <Button onClick={() => openForm(user)}>Edit</Button>
                         </Td>
                       </Tr>
                     ))}

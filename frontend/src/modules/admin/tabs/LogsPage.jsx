@@ -51,37 +51,27 @@ export default function LogsPage() {
   };
 
   return (
-    <Box p={{ base: 2, md: 4 }}>
-      <Text fontSize="xl" mb={4}>
-        View System Logs
-      </Text>
+    <Box>
+      <Text>View System Logs</Text>
 
-      <Flex
-        mb={4}
-        direction={{ base: "column", md: "row" }}
-        gap={2}
-        wrap="wrap"
-      >
+      <Flex>
         <Input
-          flex={{ md: 1 }}
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <Button onClick={fetchLogs} flexShrink={0}>
-          Filter
-        </Button>
+        <Button onClick={fetchLogs}>Filter</Button>
       </Flex>
 
       {loading ? (
-        <Flex justify="center" py={10}>
-          <Spinner size="xl" />
+        <Flex>
+          <Spinner />
         </Flex>
       ) : logs.length === 0 ? (
         <Text>No logs found.</Text>
       ) : (
-        <Box overflowX="auto">
-          <Table variant="simple" size="sm">
+        <Box>
+          <Table>
             <Thead>
               <Tr>
                 <Th>User</Th>
@@ -91,11 +81,7 @@ export default function LogsPage() {
             </Thead>
             <Tbody>
               {logs.map((log) => (
-                <Tr
-                  key={log.id}
-                  _hover={{ bg: "gray.100", cursor: "pointer" }}
-                  onClick={() => openLog(log.id)}
-                >
+                <Tr key={log.id} onClick={() => openLog(log.id)}>
                   <Td>{log.userName}</Td>
                   <Td>{log.action}</Td>
                   <Td>{new Date(log.createdAt).toLocaleString()}</Td>

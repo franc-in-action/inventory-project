@@ -89,24 +89,16 @@ export default function UserManagementPage() {
     : [];
 
   return (
-    <Box p={{ base: 2, md: 4 }}>
-      <Text fontSize="xl" mb={4}>
-        Manage System Users
-      </Text>
-      <Flex
-        direction={{ base: "column", md: "row" }}
-        gap={2}
-        mb={4}
-        wrap="wrap"
-      >
+    <Box>
+      <Text>Manage System Users</Text>
+
+      <Flex>
         <Input
-          flex={{ md: 1 }}
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <Select
-          flex={{ md: 1 }}
           placeholder="Filter role"
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
@@ -115,20 +107,18 @@ export default function UserManagementPage() {
           <option value="Manager">Manager</option>
           <option value="Staff">Staff</option>
         </Select>
-        <Button colorScheme="green" onClick={() => openForm()} flexShrink={0}>
-          Add User
-        </Button>
+        <Button onClick={() => openForm()}>Add User</Button>
       </Flex>
 
       {loading ? (
-        <Flex justify="center" py={10}>
-          <Spinner size="xl" />
+        <Flex>
+          <Spinner />
         </Flex>
       ) : filteredUsers.length === 0 ? (
         <Text>No users found.</Text>
       ) : (
-        <Box overflowX="auto">
-          <Table variant="simple" size="sm">
+        <Box>
+          <Table>
             <Thead>
               <Tr>
                 <Th>Name</Th>
@@ -144,22 +134,12 @@ export default function UserManagementPage() {
                   <Td>{user.email}</Td>
                   <Td>{user.role}</Td>
                   <Td>
-                    <Flex wrap="wrap" gap={1}>
-                      <Button size="sm" onClick={() => openForm(user.id)}>
-                        Edit
-                      </Button>
-                      <Button
-                        colorScheme="red"
-                        size="sm"
-                        onClick={() => handleDelete(user.id)}
-                      >
+                    <Flex>
+                      <Button onClick={() => openForm(user.id)}>Edit</Button>
+                      <Button onClick={() => handleDelete(user.id)}>
                         Delete
                       </Button>
-                      <Button
-                        colorScheme="blue"
-                        size="sm"
-                        onClick={() => handleResetPassword(user.id)}
-                      >
+                      <Button onClick={() => handleResetPassword(user.id)}>
                         Reset
                       </Button>
                     </Flex>
