@@ -32,6 +32,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [sales, setSales] = useState([]);
+  const [filteredSales, setFilteredSales] = useState([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -65,6 +66,22 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     })();
   }, [paymentId, isOpen, toast]);
 
+  // Update filtered sales whenever payment.customerId changes
+  useEffect(() => {
+    if (!payment.customerId) {
+      setFilteredSales([]);
+    } else {
+      const filtered = sales.filter(
+        (s) => s.customer?.id === payment.customerId
+      );
+      setFilteredSales(filtered);
+      // Reset saleId if it doesn't belong to selected customer
+      if (!filtered.find((s) => s.id === payment.saleId)) {
+        setPayment((prev) => ({ ...prev, saleId: "" }));
+      }
+    }
+  }, [payment.customerId, sales]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPayment((prev) => ({ ...prev, [name]: value }));
@@ -75,7 +92,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     setSaving(true);
     try {
       await createPayment(payment);
-      toast({ status: "success", description: "Payment created" });
+      toast({ status: "success", description: "Payment saved" });
       onSaved();
       onClose();
     } catch (err) {
@@ -119,8 +136,9 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                   value={payment.saleId}
                   onChange={handleChange}
                   placeholder="Select sale"
+                  isDisabled={!payment.customerId}
                 >
-                  {sales.map((s) => (
+                  {filteredSales.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.saleUuid} ({s.customer?.name || "Walk-in"})
                     </option>
