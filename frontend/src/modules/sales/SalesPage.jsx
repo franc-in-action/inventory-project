@@ -17,6 +17,7 @@ import { fetchSales } from "./salesApi.js";
 import SalesList from "./SalesList.jsx";
 import InvoiceDetails from "./InvoiceDetails.jsx";
 import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
+import InvoiceForm from "./InvoiceForm.jsx"; // <-- import here
 
 export default function SalesPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -30,19 +31,23 @@ export default function SalesPage() {
   const [selectedSale, setSelectedSale] = useState(null);
   const [thermalOpen, setThermalOpen] = useState(false);
 
+  // State for invoice form
+  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
+
+  const loadSales = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchSales();
+      setAllSales(data.items || []);
+    } catch (err) {
+      console.error(err);
+      setAllSales([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadSales = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchSales();
-        setAllSales(data.items || []);
-      } catch (err) {
-        console.error(err);
-        setAllSales([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadSales();
   }, []);
 
@@ -50,7 +55,10 @@ export default function SalesPage() {
     return allSales.filter(
       (s) =>
         s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.id.toString().includes(search)
+        (s.saleUuid || s.id)
+          .toString()
+          .toLowerCase()
+          .includes(search.toLowerCase())
     );
   }, [allSales, search]);
 
@@ -80,14 +88,18 @@ export default function SalesPage() {
         </Box>
         <Spacer />
         <ButtonGroup gap="2">
-          <Button variant={"primary"} leftIcon={<AddIcon />}>
+          <Button
+            variant={"primary"}
+            leftIcon={<AddIcon />}
+            onClick={() => setInvoiceFormOpen(true)} // <-- open form
+          >
             Invoice
           </Button>
         </ButtonGroup>
       </Flex>
 
       <Input
-        placeholder="Search by customer or sale ID..."
+        placeholder="Search by customer or Invoice No..."
         value={search}
         onChange={(e) => {
           setPage(1);
@@ -119,10 +131,12 @@ export default function SalesPage() {
         </Button>
       </HStack>
 
+      {/* Invoice Details Modal */}
       {selectedSale && (
         <InvoiceDetails sale={selectedSale} isOpen={isOpen} onClose={onClose} />
       )}
 
+      {/* Thermal Print Modal */}
       {selectedSale && (
         <SaleInvoiceThermal
           sale={selectedSale}
@@ -130,6 +144,16 @@ export default function SalesPage() {
           onClose={() => setThermalOpen(false)}
         />
       )}
+
+      {/* Invoice Form Modal */}
+      <InvoiceForm
+        isOpen={invoiceFormOpen}
+        onClose={() => setInvoiceFormOpen(false)}
+        onInvoiceCreated={() => {
+          setInvoiceFormOpen(false);
+          loadSales(); // refresh list after creating invoice
+        }}
+      />
     </Box>
   );
 }

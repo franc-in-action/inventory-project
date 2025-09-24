@@ -30,7 +30,7 @@ import {
   createCustomer,
 } from "../customers/customersApi.js";
 import { createSale } from "./salesApi.js";
-import { useProducts } from "../products/ProductsContext.jsx";
+import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const toast = useToast();

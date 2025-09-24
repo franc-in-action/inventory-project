@@ -19,9 +19,9 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
     <Table>
       <Thead>
         <Tr>
-          <Th>Sale ID</Th>
-          <Th>Customer</Th>
           <Th>Date</Th>
+          <Th>Invoice No</Th>
+          <Th>Customer</Th>
           <Th>Total ($)</Th>
           <Th>Payment Method</Th>
           <Th>Status</Th>
@@ -31,13 +31,11 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
       <Tbody>
         {sales.map((s) => (
           <Tr key={s.id}>
-            <Td>{s.id}</Td>
-            <Td>
-              <Link onClick={() => onSelectSale(s)}>
-                {s.customer?.name || "—"}
-              </Link>
-            </Td>
             <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
+            <Td>
+              <Link onClick={() => onSelectSale(s)}>{s.saleUuid || s.id}</Link>
+            </Td>
+            <Td>{s.customer?.name || "—"}</Td>
             <Td>{s.total}</Td>
             <Td>{s.payments?.[0]?.method || "—"}</Td>
             <Td>{s.status || "Completed"}</Td>
