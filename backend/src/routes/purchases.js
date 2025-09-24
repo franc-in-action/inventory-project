@@ -163,7 +163,7 @@ router.get(
       const where = {};
       if (locationId) where.locationId = parseInt(locationId);
       if (vendorId) where.vendorId = parseInt(vendorId);
-      if (productId) where.items = { some: { productId: parseInt(productId) } };
+      if (productId) where.items = { some: { productId } }; // <--- remove parseInt
 
       const purchases = await prisma.purchase.findMany({
         where,
