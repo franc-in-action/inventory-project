@@ -25,7 +25,7 @@ import { fetchLocations } from "../locations/locationsApi.js";
 import {
   fetchStockForProducts,
   fetchTotalStockForProducts,
-} from "../../utils/stockApi.js";
+} from "../stock/stockApi.js";
 import { useProducts } from "./contexts/ProductsContext.jsx";
 import ProductDetails from "./ProductDetails.jsx"; // ✅ import modal component
 

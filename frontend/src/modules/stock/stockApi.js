@@ -1,6 +1,6 @@
 // utils/stockApi.js
 
-import { apiFetch } from "./commonApi.js";
+import { apiFetch } from "../../utils/commonApi.js";
 
 /**
  * Get current stock quantity for a product at a specific location

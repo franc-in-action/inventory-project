@@ -19,7 +19,7 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { fetchLocations } from "../locations/locationsApi.js";
-import { fetchStockForProducts } from "../../utils/stockApi.js";
+import { fetchStockForProducts } from "../stock/stockApi.js";
 import { createPurchase } from "./purchaseApi.js";
 import { useProducts } from "../products/contexts/ProductsContext.jsx"; // ✅ context
 
