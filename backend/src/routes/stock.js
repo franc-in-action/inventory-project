@@ -1,3 +1,5 @@
+// backend/src/routes/stock.js
+
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
@@ -54,5 +56,85 @@ router.post(
     }
   }
 );
+
+// GET /api/stock/:productId/:locationId
+router.get("/:productId/:locationId", authMiddleware, async (req, res) => {
+  const { productId, locationId } = req.params;
+  try {
+    const stockLevel = await prisma.stockLevel.findUnique({
+      where: { productId_locationId: { productId, locationId } },
+    });
+
+    if (!stockLevel) {
+      return res.json({ quantity: 0 });
+    }
+
+    res.json({ quantity: stockLevel.quantity });
+  } catch (err) {
+    console.error(`[GET /stock/${productId}/${locationId}] Error:`, err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/stock/batch?locationId=...&productIds=...
+router.get("/batch", authMiddleware, async (req, res) => {
+  const { locationId, productIds } = req.query;
+
+  if (!locationId || !productIds) {
+    return res
+      .status(400)
+      .json({ error: "locationId and productIds are required" });
+  }
+
+  try {
+    const idsArray = productIds.split(","); // CSV -> array
+    const stockLevels = await prisma.stockLevel.findMany({
+      where: {
+        locationId,
+        productId: { in: idsArray },
+      },
+    });
+
+    // Convert to { productId: quantity } object
+    const stockMap = idsArray.reduce((acc, id) => {
+      const stock = stockLevels.find((s) => s.productId === id);
+      acc[id] = stock ? stock.quantity : 0;
+      return acc;
+    }, {});
+
+    res.json({ stock: stockMap });
+  } catch (err) {
+    console.error("[GET /stock/batch] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/stock/total?productIds=...
+router.get("/total", authMiddleware, async (req, res) => {
+  const { productIds } = req.query;
+  if (!productIds)
+    return res.status(400).json({ error: "productIds required" });
+
+  try {
+    const idsArray = productIds.split(",");
+    const stockLevels = await prisma.stockLevel.findMany({
+      where: { productId: { in: idsArray } },
+    });
+
+    // Sum quantities per product
+    const stockMap = idsArray.reduce((acc, id) => {
+      const total = stockLevels
+        .filter((s) => s.productId === id)
+        .reduce((sum, s) => sum + s.quantity, 0);
+      acc[id] = total;
+      return acc;
+    }, {});
+
+    res.json({ stock: stockMap });
+  } catch (err) {
+    console.error("[GET /stock/total] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

@@ -1,3 +1,5 @@
+// backend/src/routes/products.js
+
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";

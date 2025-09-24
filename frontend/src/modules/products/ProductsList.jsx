@@ -21,6 +21,10 @@ import {
 import { fetchProducts, deleteProduct } from "./productsApi.js";
 import { fetchCategories } from "./categoriesApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
+import {
+  fetchStockForProducts,
+  fetchTotalStockForProducts,
+} from "../../utils/stockApi.js";
 
 export default function ProductsList({ onEdit, refreshKey }) {
   const [products, setProducts] = useState([]);
@@ -28,6 +32,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stockByProduct, setStockByProduct] = useState({});
 
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -37,9 +42,11 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
 
+  // -----------------------
   // Fetch products, categories, locations
+  // -----------------------
   useEffect(() => {
-    const load = async () => {
+    const loadProducts = async () => {
       setLoading(true);
       try {
         const [productsData, cats, locs] = await Promise.all([
@@ -48,9 +55,10 @@ export default function ProductsList({ onEdit, refreshKey }) {
           fetchLocations(),
         ]);
 
-        setProducts(
-          Array.isArray(productsData.items) ? productsData.items : []
-        );
+        const items = Array.isArray(productsData.items)
+          ? productsData.items
+          : [];
+        setProducts(items);
         setTotalProducts(productsData.total || 0);
         setCategories(cats);
         setLocations(locs);
@@ -62,9 +70,43 @@ export default function ProductsList({ onEdit, refreshKey }) {
         setLoading(false);
       }
     };
-    load();
+    loadProducts();
   }, [refreshKey, page]);
 
+  // -----------------------
+  // Fetch stock whenever products or location change
+  // -----------------------
+  useEffect(() => {
+    const loadStock = async () => {
+      if (products.length === 0) {
+        setStockByProduct({});
+        return;
+      }
+
+      try {
+        let stock;
+        if (locationId) {
+          // Stock for selected location
+          stock = await fetchStockForProducts(
+            products.map((p) => p.id),
+            locationId
+          );
+        } else {
+          // Total stock across all locations
+          stock = await fetchTotalStockForProducts(products.map((p) => p.id));
+        }
+        setStockByProduct(stock);
+      } catch (err) {
+        console.error("Failed to fetch stock:", err);
+        setStockByProduct({});
+      }
+    };
+    loadStock();
+  }, [products, locationId]);
+
+  // -----------------------
+  // Delete product
+  // -----------------------
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
     try {
@@ -76,7 +118,9 @@ export default function ProductsList({ onEdit, refreshKey }) {
     }
   };
 
+  // -----------------------
   // Client-side filters
+  // -----------------------
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
@@ -96,6 +140,9 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   if (loading) return <Spinner size="xl" margin="auto" />;
 
+  // -----------------------
+  // Render
+  // -----------------------
   return (
     <Box w="full">
       <Heading mb={4}>Products</Heading>
@@ -111,7 +158,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
           }}
           w={{ base: "100%", md: "200px" }}
         />
-
         <Select
           placeholder="Filter by Category"
           value={categoryId}
@@ -127,7 +173,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
             </option>
           ))}
         </Select>
-
         <Select
           placeholder="Filter by Location"
           value={locationId}
@@ -170,7 +215,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
                 <Td>{p.description || "—"}</Td>
                 <Td>{p.category?.name || "—"}</Td>
                 <Td>{p.location?.name || "—"}</Td>
-                <Td isNumeric>{p.quantity}</Td>
+                <Td isNumeric>{stockByProduct[p.id] ?? 0}</Td>
                 <Td isNumeric>{p.price}</Td>
                 <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
                 <Td>{new Date(p.updatedAt).toLocaleDateString()}</Td>
@@ -213,7 +258,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
               {p.description && <Text>Description: {p.description}</Text>}
               <Text>Category: {p.category?.name || "—"}</Text>
               <Text>Location: {p.location?.name || "—"}</Text>
-              <Text>Quantity: {p.quantity}</Text>
+              <Text>Quantity: {stockByProduct[p.id] ?? 0}</Text>
               <Text>Price: ${p.price}</Text>
               <Text>Created: {new Date(p.createdAt).toLocaleDateString()}</Text>
               <Text>Updated: {new Date(p.updatedAt).toLocaleDateString()}</Text>

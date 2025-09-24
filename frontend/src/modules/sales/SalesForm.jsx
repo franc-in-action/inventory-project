@@ -1,6 +1,6 @@
-// src/components/modals/CashierForm.jsx
 import { useState, useEffect } from "react";
 import {
+  Box,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -9,35 +9,49 @@ import {
   ModalFooter,
   ModalCloseButton,
   Button,
-  Flex,
-  Box,
-  Input,
+  VStack,
+  HStack,
+  Select,
+  NumberInput,
+  NumberInputField,
   Text,
+  Divider,
   useToast,
+  IconButton,
 } from "@chakra-ui/react";
+import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import ComboBox from "../../components/ComboBox.jsx";
 import { getCustomers, createCustomer } from "../customers/customersApi.js";
-import { fetchProducts, createProduct } from "../products/productsApi.js";
+import { fetchProducts } from "../products/productsApi.js";
 import { createSale } from "./salesApi.js";
+import { fetchStockForProducts } from "../../utils/stockApi.js";
 
-export default function CashierForm({ isOpen, onClose, onSaleCreated }) {
+export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const toast = useToast();
+
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState([
+    { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
+  ]);
   const [payment, setPayment] = useState({ amount: 0, method: "cash" });
   const [loading, setLoading] = useState(false);
 
-  // Fetch customers and products when modal opens
+  // ---------------------------
+  // Load customers and products
+  // ---------------------------
   useEffect(() => {
     if (!isOpen) return;
+    const normalizeArray = (data) =>
+      Array.isArray(data) ? data : data?.items || [];
+
     (async () => {
       try {
         const custs = await getCustomers();
         const prods = await fetchProducts();
-        setCustomers(custs);
-        setProducts(prods.products || prods);
+        setCustomers(normalizeArray(custs));
+        setProducts(normalizeArray(prods));
       } catch (err) {
         toast({
           title: "Error loading data",
@@ -48,59 +62,158 @@ export default function CashierForm({ isOpen, onClose, onSaleCreated }) {
     })();
   }, [isOpen, toast]);
 
-  const addToCart = (product) => {
-    if (!product) return;
-    const exists = cart.find((c) => c.productId === product.id);
-    if (exists) {
-      setCart(
-        cart.map((c) =>
-          c.productId === product.id ? { ...c, qty: c.qty + 1 } : c
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        { productId: product.id, qty: 1, price: product.price },
-      ]);
-    }
+  // ---------------------------
+  // Update stockQty whenever cart products change
+  // ---------------------------
+  useEffect(() => {
+    const fetchCartStock = async () => {
+      const productIds = cart
+        .filter((item) => item.productId && item.locationId)
+        .map((item) => item.productId);
+      const locationId = cart[0]?.locationId;
+      if (!productIds.length || !locationId) return;
+
+      try {
+        const stockMap = await fetchStockForProducts(productIds, locationId);
+        setCart((prev) =>
+          prev.map((item) => ({
+            ...item,
+            stockQty: stockMap[item.productId] || 0,
+          }))
+        );
+      } catch (err) {
+        console.error("Failed to fetch stock:", err);
+      }
+    };
+    fetchCartStock();
+  }, [cart.map((i) => i.productId).join(","), cart[0]?.locationId]);
+
+  // ---------------------------
+  // Handle cart changes
+  // ---------------------------
+  const handleCartChange = (index, field, value) => {
+    setCart((prev) => {
+      const copy = [...prev];
+      copy[index][field] = value;
+
+      if (field === "productId") {
+        const product = products.find((p) => p.id === value);
+        copy[index].locationId = product?.locationId || "";
+        copy[index].price = product?.price || 0;
+      }
+
+      return copy;
+    });
   };
 
-  const handleSale = async () => {
-    if (!selectedCustomer || cart.length === 0) {
-      toast({ title: "Select customer and add products", status: "warning" });
+  const addCartRow = () =>
+    setCart((prev) => [
+      ...prev,
+      { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
+    ]);
+
+  const removeCartRow = (index) =>
+    setCart((prev) => prev.filter((_, i) => i !== index));
+
+  const totalAmount = cart.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
+
+  // ---------------------------
+  // Handle invoice submission
+  // ---------------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (
+      !selectedCustomer ||
+      cart.length === 0 ||
+      cart.some((i) => !i.productId || i.qty <= 0)
+    ) {
+      toast({
+        status: "warning",
+        description: "Select customer and fill all product rows",
+      });
       return;
     }
+
+    const locationId = cart[0].locationId;
+    if (cart.some((item) => item.locationId !== locationId)) {
+      toast({
+        status: "error",
+        description: "All products must belong to the same location",
+      });
+      return;
+    }
+
+    // Validate stock before submission
+    const productIds = cart.map((i) => i.productId);
+    const stockMap = await fetchStockForProducts(productIds, locationId);
+
+    const insufficient = cart.find(
+      (item) => item.qty > (stockMap[item.productId] || 0)
+    );
+    if (insufficient) {
+      const product = products.find((p) => p.id === insufficient.productId);
+      toast({
+        status: "error",
+        description: `Insufficient stock for product "${
+          product?.name || insufficient.productId
+        }"`,
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       await createSale({
-        locationId: 1,
+        locationId,
         customerId: selectedCustomer.id,
-        items: cart,
+        items: cart.map(({ productId, qty, price }) => ({
+          productId,
+          qty,
+          price,
+        })),
         payment,
+        total: totalAmount,
       });
-      toast({ title: "Sale created", status: "success" });
-      setCart([]);
+
+      toast({ status: "success", description: "Invoice created successfully" });
+      setCart([
+        { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
+      ]);
       setSelectedCustomer(null);
       setPayment({ amount: 0, method: "cash" });
-      onSaleCreated();
+      onInvoiceCreated();
       onClose();
     } catch (err) {
-      toast({ title: "Error", description: err.message, status: "error" });
+      toast({ status: "error", description: err.message });
     } finally {
       setLoading(false);
     }
   };
 
+  // ---------------------------
+  // Render
+  // ---------------------------
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="xl"
+      isCentered
+      scrollBehavior="inside"
+    >
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>New Sale</ModalHeader>
+      <ModalContent as="form" onSubmit={handleSubmit}>
+        <ModalHeader>Generate Invoice</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Flex direction="column" gap={4}>
+          <VStack spacing={4} align="stretch">
+            {/* Customer */}
             <Box>
-              <Text fontSize="sm" mb={1}>
+              <Text fontWeight="bold" mb={1}>
                 Customer
               </Text>
               <ComboBox
@@ -116,63 +229,115 @@ export default function CashierForm({ isOpen, onClose, onSaleCreated }) {
               />
             </Box>
 
+            {/* Cart */}
             <Box>
-              <Text fontSize="sm" mb={1}>
-                Product
+              <Text fontWeight="bold" mb={2}>
+                Products
               </Text>
-              <ComboBox
-                items={products}
-                placeholder="Select or add product"
-                onSelect={addToCart}
-                createNewItem={async (name) => {
-                  const newProd = await createProduct({ name, price: 0 });
-                  setProducts((prev) => [...prev, newProd]);
-                  return newProd;
-                }}
-              />
+              <VStack spacing={2} align="stretch">
+                {cart.map((item, idx) => {
+                  const stockExceeded = item.qty > item.stockQty;
+                  const product = products.find((p) => p.id === item.productId);
+
+                  return (
+                    <Box key={idx}>
+                      <HStack spacing={2}>
+                        <Select
+                          placeholder="Select Product"
+                          value={item.productId}
+                          onChange={(e) =>
+                            handleCartChange(idx, "productId", e.target.value)
+                          }
+                          isRequired
+                        >
+                          {products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} (SKU: {p.sku})
+                            </option>
+                          ))}
+                        </Select>
+
+                        <NumberInput
+                          size="sm"
+                          min={1}
+                          value={item.qty}
+                          onChange={(v) =>
+                            handleCartChange(idx, "qty", Number(v))
+                          }
+                        >
+                          <NumberInputField placeholder="Qty" />
+                        </NumberInput>
+
+                        <NumberInput
+                          size="sm"
+                          min={0}
+                          value={item.price}
+                          onChange={(v) =>
+                            handleCartChange(idx, "price", Number(v))
+                          }
+                        >
+                          <NumberInputField placeholder="Price" />
+                        </NumberInput>
+
+                        <IconButton
+                          icon={<DeleteIcon />}
+                          size="sm"
+                          colorScheme="red"
+                          onClick={() => removeCartRow(idx)}
+                        />
+                      </HStack>
+
+                      {stockExceeded && product && (
+                        <Text color="red.500" fontSize="sm">
+                          Only {item.stockQty} units of "{product.name}"
+                          available.
+                        </Text>
+                      )}
+                    </Box>
+                  );
+                })}
+                <Button leftIcon={<AddIcon />} size="sm" onClick={addCartRow}>
+                  Add Item
+                </Button>
+              </VStack>
             </Box>
 
-            <Box>
-              <Text fontSize="sm" mb={1}>
-                Payment Amount
-              </Text>
-              <Input
-                type="number"
-                placeholder="Enter amount"
+            <Divider />
+
+            {/* Payment */}
+            <HStack>
+              <NumberInput
+                min={0}
                 value={payment.amount}
-                onChange={(e) =>
-                  setPayment({
-                    ...payment,
-                    amount: parseFloat(e.target.value) || 0,
-                  })
-                }
-              />
-            </Box>
+                onChange={(v) => setPayment({ ...payment, amount: Number(v) })}
+              >
+                <NumberInputField placeholder="Payment Amount" />
+              </NumberInput>
 
-            <Box>
-              <Text fontSize="sm" mb={1}>
-                Payment Method
-              </Text>
-              <ComboBox
-                items={[
-                  { id: "cash", name: "Cash" },
-                  { id: "card", name: "Card" },
-                  { id: "mpesa", name: "M-Pesa" },
-                ]}
-                selectedItemId={payment.method}
-                placeholder="Select payment method"
-                onSelect={(item) => setPayment({ ...payment, method: item.id })}
-              />
-            </Box>
-          </Flex>
+              <Select
+                value={payment.method}
+                onChange={(e) =>
+                  setPayment({ ...payment, method: e.target.value })
+                }
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="mpesa">M-Pesa</option>
+              </Select>
+            </HStack>
+
+            <Text fontWeight="bold" mt={2}>
+              Total: {totalAmount.toFixed(2)}
+            </Text>
+          </VStack>
         </ModalBody>
 
         <ModalFooter>
-          <Button mr={3} onClick={onClose}>
+          <Button variant="ghost" mr={3} onClick={onClose}>
             Cancel
           </Button>
-          <Button colorScheme="green" onClick={handleSale} isLoading={loading}>
-            Complete Sale
+          <Button type="submit" colorScheme="blue" isLoading={loading}>
+            Generate Invoice
           </Button>
         </ModalFooter>
       </ModalContent>

@@ -20,6 +20,7 @@ import {
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { fetchProducts } from "../products/productsApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
+import { fetchStockForProducts } from "../../utils/stockApi.js";
 import { createPurchase } from "./purchaseApi.js";
 
 export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
@@ -29,31 +30,63 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
   const [products, setProducts] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [stockByProduct, setStockByProduct] = useState({});
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load products and locations dynamically
+  // Load locations on open
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
       try {
-        const prods = await fetchProducts();
-        setProducts(prods.products || []);
-
         const locs = await fetchLocations();
         setLocations(locs || []);
       } catch (err) {
-        toast({
-          status: "error",
-          description: "Failed to load products or locations",
-        });
+        toast({ status: "error", description: "Failed to load locations" });
       }
     })();
   }, [isOpen, toast]);
+
+  // Load products and stock when form opens or location changes
+  useEffect(() => {
+    if (!isOpen) return;
+    (async () => {
+      try {
+        setLoadingProducts(true);
+        const prods = await fetchProducts();
+        setProducts(prods.items || []);
+
+        if (locationId) {
+          const stock = await fetchStockForProducts(
+            prods.items.map((p) => p.id),
+            locationId
+          );
+          setStockByProduct(stock);
+        } else {
+          setStockByProduct({});
+        }
+      } catch (err) {
+        toast({
+          status: "error",
+          description: "Failed to load products or stock",
+        });
+      } finally {
+        setLoadingProducts(false);
+      }
+    })();
+  }, [isOpen, locationId, toast]);
 
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
+
+      // auto-fill purchase price if product changes
+      if (field === "productId") {
+        const product = products.find((p) => p.id === value);
+        if (product) copy[index].price = product.purchasePrice || 0;
+      }
+
       return copy;
     });
   };
@@ -71,11 +104,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
     }
     setSaving(true);
     try {
-      const payload = {
-        vendorId: parseInt(vendorId, 10), // <-- convert here
-        locationId,
-        items,
-      };
+      const payload = { vendorId: parseInt(vendorId, 10), locationId, items };
       await createPurchase(payload);
       toast({ status: "success", description: "Purchase created" });
       onSaved();
@@ -132,18 +161,27 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
               {items.map((item, idx) => (
                 <HStack key={idx} spacing={2}>
                   <Select
-                    placeholder="Select Product"
+                    placeholder={
+                      loadingProducts ? "Loading products..." : "Select Product"
+                    }
                     value={item.productId}
                     onChange={(e) =>
                       handleItemChange(idx, "productId", e.target.value)
                     }
                     isRequired
                   >
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (SKU: {p.sku})
-                      </option>
-                    ))}
+                    {loadingProducts ? (
+                      <option disabled>Loading...</option>
+                    ) : (
+                      products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (SKU: {p.sku}) - Stock:{" "}
+                          {stockByProduct[p.id] ?? 0} - Purchase: $
+                          {p.purchasePrice?.toFixed(2) ?? 0} - Retail: $
+                          {p.retailPrice?.toFixed(2) ?? 0}
+                        </option>
+                      ))
+                    )}
                   </Select>
 
                   <NumberInput
@@ -165,7 +203,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                       handleItemChange(idx, "price", Number(value))
                     }
                   >
-                    <NumberInputField placeholder="Price" />
+                    <NumberInputField placeholder="Purchase Price" />
                   </NumberInput>
 
                   <IconButton

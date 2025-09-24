@@ -13,7 +13,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { fetchSales } from "./salesApi.js";
-import CashierForm from "./SalesForm.jsx";
+import InvoiceForm from "./SalesForm.jsx";
 import SalesList from "./SalesList.jsx";
 
 export default function SalesPage() {
@@ -100,7 +100,7 @@ export default function SalesPage() {
       </HStack>
 
       {/* Cashier Modal */}
-      <CashierForm
+      <InvoiceForm
         isOpen={isOpen}
         onClose={onClose}
         onSaleCreated={async () => {

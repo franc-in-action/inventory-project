@@ -31,7 +31,12 @@ router.post(
           });
 
           if (!stockLevel || stockLevel.quantity < item.qty) {
-            throw new Error(`Insufficient stock for product ${item.productId}`);
+            const product = await tx.product.findUnique({
+              where: { id: item.productId },
+            });
+            throw new Error(
+              `Insufficient stock for product "${product?.name}"`
+            );
           }
         }
 
