@@ -11,22 +11,23 @@ import Login from "./modules/auth/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
-import VendorsPage from "./modules/vendors/VendorsPage.jsx"; // import vendors
+import VendorsPage from "./modules/vendors/VendorsPage.jsx";
 import SalesPage from "./modules/sales/SalesPage.jsx";
-import PaymentsPage from "./modules/payments/PaymentsPage.jsx"; // new
+import PaymentsPage from "./modules/payments/PaymentsPage.jsx";
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
+import StockPage from "./modules/stock/StockPage.jsx"; // <- Stock module
+import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
+
 import Header from "./components/Header.jsx";
 import Sidebar from "./components/Sidebar.jsx";
+
 import { PERMISSIONS } from "./constants/permissions.js";
 import {
   isLoggedIn,
   userHasRole,
   getDefaultPage,
 } from "./modules/auth/authApi.js";
-
-// Admin Tools Pages
-import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 
 function ProtectedRoute({ children }) {
@@ -43,32 +44,16 @@ function RoleRoute({ children, allowedRoles }) {
 
 export function ProtectedLayout({ children }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshKey((prev) => prev + 1); // Increment key to force re-render children
-  }, []);
-
-  const links = [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/products", label: "Products" },
-    { to: "/customers", label: "Customers" },
-    { to: "/sales", label: "Sales" },
-    { to: "/purchases", label: "Purchases" },
-    { to: "/locations", label: "Locations" },
-    { to: "/admin-tools", label: "Admin Tools" },
-    { to: "/admin/logs", label: "Logs" },
-  ];
+  const handleRefresh = useCallback(
+    () => setRefreshKey((prev) => prev + 1),
+    []
+  );
 
   return (
     <Box minH="100vh" display="flex" bg="gray.50">
-      <Sidebar
-        links={links}
-        isOpen={isOpen}
-        onOpen={onOpen}
-        onClose={onClose}
-      />
+      <Sidebar isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
       <Box
         flex="1"
         ml={{ base: 0, md: 60 }}
@@ -80,7 +65,6 @@ export function ProtectedLayout({ children }) {
         transition="margin-left 0.2s ease"
       >
         <Header onOpenSidebar={onOpen} onRefresh={handleRefresh} />
-        {/* Key triggers children re-render */}
         <Box key={refreshKey} flex="1">
           {children}
         </Box>
@@ -97,7 +81,8 @@ export default function App() {
           <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
-            {/* Protected Routes */}
+
+            {/* Protected */}
             <Route
               path="/dashboard"
               element={
@@ -110,6 +95,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/products"
               element={
@@ -122,6 +108,20 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/stock"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
+                    <ProtectedLayout>
+                      <StockPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/customers"
               element={
@@ -134,7 +134,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            +{" "}
+
             <Route
               path="/vendors"
               element={
@@ -147,6 +147,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/sales"
               element={
@@ -159,6 +160,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/payments"
               element={
@@ -171,6 +173,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/purchases"
               element={
@@ -183,6 +186,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/locations"
               element={
@@ -195,7 +199,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            {/* Admin Tools */}
+
             <Route
               path="/admin-tools"
               element={
@@ -208,6 +212,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             {/* Catch-all */}
             <Route
               path="*"

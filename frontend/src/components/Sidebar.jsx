@@ -21,6 +21,7 @@ import {
   FaTools,
   FaTruck,
   FaMoneyBillWave,
+  FaWarehouse,
 } from "react-icons/fa";
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -40,6 +41,12 @@ export default function Sidebar({ isOpen, onClose }) {
       roles: PERMISSIONS.PRODUCTS,
     },
     {
+      to: "/stock",
+      label: "Stock",
+      icon: FaWarehouse,
+      roles: PERMISSIONS.STOCK,
+    }, // <- Stock
+    {
       to: "/sales",
       label: "Sales",
       icon: FaCashRegister,
@@ -56,7 +63,7 @@ export default function Sidebar({ isOpen, onClose }) {
       label: "Payments",
       icon: FaMoneyBillWave,
       roles: PERMISSIONS.PAYMENTS,
-    }, // added
+    },
     {
       to: "/locations",
       label: "Locations",
@@ -66,7 +73,7 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       to: "/customers",
       label: "Customers",
-      icon: FaUsers, // added
+      icon: FaUsers,
       roles: PERMISSIONS.CUSTOMERS,
     },
     {
@@ -74,7 +81,7 @@ export default function Sidebar({ isOpen, onClose }) {
       label: "Vendors",
       icon: FaTruck,
       roles: PERMISSIONS.VENDORS,
-    }, // added
+    },
     {
       to: "/admin-tools",
       label: "Admin Tools",

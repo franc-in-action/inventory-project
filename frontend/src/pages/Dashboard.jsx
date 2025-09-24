@@ -10,13 +10,15 @@ import {
   FaUsers,
   FaTruck,
   FaMoneyBillWave,
+  FaWarehouse,
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
 import { getPayments } from "../modules/payments/paymentsApi.js";
-import { apiFetch } from "../utils/commonApi.js"; // generic API fetch for other counts
+import { apiFetch } from "../utils/commonApi.js";
 
 const dashboardLinks = [
   { label: "Products", href: "/products", icon: FaBox },
+  { label: "Stock", href: "/stock", icon: FaWarehouse }, // <- Stock link
   { label: "Sales", href: "/sales", icon: FaCashRegister },
   { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
@@ -33,6 +35,7 @@ export default function Dashboard() {
 
   const [summaryData, setSummaryData] = useState([
     { label: "Total Products", value: 0, icon: FaBox },
+    { label: "Total Stock Items", value: 0, icon: FaWarehouse }, // <- Stock summary
     { label: "Total Sales", value: 0, icon: FaCashRegister },
     { label: "Total Purchases", value: 0, icon: FaShoppingCart },
     { label: "Total Locations", value: 0, icon: FaMapMarkerAlt },
@@ -44,23 +47,33 @@ export default function Dashboard() {
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        // Fetch total payments
         const payments = await getPayments();
         const totalPayments = payments.length;
-
-        // Fetch other counts via API (replace endpoints if needed)
-        const [products, sales, purchases, locations, customers, vendors] =
-          await Promise.all([
-            apiFetch("/products"),
-            apiFetch("/sales"),
-            apiFetch("/purchases"),
-            apiFetch("/locations"),
-            apiFetch("/customers"),
-            apiFetch("/vendors"),
-          ]);
+        const [
+          products,
+          stock,
+          sales,
+          purchases,
+          locations,
+          customers,
+          vendors,
+        ] = await Promise.all([
+          apiFetch("/products"),
+          apiFetch("/stock/all"), // <- stock count
+          apiFetch("/sales"),
+          apiFetch("/purchases"),
+          apiFetch("/locations"),
+          apiFetch("/customers"),
+          apiFetch("/vendors"),
+        ]);
 
         setSummaryData([
           { label: "Total Products", value: products.length, icon: FaBox },
+          {
+            label: "Total Stock Items",
+            value: stock.length,
+            icon: FaWarehouse,
+          },
           { label: "Total Sales", value: sales.length, icon: FaCashRegister },
           {
             label: "Total Purchases",
@@ -87,14 +100,12 @@ export default function Dashboard() {
         });
       }
     };
-
     loadCounts();
   }, []);
 
   return (
     <Flex direction="column" align="center" justify="center" minH="100vh" p={8}>
       <Heading mb={4}>Dashboard</Heading>
-
       {user && (
         <Text mb={6}>
           Welcome, {user.name || "User"} ({user.role})

@@ -55,6 +55,32 @@ router.post(
   }
 );
 
+// GET /api/stock/all
+// Returns all stock levels with product and location names
+router.get("/all", authMiddleware, async (req, res) => {
+  try {
+    const stocks = await prisma.stockLevel.findMany({
+      include: {
+        product: { select: { name: true } },
+        location: { select: { name: true } },
+      },
+    });
+
+    const result = stocks.map((s) => ({
+      productId: s.productId,
+      productName: s.product?.name || "Unknown",
+      locationId: s.locationId,
+      locationName: s.location?.name || "Unknown",
+      quantity: s.quantity,
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("[GET /stock/all] Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/stock/:productId/:locationId
 router.get("/:productId/:locationId", authMiddleware, async (req, res) => {
   const { productId, locationId } = req.params;
@@ -141,18 +167,36 @@ router.get("/total", authMiddleware, async (req, res) => {
  */
 router.get("/movements", authMiddleware, async (req, res) => {
   const { productId, locationId } = req.query;
-  if (!productId) return res.status(400).json({ error: "productId required" });
 
   try {
-    const where = { productId };
+    const where = {};
+    if (productId) where.productId = productId;
     if (locationId) where.locationId = locationId;
 
     const movements = await prisma.stockMovement.findMany({
       where,
+      include: {
+        product: { select: { name: true } },
+        location: { select: { name: true } },
+        performedByUser: { select: { name: true, email: true } }, // optional user info
+      },
       orderBy: { createdAt: "desc" },
     });
 
-    res.json({ movements });
+    const result = movements.map((m) => ({
+      id: m.id,
+      productId: m.productId,
+      productName: m.product?.name || "Unknown",
+      locationId: m.locationId,
+      locationName: m.location?.name || "Unknown",
+      delta: m.delta,
+      reason: m.reason,
+      refId: m.refId,
+      performedBy: m.performedByUser?.name || m.performedBy,
+      createdAt: m.createdAt,
+    }));
+
+    res.json({ movements: result });
   } catch (err) {
     console.error("[GET /stock/movements] Error:", err);
     res.status(500).json({ error: err.message });
