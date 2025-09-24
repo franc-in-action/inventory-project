@@ -32,15 +32,17 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
       </Thead>
       <Tbody>
         {sales.map((s) => {
-          // Calculate paid and unpaid amounts
           const paid = (
             s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
           ).toFixed(2);
           const total = (s.total || 0).toFixed(2);
           const unpaid = (s.total - paid).toFixed(2);
 
+          // Highlight if unpaid balance > 0
+          const bgColor = parseFloat(unpaid) > 0 ? "red.50" : "white";
+
           return (
-            <Tr key={s.id}>
+            <Tr key={s.id} bg={bgColor}>
               <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
               <Td>
                 <Link onClick={() => onSelectSale(s)}>
