@@ -10,6 +10,7 @@ import {
 import Login from "./modules/auth/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
+import CustomersPage from "./modules/customers/CustomersPage.jsx";
 import SalesPage from "./modules/sales/SalesPage.jsx";
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
@@ -50,6 +51,7 @@ export function ProtectedLayout({ children }) {
   const links = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/products", label: "Products" },
+    { to: "/customers", label: "Customers" },
     { to: "/sales", label: "Sales" },
     { to: "/purchases", label: "Purchases" },
     { to: "/locations", label: "Locations" },
@@ -114,6 +116,18 @@ export default function App() {
                   <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
                     <ProtectedLayout>
                       <ProductsPage />
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.CUSTOMERS}>
+                    <ProtectedLayout>
+                      <CustomersPage />
                     </ProtectedLayout>
                   </RoleRoute>
                 </ProtectedRoute>

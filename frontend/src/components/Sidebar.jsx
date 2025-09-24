@@ -12,6 +12,7 @@ import { NavLink } from "react-router-dom";
 import { getUserFromToken, userHasRole } from "../modules/auth/authApi.js";
 import { PERMISSIONS } from "../constants/permissions.js";
 import {
+  FaUsers,
   FaTachometerAlt,
   FaBox,
   FaCashRegister,
@@ -53,6 +54,12 @@ export default function Sidebar({ isOpen, onClose }) {
       label: "Locations",
       icon: FaMapMarkerAlt,
       roles: PERMISSIONS.LOCATIONS,
+    },
+    {
+      to: "/customers",
+      label: "Customers",
+      icon: FaUsers, // added
+      roles: PERMISSIONS.CUSTOMERS,
     },
     {
       to: "/admin-tools",
