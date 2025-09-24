@@ -17,6 +17,7 @@ import {
   Input,
   Select,
   useBreakpointValue,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { deleteProduct } from "./productsApi.js";
 import { fetchCategories } from "./categoriesApi.js";
@@ -25,10 +26,11 @@ import {
   fetchStockForProducts,
   fetchTotalStockForProducts,
 } from "../../utils/stockApi.js";
-import { useProducts } from "./contexts/ProductsContext.jsx"; // ✅ use context
+import { useProducts } from "./contexts/ProductsContext.jsx";
+import ProductDetails from "./ProductDetails.jsx"; // ✅ import modal component
 
 export default function ProductsList({ onEdit, refreshKey }) {
-  const { products } = useProducts(); // ✅ get products from context
+  const { products } = useProducts();
   const [totalProducts, setTotalProducts] = useState(0);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -42,6 +44,15 @@ export default function ProductsList({ onEdit, refreshKey }) {
   const limit = 10;
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
+
+  // ✅ modal controls
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const handleOpenDetails = (product) => {
+    setSelectedProduct(product);
+    onOpen();
+  };
 
   // -----------------------
   // Fetch categories & locations
@@ -62,17 +73,11 @@ export default function ProductsList({ onEdit, refreshKey }) {
     loadMeta();
   }, []);
 
-  // -----------------------
-  // Update total products count
-  // -----------------------
   useEffect(() => {
     setTotalProducts(products.length);
     setLoading(false);
   }, [products]);
 
-  // -----------------------
-  // Fetch stock whenever products or location change
-  // -----------------------
   useEffect(() => {
     const loadStock = async () => {
       if (!products.length) return setStockByProduct({});
@@ -90,9 +95,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
     loadStock();
   }, [products, locationId]);
 
-  // -----------------------
-  // Delete product
-  // -----------------------
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
     try {
@@ -102,9 +104,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
     }
   };
 
-  // -----------------------
-  // Client-side filters
-  // -----------------------
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
@@ -124,9 +123,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   if (loading) return <Spinner size="xl" margin="auto" />;
 
-  // -----------------------
-  // Render
-  // -----------------------
   return (
     <Box w="full">
       <Heading mb={4}>Products</Heading>
@@ -195,7 +191,16 @@ export default function ProductsList({ onEdit, refreshKey }) {
             {paginated.map((p) => (
               <Tr key={p.id}>
                 <Td>{p.sku}</Td>
-                <Td>{p.name}</Td>
+                {/* ✅ Clickable product name to open modal */}
+                <Td>
+                  <Button
+                    variant="link"
+                    colorScheme="blue"
+                    onClick={() => handleOpenDetails(p)}
+                  >
+                    {p.name}
+                  </Button>
+                </Td>
                 <Td>{p.description || "—"}</Td>
                 <Td>{p.category?.name || "—"}</Td>
                 <Td>{p.location?.name || "—"}</Td>
@@ -236,8 +241,16 @@ export default function ProductsList({ onEdit, refreshKey }) {
               p={3}
               gap={2}
             >
+              {/* ✅ Mobile clickable name */}
               <Text fontWeight="bold">
-                {p.sku} – {p.name}
+                {p.sku} –{" "}
+                <Button
+                  variant="link"
+                  colorScheme="blue"
+                  onClick={() => handleOpenDetails(p)}
+                >
+                  {p.name}
+                </Button>
               </Text>
               {p.description && <Text>Description: {p.description}</Text>}
               <Text>Category: {p.category?.name || "—"}</Text>
@@ -285,6 +298,16 @@ export default function ProductsList({ onEdit, refreshKey }) {
           Next
         </Button>
       </HStack>
+
+      {/* ✅ Product Details Modal */}
+      {selectedProduct && (
+        <ProductDetails
+          isOpen={isOpen}
+          onClose={onClose}
+          product={selectedProduct}
+          stock={stockByProduct[selectedProduct.id] ?? 0}
+        />
+      )}
     </Box>
   );
 }

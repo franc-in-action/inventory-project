@@ -74,7 +74,7 @@ export default function SalesPage() {
   return (
     <Box w="full" maxW="container.lg" mx="auto" p={4}>
       <Flex justify="space-between" align="center" mb={4}>
-        <Heading size="md">Sales</Heading>
+        <Heading size="md">Invoices</Heading>
       </Flex>
 
       <Input
