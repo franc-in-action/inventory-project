@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Flex, Heading, Text, Icon, Card, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,13 +12,18 @@ import {
   FaWarehouse,
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
-import { fetchProducts } from "../modules/products/productsApi.js";
+import { useProducts } from "../modules/products/contexts/ProductsContext.jsx";
+import { useCustomers } from "../modules/customers/contexts/CustomersContext.jsx";
+import { useVendors } from "../modules/vendors/contexts/VendorsContext.jsx";
+import { fetchPurchases } from "../modules/purchases/purchaseApi.js";
 import { getPayments } from "../modules/payments/paymentsApi.js";
-import { apiFetch } from "../utils/commonApi.js";
+import { fetchLocations } from "../modules/locations/locationsApi.js";
+import { fetchSales } from "../modules/sales/salesApi.js";
+import { useEffect, useState } from "react";
 
 const dashboardLinks = [
   { label: "Products", href: "/products", icon: FaBox },
-  { label: "Stock", href: "/stock", icon: FaWarehouse }, // <- Stock link
+  { label: "Stock", href: "/stock", icon: FaWarehouse },
   { label: "Sales", href: "/sales", icon: FaCashRegister },
   { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
@@ -34,91 +38,56 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [summaryData, setSummaryData] = useState([
-    { label: "Total Products", value: 0, icon: FaBox },
-    { label: "Total Stock Items", value: 0, icon: FaWarehouse }, // <- Stock summary
-    { label: "Total Sales", value: 0, icon: FaCashRegister },
-    { label: "Total Purchases", value: 0, icon: FaShoppingCart },
-    { label: "Total Locations", value: 0, icon: FaMapMarkerAlt },
-    { label: "Total Customers", value: 0, icon: FaUsers },
-    { label: "Total Vendors", value: 0, icon: FaTruck },
-    { label: "Total Payments", value: 0, icon: FaMoneyBillWave },
-  ]);
+  const { products, stockMap, loading: productsLoading } = useProducts();
+  const { customers, loading: customersLoading } = useCustomers();
+  const { vendors, loading: vendorsLoading } = useVendors();
 
+  const [purchasesTotal, setPurchasesTotal] = useState(0);
+  const [salesTotal, setSalesTotal] = useState(0);
+  const [paymentsTotal, setPaymentsTotal] = useState(0);
+  const [locationsTotal, setLocationsTotal] = useState(0);
+
+  // Load dynamic data reactively
   useEffect(() => {
-    const loadCounts = async () => {
+    const loadDynamicCounts = async () => {
       try {
-        // Fetch products with total count
-        const productsData = await fetchProducts({ limit: 1 }); // limit 1 is enough to get total
+        const [purchasesData, salesData, paymentsData, locationsData] =
+          await Promise.all([
+            fetchPurchases({ limit: 1 }),
+            fetchSales({ limit: 1 }),
+            getPayments(),
+            fetchLocations(),
+          ]);
 
-        // Fetch other resources
-        const [
-          stock,
-          sales,
-          purchases,
-          locations,
-          customers,
-          vendors,
-          payments,
-        ] = await Promise.all([
-          apiFetch("/stock/all"), // Assuming this returns array
-          apiFetch("/sales"),
-          apiFetch("/purchases"),
-          apiFetch("/locations"),
-          apiFetch("/customers"),
-          apiFetch("/vendors"),
-          getPayments(),
-        ]);
-
-        setSummaryData([
-          {
-            label: "Total Products",
-            value: productsData.total || 0,
-            icon: FaBox,
-          },
-          {
-            label: "Total Stock Items",
-            value: stock.length || 0,
-            icon: FaWarehouse,
-          },
-          {
-            label: "Total Sales",
-            value: sales.length || 0,
-            icon: FaCashRegister,
-          },
-          {
-            label: "Total Purchases",
-            value: purchases.length || 0,
-            icon: FaShoppingCart,
-          },
-          {
-            label: "Total Locations",
-            value: locations.length || 0,
-            icon: FaMapMarkerAlt,
-          },
-          {
-            label: "Total Customers",
-            value: customers.length || 0,
-            icon: FaUsers,
-          },
-          { label: "Total Vendors", value: vendors.length || 0, icon: FaTruck },
-          {
-            label: "Total Payments",
-            value: payments.length || 0,
-            icon: FaMoneyBillWave,
-          },
-        ]);
+        setPurchasesTotal(purchasesData.total || 0);
+        setSalesTotal(salesData.total || 0);
+        setPaymentsTotal(paymentsData.length || 0);
+        setLocationsTotal(locationsData.length || 0);
       } catch (err) {
         toast({
           status: "error",
-          description: "Failed to load dashboard counts",
+          description: "Failed to load dynamic dashboard counts",
         });
-        console.error("[Dashboard] loadCounts error:", err);
+        console.error("[Dashboard] loadDynamicCounts error:", err);
       }
     };
 
-    loadCounts();
-  }, []);
+    loadDynamicCounts();
+  }, [toast]);
+
+  // Compute total stock reactively
+  const totalStock = Object.values(stockMap).reduce((sum, qty) => sum + qty, 0);
+
+  const summaryData = [
+    { label: "Total Products", value: products.length, icon: FaBox },
+    { label: "Total Stock Items", value: totalStock, icon: FaWarehouse },
+    { label: "Total Sales", value: salesTotal, icon: FaCashRegister },
+    { label: "Total Purchases", value: purchasesTotal, icon: FaShoppingCart },
+    { label: "Total Locations", value: locationsTotal, icon: FaMapMarkerAlt },
+    { label: "Total Customers", value: customers.length, icon: FaUsers },
+    { label: "Total Vendors", value: vendors.length, icon: FaTruck },
+    { label: "Total Payments", value: paymentsTotal, icon: FaMoneyBillWave },
+  ];
 
   return (
     <Flex

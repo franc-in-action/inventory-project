@@ -8,6 +8,9 @@ import {
 } from "react-router-dom";
 
 import Login from "./modules/auth/Login.jsx";
+import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
+import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
+import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
@@ -29,9 +32,6 @@ import {
   userHasRole,
   getDefaultPage,
 } from "./modules/auth/authApi.js";
-import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
-import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
-import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
 
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;
@@ -91,7 +91,13 @@ export default function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={PERMISSIONS.DASHBOARD}>
                   <ProtectedLayout>
-                    <Dashboard />
+                    <VendorsProvider>
+                      <ProductsProvider>
+                        <CustomersProvider>
+                          <Dashboard />
+                        </CustomersProvider>
+                      </ProductsProvider>
+                    </VendorsProvider>
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>
