@@ -104,7 +104,13 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <Flex direction="column" align="center" justify="center" minH="100vh" p={8}>
+    <Flex
+      direction="column"
+      align="center"
+      justify="flex-start"
+      minH="100vh"
+      p={8}
+    >
       <Heading mb={4}>Dashboard</Heading>
       {user && (
         <Text mb={6}>
