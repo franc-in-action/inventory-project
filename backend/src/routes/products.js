@@ -34,9 +34,16 @@ router.get("/", authMiddleware, async (req, res) => {
 
   try {
     const [products, total] = await Promise.all([
+      // prisma.product.findMany({
+      // where,
+      // include: { category: true, location: true },
       prisma.product.findMany({
         where,
-        include: { category: true, location: true },
+        include: {
+          category: true,
+          location: true,
+          productVendors: { include: { vendor: true } },
+        },
         skip: (page - 1) * limit,
         take: parseInt(limit),
         orderBy: { createdAt: "desc" },
@@ -60,6 +67,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
       include: {
         category: true,
         location: true,
+        productVendors: { include: { vendor: true } },
       },
     });
     if (!product) return res.status(404).json({ error: "Product not found" });
@@ -76,10 +84,31 @@ router.post(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const { sku, name, description, price, categoryId, locationId } = req.body;
+    const {
+      sku,
+      name,
+      description,
+      price,
+      categoryId,
+      locationId,
+      vendorIds = [],
+    } = req.body;
     try {
       const product = await prisma.product.create({
-        data: { sku, name, description, price, categoryId, locationId },
+        data: {
+          sku,
+          name,
+          description,
+          price,
+          categoryId,
+          locationId,
+          productVendors: {
+            create: vendorIds.map((vId) => ({ vendorId: vId })),
+          },
+        },
+        include: {
+          productVendors: { include: { vendor: true } },
+        },
       });
       res.status(201).json(product);
     } catch (err) {
@@ -96,11 +125,34 @@ router.put(
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
     const { id } = req.params;
-    const { sku, name, description, price, categoryId, locationId } = req.body;
+    const {
+      sku,
+      name,
+      description,
+      price,
+      categoryId,
+      locationId,
+      vendorIds = [],
+    } = req.body;
     try {
+      // Replace vendors by deleting old relations and creating new ones
+      // await prisma.productVendor.deleteMany({ where: { productId: id } });
       const product = await prisma.product.update({
         where: { id },
-        data: { sku, name, description, price, categoryId, locationId },
+        data: {
+          sku,
+          name,
+          description,
+          price,
+          categoryId,
+          locationId,
+          productVendors: {
+            create: vendorIds.map((vId) => ({ vendorId: vId })),
+          },
+        },
+        include: {
+          productVendors: { include: { vendor: true } },
+        },
       });
       res.json(product);
     } catch (err) {

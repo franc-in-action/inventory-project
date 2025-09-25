@@ -125,3 +125,8 @@ export async function createCategory(name) {
     body: JSON.stringify({ name }),
   });
 }
+
+// FIXME: Remove tthis in the future
+// export async function fetchVendors() {
+//   return apiFetch("/vendors");
+// }

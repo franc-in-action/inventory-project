@@ -24,6 +24,7 @@ import {
 } from "./productsApi.js";
 import { fetchCategories, createCategory } from "./categoriesApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
+import { fetchVendors } from "../vendors/vendorsApi.js";
 
 export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const toast = useToast();
@@ -38,6 +39,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   });
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -45,12 +47,14 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     if (!isOpen) return;
     (async () => {
       try {
-        const [cats, locs] = await Promise.all([
+        const [cats, locs, vends] = await Promise.all([
           fetchCategories(),
           fetchLocations(),
+          fetchVendors(),
         ]);
         setCategories(cats || []);
         setLocations(locs || []);
+        setVendors(vends || []);
       } catch {
         toast({ status: "error", description: "Failed to load data." });
       }
@@ -95,7 +99,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     const payload = {
       ...product,
       price: Number(product.price),
-      // quantity: Number(product.quantity),
+      vendorIds: product.vendorIds || [],
     };
     try {
       if (productId) {
@@ -190,6 +194,29 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
                     setProduct((p) => ({ ...p, locationId: item.id }))
                   }
                 />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Vendors</FormLabel>
+                <Select
+                  multiple
+                  value={product.vendorIds || []}
+                  onChange={(e) =>
+                    setProduct((p) => ({
+                      ...p,
+                      vendorIds: Array.from(
+                        e.target.selectedOptions,
+                        (o) => o.value
+                      ),
+                    }))
+                  }
+                >
+                  {vendors.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
             </VStack>
           )}

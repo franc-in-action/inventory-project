@@ -152,6 +152,14 @@ export default function ProductDetails({
                         <b>Updated:</b>{" "}
                         {new Date(product.updatedAt).toLocaleString()}
                       </Text>
+                      <Text>
+                        <b>Vendors:</b>{" "}
+                        {product.productVendors?.length
+                          ? product.productVendors
+                              .map((pv) => pv.vendor.name)
+                              .join(", ")
+                          : "—"}
+                      </Text>
                     </VStack>
                   </Box>
                 </Flex>
