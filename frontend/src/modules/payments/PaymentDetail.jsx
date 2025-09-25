@@ -10,18 +10,20 @@ import {
   Text,
   Spinner,
 } from "@chakra-ui/react";
-import { getPaymentById } from "./paymentsApi.js";
+import { usePayments } from "./contexts/PaymentsContext.jsx";
 
 export default function PaymentDetail({ paymentId, isOpen, onClose }) {
+  const { getPayment } = usePayments();
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !paymentId) return;
+
     setLoading(true);
     (async () => {
       try {
-        const data = await getPaymentById(paymentId);
+        const data = await getPayment(paymentId);
         setPayment(data);
       } catch (err) {
         console.error("Failed to fetch payment details:", err);
@@ -29,7 +31,7 @@ export default function PaymentDetail({ paymentId, isOpen, onClose }) {
         setLoading(false);
       }
     })();
-  }, [paymentId, isOpen]);
+  }, [paymentId, isOpen, getPayment]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -41,7 +43,7 @@ export default function PaymentDetail({ paymentId, isOpen, onClose }) {
           {loading ? (
             <Spinner />
           ) : payment ? (
-            <VStack>
+            <VStack spacing={2} align="start">
               <Text>
                 <strong>Customer:</strong> {payment.customer?.name || "N/A"}
               </Text>

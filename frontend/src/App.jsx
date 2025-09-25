@@ -11,6 +11,7 @@ import Login from "./modules/auth/Login.jsx";
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
 import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
+import { PaymentsProvider } from "./modules/payments/contexts/PaymentsContext.jsx"; // ✅ new
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
@@ -94,7 +95,9 @@ export default function App() {
                     <VendorsProvider>
                       <ProductsProvider>
                         <CustomersProvider>
-                          <Dashboard />
+                          <PaymentsProvider>
+                            <Dashboard />
+                          </PaymentsProvider>
                         </CustomersProvider>
                       </ProductsProvider>
                     </VendorsProvider>
@@ -207,7 +210,9 @@ export default function App() {
                 <RoleRoute allowedRoles={PERMISSIONS.PAYMENTS}>
                   <ProtectedLayout>
                     <CustomersProvider>
-                      <PaymentsPage />
+                      <PaymentsProvider>
+                        <PaymentsPage />
+                      </PaymentsProvider>
                     </CustomersProvider>
                   </ProtectedLayout>
                 </RoleRoute>

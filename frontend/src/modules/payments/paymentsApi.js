@@ -7,9 +7,18 @@ export async function createPayment(paymentData) {
     body: JSON.stringify(paymentData),
   });
 }
+
+export async function updatePayment(id, paymentData) {
+  return apiFetch(`/payments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(paymentData),
+  });
+}
+
 export async function getPayments() {
   return apiFetch("/payments");
 }
+
 export async function getPaymentById(id) {
   return apiFetch(`/payments/${id}`);
 }

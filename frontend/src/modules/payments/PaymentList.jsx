@@ -12,8 +12,10 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import PaymentDetail from "./PaymentDetail.jsx";
+import { usePayments } from "./contexts/PaymentsContext.jsx";
 
-export default function PaymentList({ payments, onEdit, onDelete }) {
+export default function PaymentList({ onEdit, filter = "" }) {
+  const { payments, deletePayment } = usePayments();
   const [selectedId, setSelectedId] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -26,6 +28,24 @@ export default function PaymentList({ payments, onEdit, onDelete }) {
     setSelectedId(null);
     setDetailsOpen(false);
   };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this payment?")) return;
+    try {
+      await deletePayment(id);
+      alert("Payment deleted");
+    } catch {
+      alert("Error deleting payment");
+    }
+  };
+
+  // Apply filter
+  const filteredPayments = payments.filter((p) => {
+    const customerName = p.customer?.name?.toLowerCase() || "";
+    const saleUuid = p.sale?.saleUuid?.toLowerCase() || "";
+    const query = filter.toLowerCase();
+    return customerName.includes(query) || saleUuid.includes(query);
+  });
 
   return (
     <>
@@ -41,7 +61,7 @@ export default function PaymentList({ payments, onEdit, onDelete }) {
           </Tr>
         </Thead>
         <Tbody>
-          {payments.map((p) => (
+          {filteredPayments.map((p) => (
             <Tr key={p.id}>
               <Td>
                 <Link onClick={() => handleOpenDetails(p.id)}>
@@ -62,7 +82,7 @@ export default function PaymentList({ payments, onEdit, onDelete }) {
                   <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Delete"
-                    onClick={() => onDelete(p.id)}
+                    onClick={() => handleDelete(p.id)}
                   />
                 </ButtonGroup>
               </Td>

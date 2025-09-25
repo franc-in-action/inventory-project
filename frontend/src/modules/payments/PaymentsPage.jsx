@@ -1,54 +1,37 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Heading,
   Button,
   Flex,
   Input,
-  useToast,
   Spacer,
   ButtonGroup,
+  useToast,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
-import { getPayments } from "./paymentsApi.js";
 import PaymentForm from "./PaymentForm.jsx";
 import PaymentList from "./PaymentList.jsx";
+import { usePayments } from "./contexts/PaymentsContext.jsx";
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState([]);
+  const { payments, loading, deletePayment, reloadPayments } = usePayments();
   const [filter, setFilter] = useState("");
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
 
-  // Fetch payments from backend
-  const loadPayments = async () => {
-    try {
-      const data = await getPayments();
-      setPayments(data);
-    } catch (err) {
-      toast({ status: "error", description: "Failed to load payments" });
-    }
-  };
-
-  useEffect(() => {
-    loadPayments();
-  }, []);
-
-  // Delete a payment
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this payment?")) return;
     try {
-      await fetch(`/payments/${id}`, { method: "DELETE" });
+      await deletePayment(id);
       toast({ title: "Payment deleted", status: "success" });
-      loadPayments();
-    } catch (err) {
+    } catch {
       toast({ title: "Error deleting payment", status: "error" });
     }
   };
 
-  // Open form for creating or editing
   const openCreateModal = () => {
     setEditingPaymentId(null);
     setIsModalOpen(true);
@@ -59,7 +42,6 @@ export default function PaymentsPage() {
     setIsModalOpen(true);
   };
 
-  // Filter payments by customer name or sale ID
   const filteredPayments = payments.filter((p) => {
     const customerName = p.customer?.name?.toLowerCase() || "";
     const saleUuid = p.sale?.saleUuid?.toLowerCase() || "";
@@ -70,9 +52,7 @@ export default function PaymentsPage() {
   return (
     <Box>
       <Flex alignItems="center" gap="2" mb={4}>
-        <Box>
-          <Heading size="md">Payments</Heading>
-        </Box>
+        <Heading size="md">Payments</Heading>
         <Spacer />
         <ButtonGroup>
           <Button
@@ -102,7 +82,7 @@ export default function PaymentsPage() {
         paymentId={editingPaymentId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSaved={loadPayments}
+        onSaved={reloadPayments}
       />
     </Box>
   );

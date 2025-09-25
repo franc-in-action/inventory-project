@@ -1,4 +1,3 @@
-// src/modules/payments/PaymentForm.jsx
 import { useState, useEffect, useRef } from "react";
 import {
   Modal,
@@ -19,9 +18,10 @@ import {
   Text,
   Badge,
   useOutsideClick,
+  ButtonGroup,
 } from "@chakra-ui/react";
 
-import { createPayment, getPaymentById } from "./paymentsApi.js";
+import { usePayments } from "./contexts/PaymentsContext.jsx";
 import { fetchSales } from "../sales/salesApi.js";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 
@@ -31,7 +31,8 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     customers,
     loading: customersLoading,
     error: customersError,
-  } = useCustomers(); // ✅ from context
+  } = useCustomers();
+  const { createPayment, getPayment } = usePayments();
 
   const [payment, setPayment] = useState({
     customerId: "",
@@ -49,7 +50,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const dropdownRef = useRef();
   useOutsideClick({ ref: dropdownRef, handler: () => setDropdownOpen(false) });
 
-  // Load sales and payment if editing
   useEffect(() => {
     if (!isOpen) return;
 
@@ -57,7 +57,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     (async () => {
       try {
         const salesData = await fetchSales();
-
         const normalizedSales = salesData.items.map((s) => ({
           ...s,
           totalAmount: s.total,
@@ -65,11 +64,10 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
             s.total -
             (s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0),
         }));
-
         setSales(normalizedSales);
 
         if (paymentId) {
-          const data = await getPaymentById(paymentId);
+          const data = await getPayment(paymentId);
           setPayment({
             customerId: data.customerId || "",
             saleId: data.saleId || "",
@@ -85,7 +83,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
         setLoading(false);
       }
     })();
-  }, [paymentId, isOpen, toast]);
+  }, [paymentId, isOpen, getPayment, toast]);
 
   // Filter sales by customer & search term
   useEffect(() => {
@@ -100,7 +98,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
         );
       }
       setFilteredSales(filtered);
-
       if (!filtered.find((s) => s.id === payment.saleId)) {
         setPayment((prev) => ({ ...prev, saleId: filtered[0]?.id || "" }));
       }
@@ -116,8 +113,22 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await createPayment(payment);
-      toast({ status: "success", description: "Payment saved" });
+      const payload = { ...payment, amount: parseFloat(payment.amount) };
+
+      if (!payload.amount || payload.amount <= 0) {
+        toast({ status: "error", description: "Amount must be positive" });
+        setSaving(false);
+        return;
+      }
+
+      if (paymentId) {
+        await updatePayment(paymentId, payload);
+        toast({ status: "success", description: "Payment updated" });
+      } else {
+        await createPayment(payload);
+        toast({ status: "success", description: "Payment created" });
+      }
+
       onSaved();
       onClose();
     } catch (err) {
@@ -128,7 +139,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   };
 
   const selectedSale = filteredSales.find((s) => s.id === payment.saleId);
-
   const customerOutstanding = sales
     .filter((s) => s.customer?.id === payment.customerId)
     .reduce((sum, s) => sum + (s.unpaidBalance || 0), 0);
@@ -296,12 +306,19 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose} size="sm">
-            Cancel
-          </Button>
-          <Button type="submit" isLoading={saving} colorScheme="teal" size="sm">
-            {paymentId ? "Update" : "Create"}
-          </Button>
+          <ButtonGroup>
+            <Button onClick={onClose} size="sm">
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              isLoading={saving}
+              colorScheme="teal"
+              size="sm"
+            >
+              {paymentId ? "Update" : "Create"}
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>

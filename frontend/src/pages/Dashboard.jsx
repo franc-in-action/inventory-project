@@ -15,8 +15,8 @@ import { getUserFromToken } from "../modules/auth/authApi.js";
 import { useProducts } from "../modules/products/contexts/ProductsContext.jsx";
 import { useCustomers } from "../modules/customers/contexts/CustomersContext.jsx";
 import { useVendors } from "../modules/vendors/contexts/VendorsContext.jsx";
+import { usePayments } from "../modules/payments/contexts/PaymentsContext.jsx";
 import { fetchPurchases } from "../modules/purchases/purchaseApi.js";
-import { getPayments } from "../modules/payments/paymentsApi.js";
 import { fetchLocations } from "../modules/locations/locationsApi.js";
 import { fetchSales } from "../modules/sales/salesApi.js";
 import { useEffect, useState } from "react";
@@ -38,30 +38,27 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const { products, stockMap, loading: productsLoading } = useProducts();
-  const { customers, loading: customersLoading } = useCustomers();
-  const { vendors, loading: vendorsLoading } = useVendors();
+  const { products, stockMap } = useProducts();
+  const { customers } = useCustomers();
+  const { vendors } = useVendors();
+  const { payments } = usePayments(); // ✅ use PaymentsContext
 
   const [purchasesTotal, setPurchasesTotal] = useState(0);
   const [salesTotal, setSalesTotal] = useState(0);
-  const [paymentsTotal, setPaymentsTotal] = useState(0);
   const [locationsTotal, setLocationsTotal] = useState(0);
 
-  // Load dynamic data reactively
+  // Load dynamic counts for purchases, sales, locations
   useEffect(() => {
     const loadDynamicCounts = async () => {
       try {
-        const [purchasesData, salesData, paymentsData, locationsData] =
-          await Promise.all([
-            fetchPurchases({ limit: 1 }),
-            fetchSales({ limit: 1 }),
-            getPayments(),
-            fetchLocations(),
-          ]);
+        const [purchasesData, salesData, locationsData] = await Promise.all([
+          fetchPurchases({ limit: 1 }),
+          fetchSales({ limit: 1 }),
+          fetchLocations(),
+        ]);
 
         setPurchasesTotal(purchasesData.total || 0);
         setSalesTotal(salesData.total || 0);
-        setPaymentsTotal(paymentsData.length || 0);
         setLocationsTotal(locationsData.length || 0);
       } catch (err) {
         toast({
@@ -75,7 +72,6 @@ export default function Dashboard() {
     loadDynamicCounts();
   }, [toast]);
 
-  // Compute total stock reactively
   const totalStock = Object.values(stockMap).reduce((sum, qty) => sum + qty, 0);
 
   const summaryData = [
@@ -86,7 +82,7 @@ export default function Dashboard() {
     { label: "Total Locations", value: locationsTotal, icon: FaMapMarkerAlt },
     { label: "Total Customers", value: customers.length, icon: FaUsers },
     { label: "Total Vendors", value: vendors.length, icon: FaTruck },
-    { label: "Total Payments", value: paymentsTotal, icon: FaMoneyBillWave },
+    { label: "Total Payments", value: payments.length, icon: FaMoneyBillWave }, // ✅ reactive
   ];
 
   return (
@@ -104,7 +100,6 @@ export default function Dashboard() {
         </Text>
       )}
 
-      {/* Summary Cards */}
       <Flex
         flexWrap="wrap"
         justify="center"
@@ -135,7 +130,6 @@ export default function Dashboard() {
         ))}
       </Flex>
 
-      {/* Navigation Cards */}
       <Flex flexWrap="wrap" justify="center" w="100%" maxW="1200px" gap={6}>
         {dashboardLinks.map((link) => (
           <Card

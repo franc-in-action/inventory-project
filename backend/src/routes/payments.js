@@ -66,6 +66,38 @@ router.post(
   }
 );
 
+// -------------------- UPDATE PAYMENT --------------------
+router.put(
+  "/:id",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER", "STAFF"]),
+  async (req, res) => {
+    const id = parseInt(req.params.id);
+    const { customerId, amount, saleId, method } = req.body;
+
+    if (!customerId && !saleId) {
+      return res
+        .status(400)
+        .json({ error: "Either customerId or saleId is required" });
+    }
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: "Positive amount required" });
+    }
+
+    try {
+      const updatedPayment = await prisma.payment.update({
+        where: { id },
+        data: { customerId, saleId, amount, method },
+        include: { customer: true, sale: true },
+      });
+
+      res.json(updatedPayment);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+);
+
 // -------------------- GET ALL PAYMENTS --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
