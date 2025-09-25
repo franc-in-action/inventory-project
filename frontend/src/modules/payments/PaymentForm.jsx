@@ -23,7 +23,7 @@ import {
 
 import { createPayment, getPaymentById } from "./paymentsApi.js";
 import { fetchSales } from "../sales/salesApi.js";
-import { useCustomers } from "../customers/contexts/CustomersContext.jsx"; // ✅ use context
+import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 
 export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const toast = useToast();
