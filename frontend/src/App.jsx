@@ -12,6 +12,7 @@ import { ProductsProvider } from "./modules/products/contexts/ProductsContext.js
 import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
 import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
 import { PaymentsProvider } from "./modules/payments/contexts/PaymentsContext.jsx"; // ✅ new
+import { SalesProvider } from "./modules/sales/contexts/SalesContext.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
@@ -95,9 +96,11 @@ export default function App() {
                     <VendorsProvider>
                       <ProductsProvider>
                         <CustomersProvider>
-                          <PaymentsProvider>
-                            <Dashboard />
-                          </PaymentsProvider>
+                          <SalesProvider>
+                            <PaymentsProvider>
+                              <Dashboard />
+                            </PaymentsProvider>
+                          </SalesProvider>
                         </CustomersProvider>
                       </ProductsProvider>
                     </VendorsProvider>
@@ -116,7 +119,9 @@ export default function App() {
                   <ProtectedLayout>
                     <VendorsProvider>
                       <ProductsProvider>
-                        <ProductsPage />
+                        <SalesProvider>
+                          <ProductsPage />
+                        </SalesProvider>
                       </ProductsProvider>
                     </VendorsProvider>
                   </ProtectedLayout>
@@ -165,7 +170,9 @@ export default function App() {
                     <CustomersProvider>
                       <PaymentsProvider>
                         <ProductsProvider>
-                          <CustomersPage />
+                          <SalesProvider>
+                            <CustomersPage />
+                          </SalesProvider>
                         </ProductsProvider>
                       </PaymentsProvider>
                     </CustomersProvider>
@@ -198,7 +205,9 @@ export default function App() {
                   <ProtectedLayout>
                     <ProductsProvider>
                       <CustomersProvider>
-                        <SalesPage />
+                        <SalesProvider>
+                          <SalesPage />
+                        </SalesProvider>
                       </CustomersProvider>
                     </ProductsProvider>
                   </ProtectedLayout>
@@ -215,7 +224,9 @@ export default function App() {
                   <ProtectedLayout>
                     <CustomersProvider>
                       <PaymentsProvider>
-                        <PaymentsPage />
+                        <SalesProvider>
+                          <PaymentsPage />
+                        </SalesProvider>
                       </PaymentsProvider>
                     </CustomersProvider>
                   </ProtectedLayout>

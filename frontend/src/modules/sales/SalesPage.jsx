@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   Flex,
@@ -8,54 +8,34 @@ import {
   HStack,
   Spinner,
   Text,
-  useDisclosure,
-  ButtonGroup,
   Spacer,
   Tabs,
   TabList,
   TabPanels,
   Tab,
   TabPanel,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import { fetchSales } from "./salesApi.js";
+
+import { useSales } from "./contexts/SalesContext.jsx";
 import SalesList from "./SalesList.jsx";
 import InvoiceDetails from "./InvoiceDetails.jsx";
 import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
 import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function SalesPage() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [allSales, setAllSales] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  const { sales, loading, reloadSales } = useSales();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const [selectedSale, setSelectedSale] = useState(null);
+  const [selectedSaleId, setSelectedSaleId] = useState(null);
   const [thermalOpen, setThermalOpen] = useState(false);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
 
-  const loadSales = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchSales();
-      setAllSales(data.items || []);
-    } catch (err) {
-      console.error(err);
-      setAllSales([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadSales();
-  }, []);
-
   const filtered = useMemo(() => {
-    return allSales.filter(
+    return sales.filter(
       (s) =>
         s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
         (s.saleUuid || s.id)
@@ -63,9 +43,8 @@ export default function SalesPage() {
           .toLowerCase()
           .includes(search.toLowerCase())
     );
-  }, [allSales, search]);
+  }, [sales, search]);
 
-  // Split sales into paid vs unpaid/partial
   const paidSales = filtered.filter((s) => s.status?.toLowerCase() === "paid");
   const unpaidSales = filtered.filter(
     (s) => s.status?.toLowerCase() !== "paid"
@@ -73,19 +52,14 @@ export default function SalesPage() {
 
   const totalPages = (salesArray) =>
     Math.max(1, Math.ceil(salesArray.length / limit));
-
   const paginated = (salesArray) => {
     const start = (page - 1) * limit;
     return salesArray.slice(start, start + limit);
   };
 
-  const handleSelectSale = (sale) => {
-    setSelectedSale(sale);
-    onOpen();
-  };
-
+  const handleSelectSale = (sale) => setSelectedSaleId(sale.id);
   const handlePrint = (sale) => {
-    setSelectedSale(sale);
+    setSelectedSaleId(sale.id);
     setThermalOpen(true);
   };
 
@@ -100,7 +74,7 @@ export default function SalesPage() {
         <Spacer />
         <ButtonGroup gap="2">
           <Button
-            variant={"primary"}
+            variant="primary"
             leftIcon={<AddIcon />}
             onClick={() => setInvoiceFormOpen(true)}
           >
@@ -182,27 +156,28 @@ export default function SalesPage() {
         </TabPanels>
       </Tabs>
 
-      {/* Invoice Details Modal */}
-      {selectedSale && (
-        <InvoiceDetails sale={selectedSale} isOpen={isOpen} onClose={onClose} />
+      {selectedSaleId && (
+        <InvoiceDetails
+          saleId={selectedSaleId}
+          isOpen={!!selectedSaleId}
+          onClose={() => setSelectedSaleId(null)}
+        />
       )}
 
-      {/* Thermal Print Modal */}
-      {selectedSale && (
+      {selectedSaleId && (
         <SaleInvoiceThermal
-          sale={selectedSale}
+          saleId={selectedSaleId}
           isOpen={thermalOpen}
           onClose={() => setThermalOpen(false)}
         />
       )}
 
-      {/* Invoice Form Modal */}
       <InvoiceForm
         isOpen={invoiceFormOpen}
         onClose={() => setInvoiceFormOpen(false)}
         onInvoiceCreated={() => {
           setInvoiceFormOpen(false);
-          loadSales();
+          reloadSales();
         }}
       />
     </Box>

@@ -24,16 +24,17 @@ import {
   Link,
 } from "@chakra-ui/react";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
+import { useSales } from "../sales/contexts/SalesContext.jsx";
 import InvoiceDetails from "../sales/InvoiceDetails.jsx";
 import PaymentDetail from "../payments/PaymentDetail.jsx";
 
 export default function CustomerDetail({ customerId, isOpen, onClose }) {
   const { fetchCustomerById } = useCustomers();
+  const { sales, getSaleById } = useSales();
+
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Modal state for invoice and payment details
-  const [selectedSale, setSelectedSale] = useState(null);
+  const [selectedSaleId, setSelectedSaleId] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   useEffect(() => {
@@ -67,16 +68,19 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
     );
   }
 
-  const { ledger = [], sales = [] } = customer;
+  const { ledger = [] } = customer;
+
+  // Filter sales for this customer from SalesContext
+  const customerSales = sales.filter((s) => s.customerId === customerId);
 
   // Map saleId -> ledger entries
-  const ledgerBySale = sales.reduce((map, s) => {
+  const ledgerBySale = customerSales.reduce((map, s) => {
     map[s.id] = ledger.filter((e) => e.saleId === s.id);
     return map;
   }, {});
 
   // Compute paid amount and balance per sale
-  const salesWithBalances = sales.map((s) => {
+  const salesWithBalances = customerSales.map((s) => {
     const entries = ledgerBySale[s.id] || [];
     const paid = entries
       .filter((e) => e.type === "PAYMENT_RECEIVED")
@@ -86,7 +90,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
   });
 
   // Map saleId -> saleUuid for payments tab
-  const saleMap = sales.reduce((map, s) => {
+  const saleMap = customerSales.reduce((map, s) => {
     map[s.id] = s.saleUuid;
     return map;
   }, {});
@@ -126,7 +130,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                 {customer.balance?.toFixed(2) || 0}
               </Text>
               <Text>
-                <strong>Total Sales:</strong> {sales.length}
+                <strong>Total Sales:</strong> {customerSales.length}
               </Text>
             </VStack>
 
@@ -140,7 +144,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
               <TabPanels>
                 {/* Sales Tab */}
                 <TabPanel>
-                  {sales.length === 0 ? (
+                  {customerSales.length === 0 ? (
                     <Text>No sales for this customer</Text>
                   ) : (
                     <Table size="sm">
@@ -159,7 +163,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                             <Td>
                               <Link
                                 color="blue.500"
-                                onClick={() => setSelectedSale(s)}
+                                onClick={() => setSelectedSaleId(s.id)}
                               >
                                 {s.saleUuid}
                               </Link>
@@ -219,11 +223,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                               {p.saleId ? (
                                 <Link
                                   color="blue.500"
-                                  onClick={() =>
-                                    setSelectedSale(
-                                      sales.find((s) => s.id === p.saleId)
-                                    )
-                                  }
+                                  onClick={() => setSelectedSaleId(p.saleId)}
                                 >
                                   {saleMap[p.saleId]}
                                 </Link>
@@ -287,11 +287,11 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
       </Modal>
 
       {/* Invoice Details Modal */}
-      {selectedSale && (
+      {selectedSaleId && (
         <InvoiceDetails
-          sale={selectedSale}
-          isOpen={Boolean(selectedSale)}
-          onClose={() => setSelectedSale(null)}
+          saleId={selectedSaleId} // pass ID, not full object
+          isOpen={Boolean(selectedSaleId)}
+          onClose={() => setSelectedSaleId(null)}
         />
       )}
 

@@ -9,10 +9,16 @@ import {
   Link,
   IconButton,
   HStack,
+  Spinner,
 } from "@chakra-ui/react";
 import { FiPrinter } from "react-icons/fi";
+import { useSales } from "./contexts/SalesContext.jsx";
 
-export default function SalesList({ sales, onSelectSale, onPrint }) {
+export default function SalesList({ onSelectSale, onPrint }) {
+  const { sales, loading } = useSales(); // <-- context-driven
+
+  if (loading) return <Spinner label="Loading sales..." />;
+
   if (!sales || sales.length === 0) return <Text>No sales found.</Text>;
 
   return (
@@ -38,14 +44,13 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
           const total = (s.total || 0).toFixed(2);
           const unpaid = (s.total - paid).toFixed(2);
 
-          // Keep only unpaid row highlighting
           const bgColor = parseFloat(unpaid) > 0 ? "red.50" : undefined;
 
           return (
             <Tr key={s.id} bg={bgColor}>
               <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
               <Td>
-                <Link onClick={() => onSelectSale(s)}>
+                <Link onClick={() => onSelectSale && onSelectSale(s)}>
                   {s.saleUuid || s.id}
                 </Link>
               </Td>
