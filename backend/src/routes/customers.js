@@ -1,6 +1,7 @@
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
+import { computeCustomerBalances } from "../utils/customersHelpers.js";
 
 const router = express.Router();
 
@@ -32,8 +33,23 @@ router.post(
 // -------------------- READ ALL --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    const includeBalance = req.query.includeBalance === "true";
+
     const customers = await prisma.customer.findMany();
-    res.json(customers);
+
+    if (!includeBalance) return res.json(customers);
+
+    // Compute balances for all customers in a single helper call
+    const balanceMap = await computeCustomerBalances(
+      customers.map((c) => c.id)
+    );
+
+    const customersWithBalance = customers.map((c) => ({
+      ...c,
+      balance: balanceMap[c.id] || 0,
+    }));
+
+    res.json(customersWithBalance);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -41,11 +57,26 @@ router.get("/", authMiddleware, async (req, res) => {
 
 // -------------------- READ ONE --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = req.params.id; // UUID string
+  const id = req.params.id;
   try {
-    const customer = await prisma.customer.findUnique({ where: { id } });
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      include: {
+        sales: {
+          include: { payments: true },
+          orderBy: { createdAt: "desc" },
+        },
+        payments: true,
+        ledger: true,
+      },
+    });
+
     if (!customer) return res.status(404).json({ error: "Customer not found" });
-    res.json(customer);
+
+    const balanceMap = await computeCustomerBalances(id);
+    const balance = balanceMap[id] || 0;
+
+    res.json({ ...customer, balance });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -57,7 +88,7 @@ router.put(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const id = req.params.id; // UUID string
+    const id = req.params.id;
     const { name, email, phone, credit_limit } = req.body;
 
     try {
@@ -78,7 +109,7 @@ router.delete(
   authMiddleware,
   requireRole(["ADMIN"]),
   async (req, res) => {
-    const id = req.params.id; // UUID string
+    const id = req.params.id;
     try {
       await prisma.customer.delete({ where: { id } });
       res.json({ message: "Customer deleted" });

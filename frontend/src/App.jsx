@@ -163,7 +163,11 @@ export default function App() {
                 <RoleRoute allowedRoles={PERMISSIONS.CUSTOMERS}>
                   <ProtectedLayout>
                     <CustomersProvider>
-                      <CustomersPage />
+                      <PaymentsProvider>
+                        <ProductsProvider>
+                          <CustomersPage />
+                        </ProductsProvider>
+                      </PaymentsProvider>
                     </CustomersProvider>
                   </ProtectedLayout>
                 </RoleRoute>

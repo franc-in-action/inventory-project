@@ -5,9 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const router = express.Router();
 
-/**
- * POST /api/sales
- */
+// -------------------- CREATE SALE --------------------
 router.post(
   "/",
   authMiddleware,
@@ -21,7 +19,7 @@ router.post(
     }
 
     try {
-      const sale = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         // Check stock availability
         for (const item of items) {
           const stockLevel = await tx.stockLevel.findUnique({
@@ -39,7 +37,7 @@ router.post(
           }
         }
 
-        // Create sale record
+        // Create sale
         const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
         const newSale = await tx.sale.create({
           data: {
@@ -50,7 +48,7 @@ router.post(
           },
         });
 
-        // Create sale items, stock movements, and update stock
+        // Create sale items & update stock
         for (const item of items) {
           await tx.saleItem.create({
             data: {
@@ -69,7 +67,7 @@ router.post(
               refId: newSale.saleUuid,
               product: { connect: { id: item.productId } },
               location: { connect: { id: locationId } },
-              user: { connect: { id: userId } }, // use relation
+              user: { connect: { id: userId } },
             },
           });
 
@@ -81,34 +79,42 @@ router.post(
           });
         }
 
-        // Handle payment / credit
+        // Create ledger entry for sale
+        if (customerId) {
+          await tx.ledgerEntry.create({
+            data: {
+              customerId,
+              saleId: newSale.id,
+              amount: total,
+              type: "SALE",
+              description: `Sale of ${total} to customer`,
+            },
+          });
+        }
+
+        // Handle payment (if any)
         if (payment?.amount > 0) {
-          await tx.payment.create({
+          const paymentRecord = await tx.payment.create({
             data: {
               saleId: newSale.id,
               amount: payment.amount,
               method: payment.method,
+              customerId,
             },
           });
 
           if (customerId) {
-            await tx.customer.update({
-              where: { id: customerId },
-              data: { balance: { decrement: payment.amount } },
+            await tx.ledgerEntry.create({
+              data: {
+                customerId,
+                saleId: newSale.id,
+                amount: payment.amount,
+                method: payment.method,
+                type: "PAYMENT_RECEIVED",
+                description: `Payment of ${payment.amount} received`,
+              },
             });
           }
-        } else if (customerId) {
-          const customer = await tx.customer.findUnique({
-            where: { id: customerId },
-          });
-          if (!customer) throw new Error("Customer not found");
-          if (customer.balance + total > customer.credit_limit) {
-            throw new Error("Credit limit exceeded");
-          }
-          await tx.customer.update({
-            where: { id: customerId },
-            data: { balance: { increment: total } },
-          });
         }
 
         // Audit log
@@ -125,17 +131,14 @@ router.post(
         return newSale;
       });
 
-      res.status(201).json(sale);
+      res.status(201).json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
   }
 );
 
-/**
- * GET /api/sales
- * Optional filters: startDate, endDate, locationId, customerId, productId
- */
+// -------------------- GET SALES --------------------
 router.get(
   "/",
   authMiddleware,
@@ -145,19 +148,14 @@ router.get(
 
     try {
       const where = {};
-
       if (startDate || endDate) {
         where.createdAt = {};
         if (startDate) where.createdAt.gte = new Date(startDate);
         if (endDate) where.createdAt.lte = new Date(endDate);
       }
-
       if (locationId) where.locationId = locationId;
       if (customerId) where.customerId = customerId;
-
-      if (productId) {
-        where.items = { some: { productId } };
-      }
+      if (productId) where.items = { some: { productId } };
 
       const sales = await prisma.sale.findMany({
         where,
@@ -165,9 +163,9 @@ router.get(
         orderBy: { createdAt: "desc" },
       });
 
+      // Optional: total quantity sold of productId
       let qtySold = 0;
       let salesWithQty = sales;
-
       if (productId) {
         salesWithQty = sales.map((s) => {
           const product_qty = s.items

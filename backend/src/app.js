@@ -17,6 +17,8 @@ import purchasesRouter from "./routes/purchases.js";
 import customersRouter from "./routes/customers.js";
 import vendorsRouter from "./routes/vendors.js";
 import paymentsRouter from "./routes/payments.js";
+import returnsRouter from "./routes/returns.js"; // NEW
+import adjustmentsRouter from "./routes/adjustments.js"; // NEW
 import syncRouter from "./routes/sync.js";
 import locationsRouter from "./routes/locations.js";
 import logsRouter from "./routes/logs.js";
@@ -55,6 +57,8 @@ app.use("/api/purchases", purchasesRouter);
 app.use("/api/customers", customersRouter);
 app.use("/api/vendors", vendorsRouter);
 app.use("/api/payments", paymentsRouter);
+app.use("/api/returns", returnsRouter); // NEW
+app.use("/api/adjustments", adjustmentsRouter); // NEW
 app.use("/api/sync", syncRouter);
 app.use("/api/locations", locationsRouter);
 app.use("/api/logs", logsRouter);

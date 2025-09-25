@@ -10,56 +10,47 @@ router.post(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER", "STAFF"]),
   async (req, res) => {
-    const { customerId, amount, saleId, method } = req.body;
+    const { customerId, saleId, amount, method } = req.body;
 
-    if (!customerId && !saleId) {
+    if (!customerId && !saleId)
       return res
         .status(400)
         .json({ error: "Either customerId or saleId is required" });
-    }
 
-    if (!amount || amount <= 0) {
+    if (!amount || amount <= 0)
       return res.status(400).json({ error: "Positive amount required" });
-    }
 
     try {
-      const payment = await prisma.$transaction(async (tx) => {
-        // Fetch customer if provided
-        let customer;
+      const result = await prisma.$transaction(async (tx) => {
+        // Validate customer if provided
         if (customerId) {
-          customer = await tx.customer.findUnique({
+          const customer = await tx.customer.findUnique({
             where: { id: customerId },
           });
           if (!customer) throw new Error("Customer not found");
         }
 
-        // Record payment
-        const newPayment = await tx.payment.create({
+        // Create payment record
+        const payment = await tx.payment.create({
+          data: { customerId, saleId, amount, method },
+        });
+
+        // Create corresponding ledger entry
+        const ledgerEntry = await tx.ledgerEntry.create({
           data: {
-            saleId, // <-- just the foreign key
+            customerId,
+            saleId,
             amount,
             method,
-            customerId,
+            type: "PAYMENT_RECEIVED",
+            description: `Payment of ${amount} received`,
           },
         });
 
-        // Reduce customer balance if applicable
-        if (customerId) {
-          await tx.customer.update({
-            where: { id: customerId },
-            data: { balance: { decrement: amount } },
-          });
-        }
-
-        // Return payment + updated customer
-        const updatedCustomer = customerId
-          ? await tx.customer.findUnique({ where: { id: customerId } })
-          : null;
-
-        return { ...newPayment, updatedCustomer };
+        return { payment, ledgerEntry };
       });
 
-      res.status(201).json(payment);
+      res.status(201).json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
@@ -73,25 +64,39 @@ router.put(
   requireRole(["ADMIN", "MANAGER", "STAFF"]),
   async (req, res) => {
     const id = parseInt(req.params.id);
-    const { customerId, amount, saleId, method } = req.body;
+    const { customerId, saleId, amount, method } = req.body;
 
-    if (!customerId && !saleId) {
+    if (!customerId && !saleId)
       return res
         .status(400)
         .json({ error: "Either customerId or saleId is required" });
-    }
-    if (!amount || amount <= 0) {
+    if (!amount || amount <= 0)
       return res.status(400).json({ error: "Positive amount required" });
-    }
 
     try {
-      const updatedPayment = await prisma.payment.update({
-        where: { id },
-        data: { customerId, saleId, amount, method },
-        include: { customer: true, sale: true },
+      const result = await prisma.$transaction(async (tx) => {
+        // Update payment
+        const payment = await tx.payment.update({
+          where: { id },
+          data: { customerId, saleId, amount, method },
+        });
+
+        // Update ledger entry
+        const ledgerEntry = await tx.ledgerEntry.findFirst({
+          where: { saleId, customerId, type: "PAYMENT_RECEIVED" },
+        });
+
+        if (ledgerEntry) {
+          await tx.ledgerEntry.update({
+            where: { id: ledgerEntry.id },
+            data: { amount, method },
+          });
+        }
+
+        return { payment, ledgerEntry };
       });
 
-      res.json(updatedPayment);
+      res.json(result);
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
@@ -124,5 +129,35 @@ router.get("/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// -------------------- DELETE PAYMENT --------------------
+router.delete(
+  "/:id",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER"]),
+  async (req, res) => {
+    const id = parseInt(req.params.id);
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const payment = await tx.payment.delete({ where: { id } });
+
+        // Delete corresponding ledger entry
+        await tx.ledgerEntry.deleteMany({
+          where: {
+            saleId: payment.saleId,
+            customerId: payment.customerId,
+            type: "PAYMENT_RECEIVED",
+          },
+        });
+
+        return payment;
+      });
+
+      res.json({ message: "Payment deleted", deleted: result });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+);
 
 export default router;

@@ -69,7 +69,6 @@ model Product {
   saleItems      SaleItem[]
   purchaseItems  PurchaseItem[]
 
-  /// NEW: many-to-many with Vendor
   productVendors ProductVendor[]
 }
 
@@ -117,13 +116,13 @@ model Customer {
   name         String
   email        String?  @unique
   phone        String?
-  balance      Float    @default(0)
   credit_limit Float    @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   sales    Sale[]
   payments Payment[]
+  ledger   LedgerEntry[]
 }
 
 model Sale {
@@ -138,6 +137,8 @@ model Sale {
   customer Customer   @relation(fields: [customerId], references: [id])
   items    SaleItem[]
   payments Payment[]
+
+  ledger LedgerEntry[] @relation("SaleLedger") // back-relation
 }
 
 model SaleItem {
@@ -159,8 +160,9 @@ model Payment {
   method     String
   createdAt  DateTime @default(now())
 
-  sale     Sale?     @relation(fields: [saleId], references: [id])
-  customer Customer? @relation(fields: [customerId], references: [id])
+  sale     Sale?         @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  ledger   LedgerEntry[] @relation("PaymentLedger")
 }
 
 model Vendor {
@@ -171,25 +173,20 @@ model Vendor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  purchases Purchase[]
-
-  
-  /// NEW: many-to-many with Product
+  purchases      Purchase[]
   productVendors ProductVendor[]
 }
 
 model ProductVendor {
-  productId String
-  vendorId  String
-  // Optional vendor-specific data
-  vendorPrice Float?      // price for this vendor
-  leadTimeDays Int?       // vendor's lead time
+  productId    String
+  vendorId     String
+  vendorPrice  Float?
+  leadTimeDays Int?
 
-  // 👇 Add onDelete: Cascade here
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   vendor  Vendor  @relation(fields: [vendorId], references: [id])
 
-  @@id([productId, vendorId]) // composite primary key
+  @@id([productId, vendorId])
 }
 
 model Purchase {
@@ -207,6 +204,8 @@ model Purchase {
 
   receivedBy     String?
   receivedByUser User?   @relation("PurchaseReceivedBy", fields: [receivedBy], references: [id])
+
+  ledger LedgerEntry[] @relation("PurchaseLedger") // back-relation
 }
 
 model PurchaseItem {
@@ -232,4 +231,30 @@ enum Role {
   ADMIN
   MANAGER
   STAFF
+}
+
+model LedgerEntry {
+  id          String     @id @default(uuid())
+  customerId  String?
+  saleId      String?
+  purchaseId  String?
+  paymentId   Int? // <-- foreign key to Payment
+  type        LedgerType
+  amount      Float
+  method      String?
+  description String?
+  createdAt   DateTime   @default(now())
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  sale     Sale?     @relation(fields: [saleId], references: [id], onDelete: Restrict, name: "SaleLedger")
+  purchase Purchase? @relation(fields: [purchaseId], references: [id], onDelete: Restrict, name: "PurchaseLedger")
+  payment  Payment?  @relation(fields: [paymentId], references: [id], name: "PaymentLedger")
+}
+
+enum LedgerType {
+  PAYMENT_RECEIVED
+  SALE
+  PURCHASE
+  RETURN
+  ADJUSTMENT
 }

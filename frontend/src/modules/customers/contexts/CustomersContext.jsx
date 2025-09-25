@@ -1,3 +1,4 @@
+// src/contexts/CustomersContext.js
 import {
   createContext,
   useContext,
@@ -28,6 +29,7 @@ export function CustomersProvider({ children }) {
   const reloadCustomers = useCallback(async () => {
     setLoading(true);
     try {
+      // Backend computes ledger balance dynamically
       const data = await getCustomers();
       setCustomers(data || []);
     } catch (err) {
@@ -38,7 +40,6 @@ export function CustomersProvider({ children }) {
     }
   }, []);
 
-  // Expose CRUD helpers that automatically refresh the list
   const addCustomer = async (data) => {
     await createCustomer(data);
     await reloadCustomers();
@@ -54,7 +55,10 @@ export function CustomersProvider({ children }) {
     await reloadCustomers();
   };
 
-  const fetchCustomerById = (id) => getCustomerById(id);
+  const fetchCustomerById = async (id) => {
+    const customer = await getCustomerById(id);
+    return customer;
+  };
 
   useEffect(() => {
     reloadCustomers();
