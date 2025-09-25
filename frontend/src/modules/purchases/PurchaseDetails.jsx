@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -10,172 +9,92 @@ import {
   Button,
   VStack,
   Text,
-  Select,
   Table,
   Thead,
   Tbody,
   Tr,
   Th,
   Td,
-  NumberInput,
-  NumberInputField,
-  useToast,
+  ButtonGroup,
 } from "@chakra-ui/react";
-import { createPurchase } from "./purchaseApi.js";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function PurchaseDetails({
   purchase,
   isOpen,
   onClose,
-  onSaved,
+  onEdit,
   vendors,
   locations,
 }) {
-  const toast = useToast();
   const { products } = useProducts();
-  const [items, setItems] = useState([]);
-  const [vendorId, setVendorId] = useState("");
-  const [locationId, setLocationId] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setItems(purchase?.items || []);
-    setVendorId(purchase?.vendorId || "");
-    setLocationId(purchase?.locationId || "");
-  }, [purchase, isOpen]);
-
-  // Filter products based on selected vendor
-  useEffect(() => {
-    if (!vendorId) return setFilteredProducts([]);
-    setFilteredProducts(
-      products.filter((p) => p.vendorId === Number(vendorId))
-    );
-  }, [vendorId, products]);
-
-  const handleItemChange = (index, field, value) => {
-    setItems((prev) => {
-      const copy = [...prev];
-      copy[index][field] = value;
-      if (field === "productId") {
-        const product = filteredProducts.find((p) => p.id === Number(value));
-        if (product) copy[index].price = product.purchasePrice || 0;
-      }
-      return copy;
-    });
-  };
-
-  const handleSubmit = async () => {
-    setSaving(true);
-    try {
-      const payload = {
-        vendorId,
-        locationId,
-        items,
-        purchaseUuid: purchase.purchaseUuid,
-      };
-      await createPurchase(payload);
-      toast({ status: "success", description: "Purchase updated" });
-      onSaved();
-      onClose();
-    } catch (err) {
-      toast({ status: "error", description: err.message });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const totalAmount = items.reduce((sum, i) => sum + i.qty * i.price, 0);
+  const totalAmount = (purchase?.items || []).reduce(
+    (sum, i) => sum + i.qty * i.price,
+    0
+  );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Purchase Details - {purchase?.purchaseUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4}>
-            <Select
-              value={vendorId}
-              onChange={(e) => setVendorId(e.target.value)}
-              isRequired
-            >
-              {vendors.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </Select>
+          <VStack spacing={4} align="stretch">
+            <Text>
+              <strong>Vendor:</strong>{" "}
+              {vendors.find((v) => v.id === purchase?.vendorId)?.name ||
+                "Unknown Vendor"}
+            </Text>
+            <Text>
+              <strong>Location:</strong>{" "}
+              {locations.find((l) => l.id === purchase?.locationId)?.name ||
+                "Unknown Location"}
+            </Text>
 
-            <Select
-              value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
-              isRequired
-            >
-              {locations.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </Select>
-
-            <Text>Items</Text>
-            <Table>
+            <Text fontWeight="bold">Items</Text>
+            <Table variant="simple">
               <Thead>
                 <Tr>
                   <Th>Product</Th>
-                  <Th>Qty</Th>
-                  <Th>Price</Th>
-                  <Th>Total</Th>
+                  <Th isNumeric>Qty</Th>
+                  <Th isNumeric>Price</Th>
+                  <Th isNumeric>Total</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {items.map((item, idx) => (
-                  <Tr key={idx}>
-                    <Td>
-                      {filteredProducts.find((p) => p.id === item.productId)
-                        ?.name || item.productId}
-                    </Td>
-                    <Td>
-                      <NumberInput
-                        min={1}
-                        value={item.qty}
-                        onChange={(val) =>
-                          handleItemChange(idx, "qty", Number(val))
-                        }
-                      >
-                        <NumberInputField />
-                      </NumberInput>
-                    </Td>
-                    <Td>
-                      <NumberInput
-                        min={0}
-                        value={item.price}
-                        onChange={(val) =>
-                          handleItemChange(idx, "price", Number(val))
-                        }
-                      >
-                        <NumberInputField />
-                      </NumberInput>
-                    </Td>
-                    <Td>{(item.qty * item.price).toLocaleString()}</Td>
-                  </Tr>
-                ))}
+                {purchase?.items.map((item, idx) => {
+                  const product = products.find((p) => p.id === item.productId);
+                  return (
+                    <Tr key={idx}>
+                      <Td>{product ? product.name : "Unknown Product"}</Td>
+                      <Td isNumeric>{item.qty}</Td>
+                      <Td isNumeric>{item.price.toLocaleString()}</Td>
+                      <Td isNumeric>
+                        {(item.qty * item.price).toLocaleString()}
+                      </Td>
+                    </Tr>
+                  );
+                })}
                 <Tr>
-                  <Td colSpan={3}>Total</Td>
-                  <Td>{totalAmount.toLocaleString()}</Td>
+                  <Td colSpan={3} textAlign="right" fontWeight="bold">
+                    Total
+                  </Td>
+                  <Td isNumeric fontWeight="bold">
+                    {totalAmount.toLocaleString()}
+                  </Td>
                 </Tr>
               </Tbody>
             </Table>
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose}>Close</Button>
-          <Button onClick={handleSubmit} isLoading={saving} colorScheme="blue">
-            Save
-          </Button>
+          <ButtonGroup>
+            <Button onClick={onClose}>Close</Button>
+            <Button colorScheme="blue" onClick={() => onEdit(purchase)}>
+              Edit
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>

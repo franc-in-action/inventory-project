@@ -36,6 +36,9 @@ export default function PurchasesPage() {
   const [locations, setLocations] = useState([]);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
+  // **Add this state**
+  const [editingPurchase, setEditingPurchase] = useState(null);
+
   const loadPurchases = async () => {
     setLoading(true);
     try {
@@ -189,17 +192,25 @@ export default function PurchasesPage() {
 
       <PurchaseForm
         isOpen={showForm}
-        onClose={() => setShowForm(false)}
+        onClose={() => {
+          setShowForm(false);
+          setEditingPurchase(null);
+        }}
         onSaved={loadPurchases}
         vendors={vendors}
         locations={locations}
+        purchase={editingPurchase}
       />
 
       <PurchaseDetails
         purchase={selectedPurchase}
         isOpen={!!selectedPurchase}
         onClose={() => setSelectedPurchase(null)}
-        onSaved={loadPurchases}
+        onEdit={(purchase) => {
+          setEditingPurchase(purchase); // pass to form
+          setShowForm(true);
+          setSelectedPurchase(null); // close details modal
+        }}
         vendors={vendors}
         locations={locations}
       />

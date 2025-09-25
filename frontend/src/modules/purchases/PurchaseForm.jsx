@@ -16,6 +16,7 @@ import {
   Text,
   useToast,
   IconButton,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { fetchLocations } from "../locations/locationsApi.js";
@@ -23,47 +24,39 @@ import { fetchStockForProducts } from "../stock/stockApi.js";
 import { createPurchase } from "./purchaseApi.js";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
-export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
+export default function PurchaseForm({
+  isOpen,
+  onClose,
+  onSaved,
+  vendors,
+  locations: initialLocations = [],
+  purchase,
+}) {
   const toast = useToast();
   const { products } = useProducts();
   const [locationId, setLocationId] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
-  const [locations, setLocations] = useState([]);
+  // const [locations, setLocations] = useState(initialLocations);
   const [stockByProduct, setStockByProduct] = useState({});
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  // Load locations when modal opens
+  // Initialize form if editing
   useEffect(() => {
     if (!isOpen) return;
-    (async () => {
-      try {
-        const locs = await fetchLocations();
-        setLocations(locs || []);
-      } catch {
-        toast({ status: "error", description: "Failed to load locations" });
-      }
-    })();
-  }, [isOpen, toast]);
+    if (purchase) {
+      setVendorId(purchase.vendorId || "");
+      setLocationId(purchase.locationId || "");
+      setItems(purchase.items?.map((i) => ({ ...i })) || []);
+    } else {
+      setVendorId("");
+      setLocationId("");
+      setItems([{ productId: "", qty: 1, price: 0 }]);
+    }
+  }, [purchase, isOpen]);
 
-  // Load stock when location changes
-  useEffect(() => {
-    if (!isOpen || !products.length || !locationId) return;
-    (async () => {
-      try {
-        const stock = await fetchStockForProducts(
-          products.map((p) => p.id),
-          locationId
-        );
-        setStockByProduct(stock);
-      } catch (err) {
-        console.error("Failed to fetch stock:", err);
-      }
-    })();
-  }, [products, locationId, isOpen]);
-
-  // Filter products by selected vendor
+  // Filter products by vendor
   useEffect(() => {
     if (!vendorId) return setFilteredProducts([]);
     setFilteredProducts(
@@ -75,8 +68,6 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
     setItems((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
-
-      // Update price automatically if product changes
       if (field === "productId") {
         const product = filteredProducts.find((p) => p.id === Number(value));
         if (product) copy[index].price = product.purchasePrice || 0;
@@ -99,8 +90,12 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
     setSaving(true);
     try {
       const payload = { vendorId, locationId, items };
+      if (purchase) payload.purchaseUuid = purchase.purchaseUuid;
       await createPurchase(payload);
-      toast({ status: "success", description: "Purchase created" });
+      toast({
+        status: "success",
+        description: purchase ? "Purchase updated" : "Purchase created",
+      });
       onSaved();
       onClose();
     } catch (err) {
@@ -114,7 +109,11 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
-        <ModalHeader>Create Purchase</ModalHeader>
+        <ModalHeader>
+          {purchase
+            ? `Edit Purchase - ${purchase.purchaseUuid}`
+            : "Create Purchase"}
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
@@ -137,7 +136,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
               onChange={(e) => setLocationId(e.target.value)}
               isRequired
             >
-              {locations.map((l) => (
+              {initialLocations.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.name}
                 </option>
@@ -158,9 +157,7 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                   >
                     {filteredProducts.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name} (SKU: {p.sku}) - Stock:{" "}
-                        {stockByProduct[p.id] ?? 0} - Price: $
-                        {p.purchasePrice ?? 0}
+                        {p.name} - Price: ${p.purchasePrice ?? 0}
                       </option>
                     ))}
                   </Select>
@@ -191,7 +188,6 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
                   />
                 </HStack>
               ))}
-
               <Button leftIcon={<AddIcon />} onClick={addItemRow}>
                 Add Item
               </Button>
@@ -199,10 +195,14 @@ export default function PurchaseForm({ isOpen, onClose, onSaved, vendors }) {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" isLoading={saving} colorScheme="blue">
-            Create Purchase
-          </Button>
+          <ButtonGroup>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit" isLoading={saving} colorScheme="blue">
+              {purchase
+                ? `Update Purchase - ${purchase.purchaseUuid}`
+                : "Create Purchase"}
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>
