@@ -28,10 +28,9 @@ export default function ProductsTable({
             <Th>Description</Th>
             <Th>Category</Th>
             <Th>Location</Th>
-            <Th isNumeric>Quantity</Th>
+            <Th isNumeric>Qty</Th>
             <Th isNumeric>Price ($)</Th>
-            <Th>Created</Th>
-            <Th>Updated</Th>
+            <Th>Last Updated</Th>
             <Th>Actions</Th>
           </Tr>
         </Thead>
@@ -49,7 +48,6 @@ export default function ProductsTable({
               <Td>{p.location?.name || "—"}</Td>
               <Td isNumeric>{stockByProduct[p.id] ?? 0}</Td>
               <Td isNumeric>{p.price}</Td>
-              <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
               <Td>{new Date(p.updatedAt).toLocaleDateString()}</Td>
               <Td>
                 <HStack spacing={2}>

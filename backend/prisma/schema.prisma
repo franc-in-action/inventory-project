@@ -178,7 +178,6 @@ model Vendor {
   productVendors ProductVendor[]
 }
 
-/// NEW join table
 model ProductVendor {
   productId String
   vendorId  String
@@ -186,7 +185,8 @@ model ProductVendor {
   vendorPrice Float?      // price for this vendor
   leadTimeDays Int?       // vendor's lead time
 
-  product Product @relation(fields: [productId], references: [id])
+  // 👇 Add onDelete: Cascade here
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   vendor  Vendor  @relation(fields: [vendorId], references: [id])
 
   @@id([productId, vendorId]) // composite primary key

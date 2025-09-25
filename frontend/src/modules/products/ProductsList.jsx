@@ -1,23 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   Box,
-  Heading,
   VStack,
   Button,
   HStack,
   Spinner,
   Flex,
   Text,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Input,
   Select,
   useBreakpointValue,
   useDisclosure,
+  useToast, // ✅ 1. import useToast
 } from "@chakra-ui/react";
 import { deleteProduct } from "./productsApi.js";
 import { fetchCategories } from "./categoriesApi.js";
@@ -43,9 +37,10 @@ export default function ProductsList({ onEdit, refreshKey }) {
   const limit = 10;
 
   const isDesktop = useBreakpointValue({ base: false, md: true });
-
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const toast = useToast(); // ✅ 2. create toast instance
 
   const handleOpenDetails = (product) => {
     setSelectedProduct(product);
@@ -93,8 +88,26 @@ export default function ProductsList({ onEdit, refreshKey }) {
     if (!confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
+      // ✅ 3. show success toast
+      toast({
+        title: "Product deleted",
+        description: "The product was successfully removed.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
     } catch (err) {
       console.error(err);
+      // ✅ 4. show error toast
+      toast({
+        title: "Error deleting product",
+        description: err?.message || "An unexpected error occurred.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
     }
   };
 
@@ -158,6 +171,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
           ))}
         </Select>
       </HStack>
+
       {isDesktop ? (
         <ProductsTable
           products={paginated}
@@ -167,7 +181,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
           onOpenDetails={handleOpenDetails}
         />
       ) : (
-        // Mobile view remains the same
         <VStack spacing={4} mt={4}>
           {paginated.map((p) => (
             <Flex
@@ -207,6 +220,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
           ))}
         </VStack>
       )}
+
       {/* Pagination */}
       <HStack>
         <Button
@@ -225,6 +239,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
           Next
         </Button>
       </HStack>
+
       {selectedProduct && (
         <ProductDetails
           isOpen={isOpen}
