@@ -17,6 +17,10 @@ export async function fetchVendorById(id) {
   return apiFetch(`/vendors/${id}`);
 }
 
+export async function fetchVendorProducts(id) {
+  return apiFetch(`/vendors/${id}/products`);
+}
+
 export async function updateVendor(id, vendorData) {
   return apiFetch(`/vendors/${id}`, {
     method: "PUT",

@@ -40,7 +40,11 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get("/:id", authMiddleware, async (req, res) => {
   const id = req.params.id; // <-- keep as string
   try {
-    const vendor = await prisma.vendor.findUnique({ where: { id } });
+    const vendor = await prisma.vendor.findUnique({
+      where: { id },
+      include: { productVendors: { include: { product: true } } },
+    });
+
     if (!vendor) return res.status(404).json({ error: "Vendor not found" });
     res.json(vendor);
   } catch (err) {
@@ -84,5 +88,18 @@ router.delete(
     }
   }
 );
+
+// Get Vendor products
+router.get("/:id/products", authMiddleware, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const products = await prisma.product.findMany({
+      where: { productVendors: { some: { vendorId: id } } },
+    });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;
