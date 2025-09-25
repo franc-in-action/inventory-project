@@ -1,4 +1,3 @@
-// frontend/src/modules/products/ProductDetails.jsx
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -29,7 +28,7 @@ import {
   Divider,
 } from "@chakra-ui/react";
 
-import { fetchSales } from "../sales/salesApi.js";
+import { useSales } from "../sales/contexts/SalesContext.jsx";
 import { fetchPurchases } from "../purchases/purchaseApi.js";
 import { fetchStockMovements } from "../stock/stockApi.js";
 
@@ -40,56 +39,28 @@ export default function ProductDetails({
   stock,
   locationId,
 }) {
-  const [sales, setSales] = useState([]);
+  const { sales, loading: salesLoading } = useSales();
   const [purchases, setPurchases] = useState([]);
   const [stockMovement, setStockMovement] = useState([]);
-  const [loadingSales, setLoadingSales] = useState(true);
   const [loadingPurchases, setLoadingPurchases] = useState(true);
   const [loadingStock, setLoadingStock] = useState(true);
-  const [qtySold, setQtySold] = useState(0);
-  const [qtyPurchased, setQtyPurchased] = useState(0);
+
+  const productSales = sales.filter((s) =>
+    s.items?.some((i) => i.productId === product?.id)
+  );
+  const qtySold = productSales.reduce(
+    (sum, s) =>
+      sum + (s.items?.find((i) => i.productId === product.id)?.qty || 0),
+    0
+  );
 
   useEffect(() => {
     if (!product?.id || !isOpen) return;
 
-    setLoadingSales(true);
-    fetchSales({ productId: product.id })
-      .then((res) => {
-        if (res && Array.isArray(res.items)) {
-          setSales(res.items);
-          setQtySold(res.qtySold || 0);
-        } else if (Array.isArray(res)) {
-          setSales(res);
-          setQtySold(0);
-        } else {
-          setSales(res.sales || []);
-          setQtySold(res.qtySold || 0);
-        }
-      })
-      .catch(() => {
-        setSales([]);
-        setQtySold(0);
-      })
-      .finally(() => setLoadingSales(false));
-
     setLoadingPurchases(true);
     fetchPurchases({ productId: product.id })
-      .then((res) => {
-        if (res && Array.isArray(res.items)) {
-          setPurchases(res.items);
-          setQtyPurchased(res.qtyPurchased || 0);
-        } else if (Array.isArray(res)) {
-          setPurchases(res);
-          setQtyPurchased(0);
-        } else {
-          setPurchases(res.purchases || []);
-          setQtyPurchased(res.qtyPurchased || 0);
-        }
-      })
-      .catch(() => {
-        setPurchases([]);
-        setQtyPurchased(0);
-      })
+      .then((res) => setPurchases(res.items || res || []))
+      .catch(() => setPurchases([]))
       .finally(() => setLoadingPurchases(false));
 
     setLoadingStock(true);
@@ -107,7 +78,6 @@ export default function ProductDetails({
       <ModalContent>
         <ModalHeader>Product Details</ModalHeader>
         <ModalCloseButton />
-
         <ModalBody>
           <Tabs>
             <TabList>
@@ -115,11 +85,10 @@ export default function ProductDetails({
               <Tab>Sales</Tab>
               <Tab>Purchases</Tab>
               <Tab>Movement</Tab>
-              <Tab>Vendors</Tab> {/* ✅ NEW TAB */}
+              <Tab>Vendors</Tab>
             </TabList>
 
             <TabPanels>
-              {/* --- Overview --- */}
               <TabPanel>
                 <Flex>
                   <Box>
@@ -158,11 +127,10 @@ export default function ProductDetails({
                 </Flex>
               </TabPanel>
 
-              {/* --- Sales --- */}
               <TabPanel>
-                {loadingSales ? (
+                {salesLoading ? (
                   <Spinner />
-                ) : sales.length === 0 ? (
+                ) : productSales.length === 0 ? (
                   <Text>No sales found for this product.</Text>
                 ) : (
                   <>
@@ -171,7 +139,7 @@ export default function ProductDetails({
                         <b>Total Qty Sold:</b> {qtySold}
                       </Text>
                       <Text>
-                        <b>Sales Count:</b> {sales.length}
+                        <b>Sales Count:</b> {productSales.length}
                       </Text>
                     </HStack>
                     <Table>
@@ -184,67 +152,58 @@ export default function ProductDetails({
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {sales.map((s) => (
-                          <Tr key={s.id}>
-                            <Td>
-                              {new Date(s.createdAt).toLocaleDateString()}
-                            </Td>
-                            <Td>
-                              {s.customer?.name || s.customer_name || "—"}
-                            </Td>
-                            <Td isNumeric>{s.product_qty ?? "—"}</Td>
-                            <Td isNumeric>{s.total}</Td>
-                          </Tr>
-                        ))}
+                        {productSales.map((s) => {
+                          const item = s.items.find(
+                            (i) => i.productId === product.id
+                          );
+                          return (
+                            <Tr key={s.id}>
+                              <Td>
+                                {new Date(s.createdAt).toLocaleDateString()}
+                              </Td>
+                              <Td>
+                                {s.customer?.name || s.customer_name || "—"}
+                              </Td>
+                              <Td isNumeric>{item?.qty || "—"}</Td>
+                              <Td isNumeric>{item?.total || "—"}</Td>
+                            </Tr>
+                          );
+                        })}
                       </Tbody>
                     </Table>
                   </>
                 )}
               </TabPanel>
 
-              {/* --- Purchases --- */}
               <TabPanel>
                 {loadingPurchases ? (
                   <Spinner />
                 ) : purchases.length === 0 ? (
                   <Text>No purchases found for this product.</Text>
                 ) : (
-                  <>
-                    <HStack>
-                      <Text>
-                        <b>Total Qty Purchased:</b> {qtyPurchased}
-                      </Text>
-                      <Text>
-                        <b>Purchases Count:</b> {purchases.length}
-                      </Text>
-                    </HStack>
-                    <Table>
-                      <Thead>
-                        <Tr>
-                          <Th>Date</Th>
-                          <Th>Vendor</Th>
-                          <Th isNumeric>Qty</Th>
-                          <Th isNumeric>Total ($)</Th>
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th>Date</Th>
+                        <Th>Vendor</Th>
+                        <Th isNumeric>Qty</Th>
+                        <Th isNumeric>Total ($)</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {purchases.map((p) => (
+                        <Tr key={p.id}>
+                          <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
+                          <Td>{p.vendorId || p.vendor_name || "—"}</Td>
+                          <Td isNumeric>{p.product_qty ?? "—"}</Td>
+                          <Td isNumeric>{p.total}</Td>
                         </Tr>
-                      </Thead>
-                      <Tbody>
-                        {purchases.map((p) => (
-                          <Tr key={p.id}>
-                            <Td>
-                              {new Date(p.createdAt).toLocaleDateString()}
-                            </Td>
-                            <Td>{p.vendorId || p.vendor_name || "—"}</Td>
-                            <Td isNumeric>{p.product_qty ?? "—"}</Td>
-                            <Td isNumeric>{p.total}</Td>
-                          </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </>
+                      ))}
+                    </Tbody>
+                  </Table>
                 )}
               </TabPanel>
 
-              {/* --- Movement --- */}
               <TabPanel>
                 {loadingStock ? (
                   <Spinner />
@@ -281,10 +240,8 @@ export default function ProductDetails({
                 )}
               </TabPanel>
 
-              {/* --- Vendors (NEW) --- */}
               <TabPanel>
-                {!product.productVendors ||
-                product.productVendors.length === 0 ? (
+                {!product.productVendors?.length ? (
                   <Text>No vendors linked to this product.</Text>
                 ) : (
                   <Table>
@@ -302,11 +259,7 @@ export default function ProductDetails({
                           <Td>{pv.vendor.name}</Td>
                           <Td>{pv.vendor.email || "—"}</Td>
                           <Td>{pv.vendor.phone || "—"}</Td>
-                          <Td isNumeric>
-                            {pv.vendorPrice != null
-                              ? pv.vendorPrice.toFixed(2)
-                              : "—"}
-                          </Td>
+                          <Td isNumeric>{pv.vendorPrice?.toFixed(2) || "—"}</Td>
                         </Tr>
                       ))}
                     </Tbody>

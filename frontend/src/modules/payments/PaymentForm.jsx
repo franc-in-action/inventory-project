@@ -21,12 +21,13 @@ import {
   ButtonGroup,
 } from "@chakra-ui/react";
 
+import { useSales } from "../sales/contexts/SalesContext.jsx";
 import { usePayments } from "./contexts/PaymentsContext.jsx";
-import { fetchSales } from "../sales/salesApi.js";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 
 export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const toast = useToast();
+  const { sales } = useSales();
   const {
     customers,
     loading: customersLoading,
@@ -40,9 +41,8 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     amount: 0,
     method: "cash",
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [sales, setSales] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,16 +56,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     setLoading(true);
     (async () => {
       try {
-        const salesData = await fetchSales();
-        const normalizedSales = salesData.items.map((s) => ({
-          ...s,
-          totalAmount: s.total,
-          unpaidBalance:
-            s.total -
-            (s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0),
-        }));
-        setSales(normalizedSales);
-
         if (paymentId) {
           const data = await getPayment(paymentId);
           setPayment({
@@ -78,48 +68,43 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
           setPayment({ customerId: "", saleId: "", amount: 0, method: "cash" });
         }
       } catch (err) {
-        toast({ status: "error", description: "Failed to load sales" });
+        toast({ status: "error", description: "Failed to load payment" });
       } finally {
         setLoading(false);
       }
     })();
-  }, [paymentId, isOpen, getPayment, toast]);
+  }, [isOpen, paymentId, getPayment, toast]);
 
-  // Filter sales by customer & search term
+  // Filter sales by customer & search
   useEffect(() => {
     if (!payment.customerId) {
       setFilteredSales([]);
       setPayment((prev) => ({ ...prev, saleId: "" }));
     } else {
       let filtered = sales.filter((s) => s.customer?.id === payment.customerId);
-      if (searchTerm) {
+      if (searchTerm)
         filtered = filtered.filter((s) =>
           s.saleUuid.toLowerCase().includes(searchTerm.toLowerCase())
         );
-      }
       setFilteredSales(filtered);
-      if (!filtered.find((s) => s.id === payment.saleId)) {
+      if (!filtered.find((s) => s.id === payment.saleId))
         setPayment((prev) => ({ ...prev, saleId: filtered[0]?.id || "" }));
-      }
     }
   }, [payment.customerId, sales, searchTerm, payment.saleId]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setPayment((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleChange = (e) =>
+    setPayment((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const payload = { ...payment, amount: parseFloat(payment.amount) };
-
-      if (!payload.amount || payload.amount <= 0) {
-        toast({ status: "error", description: "Amount must be positive" });
-        setSaving(false);
-        return;
-      }
+      if (!payload.amount || payload.amount <= 0)
+        return toast({
+          status: "error",
+          description: "Amount must be positive",
+        });
 
       if (paymentId) {
         await updatePayment(paymentId, payload);
@@ -128,7 +113,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
         await createPayment(payload);
         toast({ status: "success", description: "Payment created" });
       }
-
       onSaved();
       onClose();
     } catch (err) {
@@ -141,7 +125,12 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const selectedSale = filteredSales.find((s) => s.id === payment.saleId);
   const customerOutstanding = sales
     .filter((s) => s.customer?.id === payment.customerId)
-    .reduce((sum, s) => sum + (s.unpaidBalance || 0), 0);
+    .reduce(
+      (sum, s) =>
+        sum +
+        (s.total - (s.payments?.reduce((a, p) => a + (p.amount || 0), 0) || 0)),
+      0
+    );
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -156,7 +145,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
             <Text color="red.500">Failed to load customers</Text>
           ) : (
             <VStack spacing={4} align="stretch">
-              {/* Customer select */}
               <FormControl>
                 <FormLabel>Customer</FormLabel>
                 <select
@@ -175,7 +163,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                     </option>
                   ))}
                 </select>
-
                 {payment.customerId && (
                   <Text fontSize="sm" mt={1} color="red.600">
                     Outstanding Balance: {customerOutstanding}
@@ -183,7 +170,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                 )}
               </FormControl>
 
-              {/* Sale dropdown */}
               <FormControl>
                 <FormLabel>Sale</FormLabel>
                 <Box position="relative" ref={dropdownRef}>
@@ -194,16 +180,20 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                     value={
                       selectedSale
                         ? `${selectedSale.saleUuid} ${
-                            selectedSale.unpaidBalance > 0
+                            selectedSale.total -
+                              (selectedSale.payments?.reduce(
+                                (a, p) => a + (p.amount || 0),
+                                0
+                              ) || 0) >
+                            0
                               ? "(Unpaid)"
                               : "(Paid)"
-                          } | Total: ${selectedSale.totalAmount}`
+                          } | Total: ${selectedSale.total}`
                         : ""
                     }
                     onClick={() => setDropdownOpen((prev) => !prev)}
                     cursor="pointer"
                   />
-
                   {dropdownOpen && (
                     <VStack
                       spacing={1}
@@ -227,56 +217,62 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         autoFocus
                       />
-
                       {filteredSales.length === 0 ? (
                         <Text fontSize="sm">No sales found</Text>
                       ) : (
-                        filteredSales.map((s) => {
-                          const isUnpaid = s.unpaidBalance > 0;
-                          return (
-                            <Box
-                              key={s.id}
-                              p={1}
-                              w="100%"
-                              borderRadius="md"
-                              border={
-                                payment.saleId === s.id
-                                  ? "2px solid teal"
-                                  : "1px solid gray"
-                              }
-                              bg={payment.saleId === s.id ? "teal.50" : "white"}
-                              cursor="pointer"
-                              fontSize="sm"
-                              onClick={() => {
-                                setPayment((prev) => ({
-                                  ...prev,
-                                  saleId: s.id,
-                                }));
-                                setDropdownOpen(false);
-                                setSearchTerm("");
-                              }}
-                            >
-                              <VStack align="start" spacing={0}>
-                                <Text fontWeight="bold">{s.saleUuid}</Text>
-                                <Badge
-                                  colorScheme={isUnpaid ? "red" : "green"}
-                                  fontSize="0.7em"
-                                >
-                                  {isUnpaid
-                                    ? `Unpaid | Total: ${s.totalAmount}`
-                                    : `Paid | Total: ${s.totalAmount}`}
-                                </Badge>
-                              </VStack>
-                            </Box>
-                          );
-                        })
+                        filteredSales.map((s) => (
+                          <Box
+                            key={s.id}
+                            p={1}
+                            w="100%"
+                            borderRadius="md"
+                            border={
+                              payment.saleId === s.id
+                                ? "2px solid teal"
+                                : "1px solid gray"
+                            }
+                            bg={payment.saleId === s.id ? "teal.50" : "white"}
+                            cursor="pointer"
+                            fontSize="sm"
+                            onClick={() => {
+                              setPayment((prev) => ({ ...prev, saleId: s.id }));
+                              setDropdownOpen(false);
+                              setSearchTerm("");
+                            }}
+                          >
+                            <VStack align="start" spacing={0}>
+                              <Text fontWeight="bold">{s.saleUuid}</Text>
+                              <Badge
+                                colorScheme={
+                                  s.total -
+                                    (s.payments?.reduce(
+                                      (a, p) => a + (p.amount || 0),
+                                      0
+                                    ) || 0) >
+                                  0
+                                    ? "red"
+                                    : "green"
+                                }
+                                fontSize="0.7em"
+                              >
+                                {s.total -
+                                  (s.payments?.reduce(
+                                    (a, p) => a + (p.amount || 0),
+                                    0
+                                  ) || 0) >
+                                0
+                                  ? `Unpaid | Total: ${s.total}`
+                                  : `Paid | Total: ${s.total}`}
+                              </Badge>
+                            </VStack>
+                          </Box>
+                        ))
                       )}
                     </VStack>
                   )}
                 </Box>
               </FormControl>
 
-              {/* Amount */}
               <FormControl isRequired>
                 <FormLabel>Amount</FormLabel>
                 <Input
@@ -288,7 +284,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                 />
               </FormControl>
 
-              {/* Method */}
               <FormControl>
                 <FormLabel>Method</FormLabel>
                 <select
@@ -305,6 +300,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
             </VStack>
           )}
         </ModalBody>
+
         <ModalFooter>
           <ButtonGroup>
             <Button onClick={onClose} size="sm">
