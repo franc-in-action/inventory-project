@@ -193,7 +193,9 @@ export default function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={PERMISSIONS.PAYMENTS}>
                   <ProtectedLayout>
-                    <PaymentsPage />
+                    <CustomersProvider>
+                      <PaymentsPage />
+                    </CustomersProvider>
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>

@@ -1,3 +1,4 @@
+// src/modules/payments/PaymentForm.jsx
 import { useState, useEffect, useRef } from "react";
 import {
   Modal,
@@ -19,12 +20,19 @@ import {
   Badge,
   useOutsideClick,
 } from "@chakra-ui/react";
+
 import { createPayment, getPaymentById } from "./paymentsApi.js";
-import { getCustomers } from "../customers/customersApi.js";
 import { fetchSales } from "../sales/salesApi.js";
+import { useCustomers } from "../customers/contexts/CustomersContext.jsx"; // ✅ use context
 
 export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const toast = useToast();
+  const {
+    customers,
+    loading: customersLoading,
+    error: customersError,
+  } = useCustomers(); // ✅ from context
+
   const [payment, setPayment] = useState({
     customerId: "",
     saleId: "",
@@ -33,7 +41,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [customers, setCustomers] = useState([]);
   const [sales, setSales] = useState([]);
   const [filteredSales, setFilteredSales] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -42,20 +49,15 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const dropdownRef = useRef();
   useOutsideClick({ ref: dropdownRef, handler: () => setDropdownOpen(false) });
 
-  // Fetch customers and sales when modal opens
+  // Load sales and payment if editing
   useEffect(() => {
     if (!isOpen) return;
 
     setLoading(true);
     (async () => {
       try {
-        const [custs, salesData] = await Promise.all([
-          getCustomers(),
-          fetchSales(),
-        ]);
-        setCustomers(custs);
+        const salesData = await fetchSales();
 
-        // Normalize sales: add totalAmount and unpaidBalance
         const normalizedSales = salesData.items.map((s) => ({
           ...s,
           totalAmount: s.total,
@@ -78,14 +80,14 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
           setPayment({ customerId: "", saleId: "", amount: 0, method: "cash" });
         }
       } catch (err) {
-        toast({ status: "error", description: "Failed to load data" });
+        toast({ status: "error", description: "Failed to load sales" });
       } finally {
         setLoading(false);
       }
     })();
   }, [paymentId, isOpen, toast]);
 
-  // Filter sales by selected customer and search term
+  // Filter sales by customer & search term
   useEffect(() => {
     if (!payment.customerId) {
       setFilteredSales([]);
@@ -99,7 +101,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
       }
       setFilteredSales(filtered);
 
-      // Auto-select first sale if current selection is invalid
       if (!filtered.find((s) => s.id === payment.saleId)) {
         setPayment((prev) => ({ ...prev, saleId: filtered[0]?.id || "" }));
       }
@@ -128,7 +129,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
 
   const selectedSale = filteredSales.find((s) => s.id === payment.saleId);
 
-  // Compute customer total outstanding balance
   const customerOutstanding = sales
     .filter((s) => s.customer?.id === payment.customerId)
     .reduce((sum, s) => sum + (s.unpaidBalance || 0), 0);
@@ -140,8 +140,10 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
         <ModalHeader>{paymentId ? "Edit Payment" : "Add Payment"}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {loading ? (
+          {loading || customersLoading ? (
             <Spinner />
+          ) : customersError ? (
+            <Text color="red.500">Failed to load customers</Text>
           ) : (
             <VStack spacing={4} align="stretch">
               {/* Customer select */}
@@ -164,7 +166,6 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                   ))}
                 </select>
 
-                {/* Display customer outstanding balance */}
                 {payment.customerId && (
                   <Text fontSize="sm" mt={1} color="red.600">
                     Outstanding Balance: {customerOutstanding}
@@ -172,7 +173,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                 )}
               </FormControl>
 
-              {/* Compact Sale dropdown */}
+              {/* Sale dropdown */}
               <FormControl>
                 <FormLabel>Sale</FormLabel>
                 <Box position="relative" ref={dropdownRef}>
@@ -277,7 +278,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                 />
               </FormControl>
 
-              {/* Payment method */}
+              {/* Method */}
               <FormControl>
                 <FormLabel>Method</FormLabel>
                 <select
