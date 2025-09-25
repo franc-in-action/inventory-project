@@ -1,3 +1,4 @@
+// modules/sales/InvoiceForm.jsx
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -24,19 +25,16 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import ComboBox from "../../components/ComboBox.jsx";
-import {
-  getCustomers,
-  getCustomerById,
-  createCustomer,
-} from "../customers/customersApi.js";
 import { createSale } from "./salesApi.js";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
+import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 
 export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const toast = useToast();
   const { products, stockMap } = useProducts();
+  const { customers, refreshCustomers, getCustomerById, createCustomer } =
+    useCustomers();
 
-  const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerData, setCustomerData] = useState(null);
   const [cart, setCart] = useState([
@@ -47,20 +45,8 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
   const [isCashSale, setIsCashSale] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
-    (async () => {
-      try {
-        const custs = await getCustomers();
-        setCustomers(Array.isArray(custs) ? custs : custs.items || []);
-      } catch (err) {
-        toast({
-          title: "Error loading customers",
-          description: err.message,
-          status: "error",
-        });
-      }
-    })();
-  }, [isOpen, toast]);
+    if (isOpen) refreshCustomers();
+  }, [isOpen, refreshCustomers]);
 
   useEffect(() => {
     if (!selectedCustomer) return setCustomerData(null);
@@ -72,7 +58,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
         setCustomerData(null);
       }
     })();
-  }, [selectedCustomer]);
+  }, [selectedCustomer, getCustomerById]);
 
   useEffect(() => {
     setCart((prev) =>
@@ -208,7 +194,7 @@ export default function InvoiceForm({ isOpen, onClose, onInvoiceCreated }) {
                 onSelect={setSelectedCustomer}
                 createNewItem={async (name) => {
                   const newCust = await createCustomer({ name });
-                  setCustomers((prev) => [...prev, newCust]);
+                  refreshCustomers();
                   return newCust;
                 }}
               />
