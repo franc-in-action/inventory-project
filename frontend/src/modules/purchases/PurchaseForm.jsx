@@ -21,7 +21,7 @@ import {
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { fetchLocations } from "../locations/locationsApi.js";
 import { fetchStockForProducts } from "../stock/stockApi.js";
-import { createPurchase } from "./purchaseApi.js";
+import { createPurchase, fetchProductsForVendor } from "./purchaseApi.js";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
 export default function PurchaseForm({
@@ -56,13 +56,16 @@ export default function PurchaseForm({
     }
   }, [purchase, isOpen]);
 
-  // Filter products by vendor
+  // ✅ Load products for selected vendor from backend
   useEffect(() => {
-    if (!vendorId) return setFilteredProducts([]);
-    setFilteredProducts(
-      products.filter((p) => p.vendorId === Number(vendorId))
-    );
-  }, [vendorId, products]);
+    if (!vendorId) {
+      setFilteredProducts([]);
+      return;
+    }
+    fetchProductsForVendor(vendorId)
+      .then(setFilteredProducts)
+      .catch(() => setFilteredProducts([]));
+  }, [vendorId]);
 
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {

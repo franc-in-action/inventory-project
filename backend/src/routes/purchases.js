@@ -20,9 +20,25 @@ router.post(
     try {
       // Ensure vendor exists
       const vendor = await prisma.vendor.findUnique({
-        where: { id: parseInt(vendorId) },
+        where: { id: vendorId },
       });
       if (!vendor) return res.status(400).json({ error: "Invalid vendor" });
+
+      // ✅ Check that every product in items is linked to this vendor
+      const notSupplied = [];
+      for (const it of items) {
+        const pv = await prisma.productVendor.findUnique({
+          where: { productId_vendorId: { productId: it.productId, vendorId } },
+        });
+        if (!pv) notSupplied.push(it.productId);
+      }
+      if (notSupplied.length) {
+        return res.status(400).json({
+          error: `Products not supplied by this vendor: ${notSupplied.join(
+            ", "
+          )}`,
+        });
+      }
 
       const finalUuid = purchaseUuid || uuidv4();
 

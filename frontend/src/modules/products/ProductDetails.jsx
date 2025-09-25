@@ -1,5 +1,4 @@
 // frontend/src/modules/products/ProductDetails.jsx
-
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -103,7 +102,7 @@ export default function ProductDetails({
   if (!product) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl">
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Product Details</ModalHeader>
@@ -116,13 +115,15 @@ export default function ProductDetails({
               <Tab>Sales</Tab>
               <Tab>Purchases</Tab>
               <Tab>Movement</Tab>
+              <Tab>Vendors</Tab> {/* ✅ NEW TAB */}
             </TabList>
 
             <TabPanels>
+              {/* --- Overview --- */}
               <TabPanel>
                 <Flex>
                   <Box>
-                    <VStack>
+                    <VStack align="start">
                       <Text>
                         <b>SKU:</b> {product.sku}
                       </Text>
@@ -152,19 +153,12 @@ export default function ProductDetails({
                         <b>Updated:</b>{" "}
                         {new Date(product.updatedAt).toLocaleString()}
                       </Text>
-                      <Text>
-                        <b>Vendors:</b>{" "}
-                        {product.productVendors?.length
-                          ? product.productVendors
-                              .map((pv) => pv.vendor.name)
-                              .join(", ")
-                          : "—"}
-                      </Text>
                     </VStack>
                   </Box>
                 </Flex>
               </TabPanel>
 
+              {/* --- Sales --- */}
               <TabPanel>
                 {loadingSales ? (
                   <Spinner />
@@ -208,6 +202,7 @@ export default function ProductDetails({
                 )}
               </TabPanel>
 
+              {/* --- Purchases --- */}
               <TabPanel>
                 {loadingPurchases ? (
                   <Spinner />
@@ -249,13 +244,14 @@ export default function ProductDetails({
                 )}
               </TabPanel>
 
+              {/* --- Movement --- */}
               <TabPanel>
                 {loadingStock ? (
                   <Spinner />
                 ) : stockMovement.length === 0 ? (
                   <Text>No stock movement data available.</Text>
                 ) : (
-                  <VStack>
+                  <VStack align="start">
                     <HStack>
                       <Text>
                         <b>Movements:</b> {stockMovement.length}
@@ -266,8 +262,8 @@ export default function ProductDetails({
                     </HStack>
                     <Divider />
                     {stockMovement.map((m) => (
-                      <HStack key={m.id}>
-                        <VStack>
+                      <HStack key={m.id} justify="space-between" w="100%">
+                        <VStack align="start">
                           <Text>
                             <b>Reason:</b> {m.reason}
                           </Text>
@@ -282,6 +278,39 @@ export default function ProductDetails({
                       </HStack>
                     ))}
                   </VStack>
+                )}
+              </TabPanel>
+
+              {/* --- Vendors (NEW) --- */}
+              <TabPanel>
+                {!product.productVendors ||
+                product.productVendors.length === 0 ? (
+                  <Text>No vendors linked to this product.</Text>
+                ) : (
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th>Vendor Name</Th>
+                        <Th>Email</Th>
+                        <Th>Phone</Th>
+                        <Th isNumeric>Vendor Price ($)</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {product.productVendors.map((pv) => (
+                        <Tr key={pv.vendor.id}>
+                          <Td>{pv.vendor.name}</Td>
+                          <Td>{pv.vendor.email || "—"}</Td>
+                          <Td>{pv.vendor.phone || "—"}</Td>
+                          <Td isNumeric>
+                            {pv.vendorPrice != null
+                              ? pv.vendorPrice.toFixed(2)
+                              : "—"}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
                 )}
               </TabPanel>
             </TabPanels>

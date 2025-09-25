@@ -6,14 +6,14 @@ const prisma = new PrismaClient();
 const chance = new Chance();
 
 async function main() {
-  // --- 1. Create Location ---
+  // --- 1. Location ---
   const location = await prisma.location.create({
     data: { name: "Main Branch", address: "Downtown" },
   });
 
-  // --- 2. Admin User ---
+  // --- 2. Users ---
   const hashedAdminPassword = await bcrypt.hash("adminpassword", 10);
-  const adminUser = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: "admin@example.com",
       password: hashedAdminPassword,
@@ -23,109 +23,131 @@ async function main() {
     },
   });
 
-  // --- 3. 2 Managers ---
   const hashedManagerPassword = await bcrypt.hash("managerpassword", 10);
-  const managers = [];
-  for (let i = 1; i <= 2; i++) {
-    const manager = await prisma.user.create({
-      data: {
-        email: `manager${i}@example.com`,
-        password: hashedManagerPassword,
-        name: `Manager ${i}`,
-        role: "MANAGER",
-        locationId: location.id,
-      },
-    });
-    managers.push(manager);
-  }
+  const managers = await Promise.all(
+    Array.from({ length: 2 }, (_, i) =>
+      prisma.user.create({
+        data: {
+          email: `manager${i + 1}@example.com`,
+          password: hashedManagerPassword,
+          name: `Manager ${i + 1}`,
+          role: "MANAGER",
+          locationId: location.id,
+        },
+      })
+    )
+  );
 
-  // --- 4. 3 Staff ---
   const hashedStaffPassword = await bcrypt.hash("staffpassword", 10);
-  const staffUsers = [];
-  for (let i = 1; i <= 3; i++) {
-    const staff = await prisma.user.create({
-      data: {
-        email: `staff${i}@example.com`,
-        password: hashedStaffPassword,
-        name: `Staff ${i}`,
-        role: "STAFF",
-        locationId: location.id,
-      },
-    });
-    staffUsers.push(staff);
-  }
+  const staffUsers = await Promise.all(
+    Array.from({ length: 3 }, (_, i) =>
+      prisma.user.create({
+        data: {
+          email: `staff${i + 1}@example.com`,
+          password: hashedStaffPassword,
+          name: `Staff ${i + 1}`,
+          role: "STAFF",
+          locationId: location.id,
+        },
+      })
+    )
+  );
 
   const allUsers = [...managers, ...staffUsers];
 
-  // --- 5. 10 Categories ---
-  const categories = [];
-  for (let i = 1; i <= 10; i++) {
-    const category = await prisma.category.create({
-      data: { name: `Category ${i}` },
-    });
-    categories.push(category);
+  // --- 3. Categories ---
+  const categories = await Promise.all(
+    Array.from({ length: 10 }, (_, i) =>
+      prisma.category.create({ data: { name: `Category ${i + 1}` } })
+    )
+  );
+
+  // --- 4. Products ---
+  const products = await Promise.all(
+    Array.from({ length: 100 }, (_, i) =>
+      prisma.product.create({
+        data: {
+          name: `Product ${i + 1}`,
+          sku: `SKU-${String(i + 1).padStart(3, "0")}`,
+          price: chance.floating({ min: 10, max: 1000, fixed: 2 }),
+          locationId: location.id,
+          categoryId: categories[i % categories.length].id,
+        },
+      })
+    )
+  );
+
+  // --- 5. Vendors ---
+  const vendors = await Promise.all(
+    Array.from({ length: 5 }, (_, i) =>
+      prisma.vendor.create({
+        data: {
+          name: `Vendor ${i + 1}`,
+          email: `vendor${i + 1}@example.com`,
+          phone: chance.string({ length: 10, pool: "0123456789" }),
+        },
+      })
+    )
+  );
+
+  // --- 6. ProductVendor many-to-many relations ---
+  // Each product will be linked to 1–3 random vendors.
+  for (const product of products) {
+    const vendorCount = chance.integer({ min: 1, max: 3 });
+    const selected = chance.pickset(vendors, vendorCount);
+    for (const v of selected) {
+      await prisma.productVendor.create({
+        data: {
+          productId: product.id,
+          vendorId: v.id,
+          vendorPrice:
+            product.price * chance.floating({ min: 0.9, max: 1.1, fixed: 2 }),
+          leadTimeDays: chance.integer({ min: 2, max: 14 }),
+        },
+      });
+    }
   }
 
-  // --- 6. 100 Products ---
-  const products = [];
-  for (let i = 1; i <= 100; i++) {
-    const category = categories[i % categories.length];
-    const product = await prisma.product.create({
-      data: {
-        name: `Product ${i}`,
-        sku: `SKU-${i.toString().padStart(3, "0")}`,
-        price: chance.floating({ min: 10, max: 1000, fixed: 2 }),
-        locationId: location.id,
-        categoryId: category.id,
-      },
-    });
-    products.push(product);
-  }
-
-  // --- 7. 5 Vendors ---
-  const vendors = [];
-  for (let i = 1; i <= 5; i++) {
-    const vendor = await prisma.vendor.create({
-      data: {
-        name: `Vendor ${i}`,
-        email: `vendor${i}@example.com`,
-        phone: chance.string({ length: 10, pool: "0123456789" }),
-      },
-    });
-    vendors.push(vendor);
-  }
-
-  // --- 8. 50 Purchases ---
+  // --- 7. Purchases ---
+  // Pick a vendor, then buy a product that vendor actually supplies.
   for (let i = 1; i <= 50; i++) {
     const vendor = vendors[i % vendors.length];
-    const product = products[i % products.length];
+
+    // get products for this vendor from join table
+    const supplied = await prisma.productVendor.findMany({
+      where: { vendorId: vendor.id },
+      select: { productId: true, vendorPrice: true },
+    });
+    if (!supplied.length) continue;
+
+    const { productId, vendorPrice } = chance.pickone(supplied);
+    const product = products.find((p) => p.id === productId);
+
     const qty = chance.integer({ min: 1, max: 20 });
     const received = chance.bool();
+    const receivedByUser = received ? chance.pickone(allUsers) : null;
 
-    const receivedByUser = received
-      ? allUsers[chance.integer({ min: 0, max: allUsers.length - 1 })]
-      : null;
+    const priceToUse = vendorPrice ?? product.price;
 
-    const purchase = await prisma.purchase.create({
+    await prisma.purchase.create({
       data: {
-        purchaseUuid: `PUR-${i.toString().padStart(3, "0")}`,
+        purchaseUuid: `PUR-${String(i).padStart(3, "0")}`,
         vendorId: vendor.id,
         locationId: location.id,
-        total: qty * product.price,
+        total: qty * priceToUse,
         received,
         receivedBy: receivedByUser?.id,
         items: {
-          create: [{ productId: product.id, qty, price: product.price }],
+          create: [{ productId, qty, price: priceToUse }],
         },
       },
     });
 
-    // Update StockLevel only if received
     if (received) {
       const existingStock = await prisma.stockLevel.findUnique({
         where: {
           productId_locationId: {
-            productId: product.id,
+            productId,
             locationId: location.id,
           },
         },
@@ -139,7 +161,7 @@ async function main() {
       } else {
         await prisma.stockLevel.create({
           data: {
-            productId: product.id,
+            productId,
             locationId: location.id,
             quantity: qty,
           },
@@ -148,26 +170,26 @@ async function main() {
     }
   }
 
-  // --- 9. 15 Customers ---
-  const customers = [];
-  for (let i = 1; i <= 15; i++) {
-    const customer = await prisma.customer.create({
-      data: {
-        name: chance.name(),
-        email: chance.email(),
-        phone: chance.string({ length: 10, pool: "0123456789" }),
-        balance: 0,
-        credit_limit: 5000,
-      },
-    });
-    customers.push(customer);
-  }
+  // --- 8. Customers ---
+  const customers = await Promise.all(
+    Array.from({ length: 15 }, () =>
+      prisma.customer.create({
+        data: {
+          name: chance.name(),
+          email: chance.email(),
+          phone: chance.string({ length: 10, pool: "0123456789" }),
+          balance: 0,
+          credit_limit: 5000,
+        },
+      })
+    )
+  );
 
-  // --- 10. 50 Sales ---
+  // --- 9. Sales ---
   let saleCounter = 1;
   for (let i = 0; i < 50; i++) {
     const customer = customers[i % customers.length];
-    const product = products[i % products.length];
+    const product = chance.pickone(products);
 
     const stock = await prisma.stockLevel.findUnique({
       where: {
@@ -177,7 +199,6 @@ async function main() {
         },
       },
     });
-
     if (!stock || stock.quantity < 1) continue;
 
     const qtySold = chance.integer({
@@ -188,7 +209,7 @@ async function main() {
 
     const sale = await prisma.sale.create({
       data: {
-        saleUuid: `SALE-${saleCounter.toString().padStart(3, "0")}`,
+        saleUuid: `SALE-${String(saleCounter).padStart(3, "0")}`,
         locationId: location.id,
         customerId: customer.id,
         total,
@@ -200,7 +221,6 @@ async function main() {
       },
     });
 
-    // Decrease stock
     await prisma.stockLevel.update({
       where: { id: stock.id },
       data: { quantity: stock.quantity - qtySold },
@@ -229,7 +249,7 @@ async function main() {
     saleCounter++;
   }
 
-  console.log("Seed data inserted successfully (no product.qty references)!");
+  console.log("✅ Seed data with Product–Vendor many-to-many inserted!");
 }
 
 main()
