@@ -30,7 +30,8 @@ import {
   getDefaultPage,
 } from "./modules/auth/authApi.js";
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
-import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx"; // ✅ NEW
+import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
+import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
 
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;
@@ -165,7 +166,9 @@ export default function App() {
               <ProtectedRoute>
                 <RoleRoute allowedRoles={PERMISSIONS.VENDORS}>
                   <ProtectedLayout>
-                    <VendorsPage />
+                    <VendorsProvider>
+                      <VendorsPage />
+                    </VendorsProvider>
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>

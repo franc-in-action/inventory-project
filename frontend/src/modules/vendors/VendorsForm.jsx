@@ -15,10 +15,11 @@ import {
   useToast,
   Spinner,
 } from "@chakra-ui/react";
-import { fetchVendorById, createVendor, updateVendor } from "./vendorsApi.js";
+import { useVendors } from "./contexts/VendorsContext.jsx";
 
-export default function VendorForm({ vendorId, isOpen, onClose, onSaved }) {
+export default function VendorForm({ vendorId, isOpen, onClose }) {
   const toast = useToast();
+  const { getVendorById, addVendor, editVendor } = useVendors();
   const [vendor, setVendor] = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -32,7 +33,7 @@ export default function VendorForm({ vendorId, isOpen, onClose, onSaved }) {
     setLoading(true);
     (async () => {
       try {
-        const data = await fetchVendorById(vendorId);
+        const data = await getVendorById(vendorId);
         if (data) setVendor(data);
       } catch (err) {
         console.error("Failed to load vendor:", err);
@@ -41,7 +42,7 @@ export default function VendorForm({ vendorId, isOpen, onClose, onSaved }) {
         setLoading(false);
       }
     })();
-  }, [vendorId, isOpen, toast]);
+  }, [vendorId, isOpen, getVendorById, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,13 +54,12 @@ export default function VendorForm({ vendorId, isOpen, onClose, onSaved }) {
     setSaving(true);
     try {
       if (vendorId) {
-        await updateVendor(vendorId, vendor);
+        await editVendor(vendorId, vendor);
         toast({ status: "success", description: "Vendor updated" });
       } else {
-        await createVendor(vendor);
+        await addVendor(vendor);
         toast({ status: "success", description: "Vendor created" });
       }
-      onSaved();
       onClose();
     } catch (err) {
       console.error("Error saving vendor:", err);

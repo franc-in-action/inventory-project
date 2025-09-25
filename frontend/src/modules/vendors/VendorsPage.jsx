@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Heading,
@@ -10,33 +10,22 @@ import {
   ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-
-import { fetchVendors, deleteVendor } from "./vendorsApi.js";
+import { useVendors } from "./contexts/VendorsContext.jsx";
 import VendorForm from "./VendorsForm.jsx";
 import VendorList from "./VendorsList.jsx";
 
 export default function VendorsPage() {
-  const [vendors, setVendors] = useState([]);
+  const { vendors, removeVendor } = useVendors();
   const [filter, setFilter] = useState("");
   const [editingVendorId, setEditingVendorId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
 
-  const loadVendors = async () => {
-    const data = await fetchVendors();
-    setVendors(data);
-  };
-
-  useEffect(() => {
-    loadVendors();
-  }, []);
-
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this vendor?")) return;
     try {
-      await deleteVendor(id);
+      await removeVendor(id);
       toast({ title: "Vendor deleted", status: "success" });
-      loadVendors();
     } catch (err) {
       toast({ title: "Error deleting vendor", status: "error" });
     }
@@ -65,7 +54,7 @@ export default function VendorsPage() {
         <Spacer />
         <ButtonGroup gap="2">
           <Button
-            variant={"primary"}
+            variant="primary"
             leftIcon={<AddIcon />}
             onClick={openCreateModal}
           >
@@ -90,7 +79,6 @@ export default function VendorsPage() {
         vendorId={editingVendorId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSaved={loadVendors}
       />
     </Box>
   );

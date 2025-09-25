@@ -21,9 +21,10 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
-import { fetchVendorById } from "./vendorsApi.js";
+import { useVendors } from "./contexts/VendorsContext.jsx";
 
 export default function VendorDetails({ vendorId, isOpen, onClose }) {
+  const { getVendorById } = useVendors();
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +33,7 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
     setLoading(true);
     (async () => {
       try {
-        const data = await fetchVendorById(vendorId);
+        const data = await getVendorById(vendorId);
         setVendor(data);
       } catch (err) {
         console.error("Failed to fetch vendor details:", err);
@@ -40,7 +41,7 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
         setLoading(false);
       }
     })();
-  }, [vendorId, isOpen]);
+  }, [vendorId, isOpen, getVendorById]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -58,7 +59,6 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                 <Tab>Products</Tab>
               </TabList>
               <TabPanels>
-                {/* Overview Tab */}
                 <TabPanel>
                   <VStack align="start" spacing={3}>
                     <Text>
@@ -81,7 +81,6 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   </VStack>
                 </TabPanel>
 
-                {/* Products Tab */}
                 <TabPanel>
                   {vendor.productVendors?.length === 0 ? (
                     <Text>No products linked</Text>
@@ -89,8 +88,8 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                     <Table
                       variant="simple"
                       size="sm"
-                      overflow={"auto"}
-                      height={"200px"}
+                      overflow="auto"
+                      height="200px"
                     >
                       <Thead>
                         <Tr>
