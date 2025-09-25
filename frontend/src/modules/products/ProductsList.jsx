@@ -87,7 +87,7 @@ export default function ProductsList({ onEdit }) {
     if (!confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
-      await reloadProducts(); // 🔄 Refresh list immediately
+      await reloadProducts();
       toast({
         title: "Product deleted",
         description: "The product was successfully removed.",
@@ -242,6 +242,7 @@ export default function ProductsList({ onEdit }) {
           onClose={onClose}
           product={selectedProduct}
           stock={stockByProduct[selectedProduct.id] ?? 0}
+          locationId={locationId}
         />
       )}
     </Box>

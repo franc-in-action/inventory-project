@@ -25,10 +25,12 @@ import {
 } from "./productsApi.js";
 import { fetchCategories, createCategory } from "./categoriesApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
-import { fetchVendors } from "../vendors/vendorsApi.js";
+import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 
 export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const toast = useToast();
+  const { vendors, loading: vendorsLoading, reloadVendors } = useVendors();
+
   const [product, setProduct] = useState({
     name: "",
     sku: "",
@@ -37,31 +39,33 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     description: "",
     categoryId: "",
     locationId: "",
+    vendorIds: [],
   });
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Load categories & locations; vendors come from context
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
       try {
-        const [cats, locs, vends] = await Promise.all([
+        const [cats, locs] = await Promise.all([
           fetchCategories(),
           fetchLocations(),
-          fetchVendors(),
         ]);
         setCategories(cats || []);
         setLocations(locs || []);
-        setVendors(vends || []);
+        // ensure vendors are loaded if context is empty
+        if (!vendors.length) await reloadVendors();
       } catch {
         toast({ status: "error", description: "Failed to load data." });
       }
     })();
-  }, [isOpen, toast]);
+  }, [isOpen, toast, vendors.length, reloadVendors]);
 
+  // Load product for editing
   useEffect(() => {
     if (!isOpen) return;
     if (!productId) {
@@ -73,6 +77,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         description: "",
         categoryId: "",
         locationId: "",
+        vendorIds: [],
       });
       return;
     }
@@ -80,7 +85,15 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     (async () => {
       try {
         const data = await fetchProductById(productId);
-        if (data) setProduct(data);
+        if (data) {
+          setProduct({
+            ...data,
+            vendorIds:
+              data.vendorIds ||
+              data.productVendors?.map((pv) => pv.vendor.id) ||
+              [],
+          });
+        }
       } catch {
         toast({ status: "error", description: "Failed to load product." });
       } finally {
@@ -199,25 +212,29 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
 
               <FormControl>
                 <FormLabel>Vendors</FormLabel>
-                <Select
-                  multiple
-                  value={product.vendorIds || []}
-                  onChange={(e) =>
-                    setProduct((p) => ({
-                      ...p,
-                      vendorIds: Array.from(
-                        e.target.selectedOptions,
-                        (o) => o.value
-                      ),
-                    }))
-                  }
-                >
-                  {vendors.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </Select>
+                {vendorsLoading ? (
+                  <Spinner />
+                ) : (
+                  <Select
+                    multiple
+                    value={product.vendorIds || []}
+                    onChange={(e) =>
+                      setProduct((p) => ({
+                        ...p,
+                        vendorIds: Array.from(
+                          e.target.selectedOptions,
+                          (o) => o.value
+                        ),
+                      }))
+                    }
+                  >
+                    {vendors.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
               </FormControl>
             </VStack>
           )}
