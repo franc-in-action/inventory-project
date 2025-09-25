@@ -1,5 +1,10 @@
-// src/contexts/ProductsContext.jsx
-import { createContext, useState, useEffect, useContext } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+} from "react";
 import { fetchProducts } from "../productsApi.js";
 import { fetchTotalStockForProducts } from "../../stock/stockApi.js";
 
@@ -16,44 +21,44 @@ export function ProductsProvider({ children }) {
     return map;
   }, {});
 
-  useEffect(() => {
-    const loadProductsAndStock = async () => {
-      setLoading(true);
-      try {
-        // 1️⃣ Fetch products
-        const result = await fetchProducts({ limit: 1000 });
-        const prods = result.items || [];
-        setProducts(prods);
+  const loadProductsAndStock = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await fetchProducts({ limit: 1000 });
+      const prods = result.items || [];
+      setProducts(prods);
 
-        // 2️⃣ Fetch total stock for all products
-        const productIds = prods.map((p) => p.id);
-        const stock = await fetchTotalStockForProducts(productIds);
-        setStockMap(stock); // stockMap[productId] = qty
-      } catch (err) {
-        console.error(
-          "[ProductsContext] Failed to fetch products or stock",
-          err
-        );
-        setProducts([]);
-        setStockMap({});
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProductsAndStock();
+      const productIds = prods.map((p) => p.id);
+      const stock = await fetchTotalStockForProducts(productIds);
+      setStockMap(stock);
+    } catch (err) {
+      console.error("[ProductsContext] Failed to fetch products or stock", err);
+      setProducts([]);
+      setStockMap({});
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProductsAndStock();
+  }, [loadProductsAndStock]);
 
   return (
     <ProductsContext.Provider
-      value={{ products, productsMap, stockMap, loading }}
+      value={{
+        products,
+        productsMap,
+        stockMap,
+        loading,
+        reloadProducts: loadProductsAndStock,
+      }}
     >
       {children}
     </ProductsContext.Provider>
   );
 }
 
-// Custom hook for easy access
 export function useProducts() {
   return useContext(ProductsContext);
 }

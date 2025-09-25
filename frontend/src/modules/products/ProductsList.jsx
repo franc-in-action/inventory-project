@@ -11,7 +11,7 @@ import {
   Select,
   useBreakpointValue,
   useDisclosure,
-  useToast, // ✅ 1. import useToast
+  useToast,
 } from "@chakra-ui/react";
 import { deleteProduct } from "./productsApi.js";
 import { fetchCategories } from "./categoriesApi.js";
@@ -24,8 +24,8 @@ import { useProducts } from "./contexts/ProductsContext.jsx";
 import ProductDetails from "./ProductDetails.jsx";
 import ProductsTable from "./ProductsTable.jsx";
 
-export default function ProductsList({ onEdit, refreshKey }) {
-  const { products } = useProducts();
+export default function ProductsList({ onEdit }) {
+  const { products, reloadProducts } = useProducts();
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +39,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProduct, setSelectedProduct] = useState(null);
-
-  const toast = useToast(); // ✅ 2. create toast instance
+  const toast = useToast();
 
   const handleOpenDetails = (product) => {
     setSelectedProduct(product);
@@ -88,7 +87,7 @@ export default function ProductsList({ onEdit, refreshKey }) {
     if (!confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
-      // ✅ 3. show success toast
+      await reloadProducts(); // 🔄 Refresh list immediately
       toast({
         title: "Product deleted",
         description: "The product was successfully removed.",
@@ -99,7 +98,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
       });
     } catch (err) {
       console.error(err);
-      // ✅ 4. show error toast
       toast({
         title: "Error deleting product",
         description: err?.message || "An unexpected error occurred.",
@@ -132,7 +130,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
 
   return (
     <Box>
-      {/* Filters */}
       <HStack>
         <Input
           placeholder="Search name or SKU..."
@@ -221,7 +218,6 @@ export default function ProductsList({ onEdit, refreshKey }) {
         </VStack>
       )}
 
-      {/* Pagination */}
       <HStack>
         <Button
           onClick={() => setPage((p) => Math.max(1, p - 1))}

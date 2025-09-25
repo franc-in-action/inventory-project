@@ -12,10 +12,12 @@ import {
 import { AddIcon } from "@chakra-ui/icons";
 import ProductsList from "./ProductsList.jsx";
 import ProductForm from "./ProductForm.jsx";
+import { useProducts } from "./contexts/ProductsContext.jsx";
 
 export default function Products() {
   const [editingId, setEditingId] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { reloadProducts } = useProducts();
 
   const handleAdd = () => {
     setEditingId(null);
@@ -27,7 +29,8 @@ export default function Products() {
     onOpen();
   };
 
-  const handleSaved = () => {
+  const handleSaved = async () => {
+    await reloadProducts(); // 🔄 Refresh after create/update
     onClose();
     setEditingId(null);
   };
@@ -40,18 +43,13 @@ export default function Products() {
         </Box>
         <Spacer />
         <ButtonGroup gap="2">
-          <Button
-            variant={"primary"}
-            leftIcon={<AddIcon />}
-            onClick={handleAdd}
-          >
-            {" "}
+          <Button variant="primary" leftIcon={<AddIcon />} onClick={handleAdd}>
             New
           </Button>
         </ButtonGroup>
       </Flex>
 
-      <ProductsList onEdit={handleEdit} refreshKey={isOpen} />
+      <ProductsList onEdit={handleEdit} />
 
       <ProductForm
         productId={editingId}
