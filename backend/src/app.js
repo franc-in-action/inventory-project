@@ -3,7 +3,9 @@
 import express from "express";
 import fileUpload from "express-fileupload";
 import bodyParser from "body-parser";
-import cors from "cors"; // <--- add this
+import cors from "cors";
+
+// Keep your individual route imports
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import rolesRouter from "./routes/roles.js";
