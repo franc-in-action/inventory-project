@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Heading,
@@ -11,32 +11,22 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
-import { getCustomers, deleteCustomer } from "./customersApi.js";
+import { useCustomers } from "./contexts/CustomersContext.jsx";
 import CustomerForm from "./CustomerForm.jsx";
 import CustomerList from "./CustomerList.jsx";
 
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState([]);
+  const { customers, removeCustomer, loading } = useCustomers();
   const [filter, setFilter] = useState("");
   const [editingCustomerId, setEditingCustomerId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
 
-  const loadCustomers = async () => {
-    const data = await getCustomers();
-    setCustomers(data);
-  };
-
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this customer?")) return;
     try {
-      await deleteCustomer(id);
+      await removeCustomer(id);
       toast({ title: "Customer deleted", status: "success" });
-      loadCustomers();
     } catch (err) {
       toast({ title: "Error deleting customer", status: "error" });
     }
@@ -80,17 +70,20 @@ export default function CustomersPage() {
         mb={4}
       />
 
-      <CustomerList
-        customers={filteredCustomers}
-        onEdit={openEditModal}
-        onDelete={handleDelete}
-      />
+      {loading ? (
+        <p>Loading customers...</p>
+      ) : (
+        <CustomerList
+          customers={filteredCustomers}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+        />
+      )}
 
       <CustomerForm
         customerId={editingCustomerId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSaved={loadCustomers}
       />
     </Box>
   );

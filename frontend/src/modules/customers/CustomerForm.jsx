@@ -15,14 +15,12 @@ import {
   useToast,
   Spinner,
 } from "@chakra-ui/react";
-import {
-  getCustomerById,
-  createCustomer,
-  updateCustomer,
-} from "./customersApi.js";
+import { useCustomers } from "./contexts/CustomersContext.jsx";
 
-export default function CustomerForm({ customerId, isOpen, onClose, onSaved }) {
+export default function CustomerForm({ customerId, isOpen, onClose }) {
   const toast = useToast();
+  const { fetchCustomerById, addCustomer, editCustomer } = useCustomers();
+
   const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -36,7 +34,7 @@ export default function CustomerForm({ customerId, isOpen, onClose, onSaved }) {
     setLoading(true);
     (async () => {
       try {
-        const data = await getCustomerById(customerId);
+        const data = await fetchCustomerById(customerId);
         if (data) setCustomer(data);
       } catch (err) {
         console.error("Failed to load customer:", err);
@@ -45,7 +43,7 @@ export default function CustomerForm({ customerId, isOpen, onClose, onSaved }) {
         setLoading(false);
       }
     })();
-  }, [customerId, isOpen, toast]);
+  }, [customerId, isOpen, toast, fetchCustomerById]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,13 +55,12 @@ export default function CustomerForm({ customerId, isOpen, onClose, onSaved }) {
     setSaving(true);
     try {
       if (customerId) {
-        await updateCustomer(customerId, customer);
+        await editCustomer(customerId, customer);
         toast({ status: "success", description: "Customer updated" });
       } else {
-        await createCustomer(customer);
+        await addCustomer(customer);
         toast({ status: "success", description: "Customer created" });
       }
-      onSaved();
       onClose();
     } catch (err) {
       console.error("Error saving customer:", err);

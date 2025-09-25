@@ -10,9 +10,10 @@ import {
   Text,
   Spinner,
 } from "@chakra-ui/react";
-import { getCustomerById } from "./customersApi.js";
+import { useCustomers } from "./contexts/CustomersContext.jsx";
 
 export default function CustomerDetail({ customerId, isOpen, onClose }) {
+  const { fetchCustomerById } = useCustomers();
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +22,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
     setLoading(true);
     (async () => {
       try {
-        const data = await getCustomerById(customerId);
+        const data = await fetchCustomerById(customerId);
         setCustomer(data);
       } catch (err) {
         console.error("Failed to fetch customer details:", err);
@@ -29,7 +30,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
         setLoading(false);
       }
     })();
-  }, [customerId, isOpen]);
+  }, [customerId, isOpen, fetchCustomerById]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

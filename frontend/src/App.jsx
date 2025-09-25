@@ -30,6 +30,7 @@ import {
   getDefaultPage,
 } from "./modules/auth/authApi.js";
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
+import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx"; // ✅ NEW
 
 function ProtectedRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/login" replace />;
@@ -142,13 +143,16 @@ export default function App() {
             }
           />
 
+          {/* ✅ Customers page now wrapped with CustomersProvider */}
           <Route
             path="/customers"
             element={
               <ProtectedRoute>
                 <RoleRoute allowedRoles={PERMISSIONS.CUSTOMERS}>
                   <ProtectedLayout>
-                    <CustomersPage />
+                    <CustomersProvider>
+                      <CustomersPage />
+                    </CustomersProvider>
                   </ProtectedLayout>
                 </RoleRoute>
               </ProtectedRoute>
