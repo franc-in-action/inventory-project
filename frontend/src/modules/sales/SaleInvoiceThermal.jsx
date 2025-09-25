@@ -17,15 +17,50 @@ import { formatReceipt } from "./salesApi.js";
 
 export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
   const toast = useToast();
-  const { productsMap } = useProducts(); // ✅ get product names
+  const { productsMap } = useProducts();
+
+  const receiptOptions = {
+    storeName: "★ MY STORE ★",
+    storeAddress: "123 Main St\nCity, State ZIP",
+    storeTel: "Tel: 012-345-6789",
+    taxPin: "123456789",
+    cashier: "John Doe",
+    paybill: "500000",
+    taxRate: 0.05,
+  };
+
+  const receiptText = formatReceipt(sale, productsMap, receiptOptions);
 
   const handlePrint = () => {
-    if (!window.api) {
-      toast({ status: "error", description: "Printing not available" });
+    // Electron
+    if (window.api?.printText) {
+      window.api.printText(receiptText);
+      toast({ status: "success", description: "Sent to printer" });
       return;
     }
-    window.api.printText(formatReceipt(sale, productsMap));
-    toast({ status: "success", description: "Sent to printer" });
+
+    // Browser fallback
+    const printWindow = window.open("", "_blank", "width=600,height=800");
+    if (!printWindow) {
+      toast({ status: "error", description: "Unable to open print window" });
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Receipt</title>
+          <style>
+            body { font-family: monospace; white-space: pre; padding: 20px; }
+          </style>
+        </head>
+        <body>${receiptText}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    toast({ status: "success", description: "Print dialog opened" });
   };
 
   return (
@@ -36,9 +71,7 @@ export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
         <ModalCloseButton />
         <ModalBody>
           <VStack>
-            <Text whiteSpace="pre-wrap">
-              {formatReceipt(sale, productsMap)}
-            </Text>
+            <Text whiteSpace="pre-wrap">{receiptText}</Text>
           </VStack>
         </ModalBody>
         <ModalFooter>
