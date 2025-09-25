@@ -16,7 +16,6 @@ import {
   Spinner,
   Box,
   Text,
-  StackDivider,
   Badge,
   useOutsideClick,
 } from "@chakra-ui/react";
@@ -43,6 +42,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   const dropdownRef = useRef();
   useOutsideClick({ ref: dropdownRef, handler: () => setDropdownOpen(false) });
 
+  // Fetch customers and sales when modal opens
   useEffect(() => {
     if (!isOpen) return;
 
@@ -54,7 +54,17 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
           fetchSales(),
         ]);
         setCustomers(custs);
-        setSales(salesData.items);
+
+        // Normalize sales: add totalAmount and unpaidBalance
+        const normalizedSales = salesData.items.map((s) => ({
+          ...s,
+          totalAmount: s.total,
+          unpaidBalance:
+            s.total -
+            (s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0),
+        }));
+
+        setSales(normalizedSales);
 
         if (paymentId) {
           const data = await getPaymentById(paymentId);
@@ -75,6 +85,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     })();
   }, [paymentId, isOpen, toast]);
 
+  // Filter sales by selected customer and search term
   useEffect(() => {
     if (!payment.customerId) {
       setFilteredSales([]);
@@ -88,6 +99,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
       }
       setFilteredSales(filtered);
 
+      // Auto-select first sale if current selection is invalid
       if (!filtered.find((s) => s.id === payment.saleId)) {
         setPayment((prev) => ({ ...prev, saleId: filtered[0]?.id || "" }));
       }
@@ -115,6 +127,11 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
   };
 
   const selectedSale = filteredSales.find((s) => s.id === payment.saleId);
+
+  // Compute customer total outstanding balance
+  const customerOutstanding = sales
+    .filter((s) => s.customer?.id === payment.customerId)
+    .reduce((sum, s) => sum + (s.unpaidBalance || 0), 0);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -146,9 +163,16 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                     </option>
                   ))}
                 </select>
+
+                {/* Display customer outstanding balance */}
+                {payment.customerId && (
+                  <Text fontSize="sm" mt={1} color="red.600">
+                    Outstanding Balance: {customerOutstanding}
+                  </Text>
+                )}
               </FormControl>
 
-              {/* Sale dropdown with search, badges, and total amount */}
+              {/* Compact Sale dropdown */}
               <FormControl>
                 <FormLabel>Sale</FormLabel>
                 <Box position="relative" ref={dropdownRef}>
@@ -160,9 +184,9 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                       selectedSale
                         ? `${selectedSale.saleUuid} ${
                             selectedSale.unpaidBalance > 0
-                              ? `(Unpaid: ${selectedSale.unpaidBalance})`
+                              ? "(Unpaid)"
                               : "(Paid)"
-                          } | Total: ${selectedSale.totalAmount || 0}`
+                          } | Total: ${selectedSale.totalAmount}`
                         : ""
                     }
                     onClick={() => setDropdownOpen((prev) => !prev)}
@@ -223,18 +247,13 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                             >
                               <VStack align="start" spacing={0}>
                                 <Text fontWeight="bold">{s.saleUuid}</Text>
-                                <Text>
-                                  Customer: {s.customer?.name || "Walk-in"}
-                                </Text>
                                 <Badge
                                   colorScheme={isUnpaid ? "red" : "green"}
                                   fontSize="0.7em"
                                 >
                                   {isUnpaid
-                                    ? `Unpaid: ${s.unpaidBalance} | Total: ${
-                                        s.totalAmount || 0
-                                      }`
-                                    : `Paid | Total: ${s.totalAmount || 0}`}
+                                    ? `Unpaid | Total: ${s.totalAmount}`
+                                    : `Paid | Total: ${s.totalAmount}`}
                                 </Badge>
                               </VStack>
                             </Box>
