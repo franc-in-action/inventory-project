@@ -16,20 +16,21 @@ router.get("/", authMiddleware, async (req, res) => {
     limit = 10,
   } = req.query;
 
-  const where = {
-    AND: [
-      search
-        ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { sku: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {},
-      categoryId ? { categoryId } : {},
-      locationId ? { locationId } : {},
-    ],
-  };
+  const filters = [];
+
+  if (search) {
+    filters.push({
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { sku: { contains: search, mode: "insensitive" } },
+      ],
+    });
+  }
+
+  if (categoryId) filters.push({ categoryId });
+  if (locationId) filters.push({ locationId });
+
+  const where = filters.length ? { AND: filters } : {};
 
   try {
     const [products, total] = await Promise.all([
@@ -58,7 +59,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
       where: { id },
       include: {
         category: true,
-        location: true, // ✅ include location name for single product too
+        location: true,
       },
     });
     if (!product) return res.status(404).json({ error: "Product not found" });
@@ -75,19 +76,10 @@ router.post(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const { sku, name, description, price, quantity, categoryId, locationId } =
-      req.body;
+    const { sku, name, description, price, categoryId, locationId } = req.body;
     try {
       const product = await prisma.product.create({
-        data: {
-          sku,
-          name,
-          description,
-          price,
-          quantity,
-          categoryId,
-          locationId,
-        },
+        data: { sku, name, description, price, categoryId, locationId },
       });
       res.status(201).json(product);
     } catch (err) {
@@ -104,12 +96,11 @@ router.put(
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
     const { id } = req.params;
-    const { name, description, price, quantity, categoryId, locationId } =
-      req.body;
+    const { sku, name, description, price, categoryId, locationId } = req.body;
     try {
       const product = await prisma.product.update({
         where: { id },
-        data: { name, description, price, quantity, categoryId, locationId },
+        data: { sku, name, description, price, categoryId, locationId },
       });
       res.json(product);
     } catch (err) {

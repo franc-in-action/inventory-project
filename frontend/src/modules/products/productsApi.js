@@ -63,14 +63,14 @@ export async function fetchProductById(id) {
 export async function createProduct(product) {
   if (window.api) {
     return window.api.run(
-      "INSERT INTO products (name, sku, price, quantity, description, categoryId) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO products (name, sku, price, description, categoryId, locationId) VALUES (?, ?, ?, ?, ?, ?)",
       [
         product.name,
         product.sku,
         product.price,
-        product.quantity,
         product.description,
         product.categoryId,
+        product.locationId,
       ]
     );
   }
@@ -83,14 +83,14 @@ export async function createProduct(product) {
 export async function updateProduct(id, product) {
   if (window.api) {
     return window.api.run(
-      "UPDATE products SET name=?, sku=?, price=?, quantity=?, description=?, categoryId=? WHERE id=?",
+      "UPDATE products SET name=?, sku=?, price=?, description=?, categoryId=?, locationId=? WHERE id=?",
       [
         product.name,
         product.sku,
         product.price,
-        product.quantity,
         product.description,
         product.categoryId,
+        product.locationId,
         id,
       ]
     );

@@ -7,7 +7,7 @@ const ProductsContext = createContext();
 
 export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
-  const [stockMap, setStockMap] = useState({}); // productId → quantity
+  const [stockMap, setStockMap] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Map productId → productName for quick lookup

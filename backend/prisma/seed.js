@@ -74,7 +74,6 @@ async function main() {
       data: {
         name: `Product ${i}`,
         sku: `SKU-${i.toString().padStart(3, "0")}`,
-        quantity: 0,
         price: chance.floating({ min: 10, max: 1000, fixed: 2 }),
         locationId: location.id,
         categoryId: category.id,
@@ -103,7 +102,6 @@ async function main() {
     const qty = chance.integer({ min: 1, max: 20 });
     const received = chance.bool();
 
-    // If received, pick a random staff or manager as receiver
     const receivedByUser = received
       ? allUsers[chance.integer({ min: 0, max: allUsers.length - 1 })]
       : null;
@@ -122,6 +120,7 @@ async function main() {
       },
     });
 
+    // Update StockLevel only if received
     if (received) {
       const existingStock = await prisma.stockLevel.findUnique({
         where: {
@@ -178,6 +177,7 @@ async function main() {
         },
       },
     });
+
     if (!stock || stock.quantity < 1) continue;
 
     const qtySold = chance.integer({
@@ -200,6 +200,7 @@ async function main() {
       },
     });
 
+    // Decrease stock
     await prisma.stockLevel.update({
       where: { id: stock.id },
       data: { quantity: stock.quantity - qtySold },
@@ -228,7 +229,7 @@ async function main() {
     saleCounter++;
   }
 
-  console.log("Seed data inserted successfully with receivedBy!");
+  console.log("Seed data inserted successfully (no product.qty references)!");
 }
 
 main()

@@ -95,7 +95,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     const payload = {
       ...product,
       price: Number(product.price),
-      quantity: Number(product.quantity),
+      // quantity: Number(product.quantity),
     };
     try {
       if (productId) {
@@ -149,16 +149,6 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
                   type="number"
                   name="price"
                   value={product.price}
-                  onChange={handleChange}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>Quantity</FormLabel>
-                <Input
-                  type="number"
-                  name="quantity"
-                  value={product.quantity}
                   onChange={handleChange}
                 />
               </FormControl>
