@@ -17,6 +17,7 @@ import {
   Box,
   Text,
   StackDivider,
+  Badge,
   useOutsideClick,
 } from "@chakra-ui/react";
 import { createPayment, getPaymentById } from "./paymentsApi.js";
@@ -147,7 +148,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                 </select>
               </FormControl>
 
-              {/* Sale dropdown with search */}
+              {/* Sale dropdown with search, badges, and total amount */}
               <FormControl>
                 <FormLabel>Sale</FormLabel>
                 <Box position="relative" ref={dropdownRef}>
@@ -157,9 +158,11 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                     placeholder="Select sale"
                     value={
                       selectedSale
-                        ? `${selectedSale.saleUuid} | Unpaid: ${
-                            selectedSale.unpaidBalance || 0
-                          }`
+                        ? `${selectedSale.saleUuid} ${
+                            selectedSale.unpaidBalance > 0
+                              ? `(Unpaid: ${selectedSale.unpaidBalance})`
+                              : "(Paid)"
+                          } | Total: ${selectedSale.totalAmount || 0}`
                         : ""
                     }
                     onClick={() => setDropdownOpen((prev) => !prev)}
@@ -169,7 +172,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                   {dropdownOpen && (
                     <VStack
                       spacing={1}
-                      maxH="180px"
+                      maxH="200px"
                       overflowY="auto"
                       border="1px solid"
                       borderColor="gray.200"
@@ -193,30 +196,50 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                       {filteredSales.length === 0 ? (
                         <Text fontSize="sm">No sales found</Text>
                       ) : (
-                        filteredSales.map((s) => (
-                          <Box
-                            key={s.id}
-                            p={1}
-                            w="100%"
-                            borderRadius="md"
-                            border={
-                              payment.saleId === s.id
-                                ? "2px solid teal"
-                                : "1px solid gray"
-                            }
-                            bg={payment.saleId === s.id ? "teal.50" : "white"}
-                            cursor="pointer"
-                            fontSize="sm"
-                            onClick={() => {
-                              setPayment((prev) => ({ ...prev, saleId: s.id }));
-                              setDropdownOpen(false);
-                              setSearchTerm("");
-                            }}
-                          >
-                            <Text fontWeight="bold">{s.saleUuid}</Text>
-                            <Text>Unpaid: {s.unpaidBalance || 0}</Text>
-                          </Box>
-                        ))
+                        filteredSales.map((s) => {
+                          const isUnpaid = s.unpaidBalance > 0;
+                          return (
+                            <Box
+                              key={s.id}
+                              p={1}
+                              w="100%"
+                              borderRadius="md"
+                              border={
+                                payment.saleId === s.id
+                                  ? "2px solid teal"
+                                  : "1px solid gray"
+                              }
+                              bg={payment.saleId === s.id ? "teal.50" : "white"}
+                              cursor="pointer"
+                              fontSize="sm"
+                              onClick={() => {
+                                setPayment((prev) => ({
+                                  ...prev,
+                                  saleId: s.id,
+                                }));
+                                setDropdownOpen(false);
+                                setSearchTerm("");
+                              }}
+                            >
+                              <VStack align="start" spacing={0}>
+                                <Text fontWeight="bold">{s.saleUuid}</Text>
+                                <Text>
+                                  Customer: {s.customer?.name || "Walk-in"}
+                                </Text>
+                                <Badge
+                                  colorScheme={isUnpaid ? "red" : "green"}
+                                  fontSize="0.7em"
+                                >
+                                  {isUnpaid
+                                    ? `Unpaid: ${s.unpaidBalance} | Total: ${
+                                        s.totalAmount || 0
+                                      }`
+                                    : `Paid | Total: ${s.totalAmount || 0}`}
+                                </Badge>
+                              </VStack>
+                            </Box>
+                          );
+                        })
                       )}
                     </VStack>
                   )}
