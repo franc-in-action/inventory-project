@@ -60,113 +60,100 @@ export async function deleteSale(saleId) {
  */
 export function formatReceipt(sale, productsMap = {}, options = {}) {
   const {
-    storeName = "★ STORE ★",
+    storeName = "★ MY STORE ★",
     storeAddress = "123 Main St\nCity, State ZIP",
     storeTel = "Tel: 012-345-6789",
-    taxPin = "123456789",
+    storeTaxPin = "123456789",
+    customerTaxPin = "987654321",
     cashier = "John Doe",
     paybill = "500000",
     taxRate = 0.05,
   } = options;
 
   const lines = [];
-  const lineWidth = 42;
-  const itemCol = 12; // chars for item name
-  const qtyCol = 4; // chars for quantity
-  const priceCol = 10; // chars for price
-  const totalCol = 12; // chars for total
-  const divider = "-".repeat(lineWidth);
-
-  // Header
-  lines.push(
-    storeName.padStart(Math.floor((lineWidth + storeName.length) / 2))
+  const date = new Date(sale?.createdAt || Date.now());
+  const subtotal = (sale?.items || []).reduce(
+    (sum, i) => sum + i.qty * i.price,
+    0
   );
-  storeAddress
-    .split("\n")
-    .forEach((line) =>
-      lines.push(line.padStart(Math.floor((lineWidth + line.length) / 2)))
-    );
-  lines.push(storeTel.padStart(Math.floor((lineWidth + storeTel.length) / 2)));
-  lines.push(divider);
-
-  const date = new Date(sale.createdAt || Date.now());
-  lines.push(
-    `Date: ${date.toLocaleDateString()}   Time: ${date.toLocaleTimeString()}`
-  );
-  lines.push(`Receipt #: ${sale.saleUuid || sale.id || "N/A"}`);
-  lines.push(`Customer: ${sale.customer?.name || "Walk-in"}`);
-  lines.push(`Tax PIN: ${taxPin}`);
-  lines.push(divider);
-
-  // Column headers
-  lines.push(
-    "Item".padEnd(itemCol) +
-      "Qty".padStart(qtyCol) +
-      "Price".padStart(priceCol) +
-      "Total".padStart(totalCol)
-  );
-  lines.push(divider);
-
-  let subtotal = 0;
-
-  (sale.items || []).forEach((item) => {
-    const fullName =
-      productsMap[item.productId] || item.product?.name || item.productId || "";
-    const qty = item.qty;
-    const price = item.price.toFixed(2);
-    const total = (item.qty * item.price).toFixed(2);
-    subtotal += parseFloat(total);
-
-    // Split item name into multiple lines if too long
-    const nameLines = [];
-    for (let i = 0; i < fullName.length; i += itemCol) {
-      nameLines.push(fullName.slice(i, i + itemCol));
-    }
-
-    nameLines.forEach((line, idx) => {
-      if (idx === 0) {
-        lines.push(
-          line.padEnd(itemCol) +
-            String(qty).padStart(qtyCol) +
-            String(price).padStart(priceCol) +
-            String(total).padStart(totalCol)
-        );
-      } else {
-        lines.push(line.padEnd(itemCol));
-      }
-    });
-
-    lines.push(divider); // divider between items
-  });
-
   const tax = subtotal * taxRate;
   const total = subtotal + tax;
 
-  lines.push(
-    "Subtotal:".padEnd(itemCol + qtyCol + priceCol) +
-      subtotal.toFixed(2).padStart(totalCol)
-  );
-  lines.push(
-    `Tax (${(taxRate * 100).toFixed(0)}%):`.padEnd(
-      itemCol + qtyCol + priceCol
-    ) + tax.toFixed(2).padStart(totalCol)
-  );
-  lines.push(
-    "TOTAL:".padEnd(itemCol + qtyCol + priceCol) +
-      total.toFixed(2).padStart(totalCol)
-  );
+  const maxLine = 42;
 
-  if (sale.payments?.length > 0) {
+  const wrapText = (text, length = 12) => {
+    const result = [];
+    let start = 0;
+    while (start < text.length) {
+      result.push(text.slice(start, start + length));
+      start += length;
+    }
+    return result;
+  };
+
+  // Header
+  lines.push(storeName.padStart((maxLine + storeName.length) / 2));
+  lines.push(...storeAddress.split("\n"));
+  lines.push(storeTel);
+  lines.push(`Tax PIN: ${storeTaxPin}`);
+  lines.push("-".repeat(maxLine));
+
+  // Customer info
+  lines.push(
+    `Date: ${date.toLocaleDateString()}   Time: ${date.toLocaleTimeString()}`
+  );
+  lines.push(`Receipt #: ${sale?.saleUuid || sale?.id}`);
+  lines.push(`Customer: ${sale?.customer?.name || "Walk-in"}`);
+  lines.push(`Tax PIN: ${customerTaxPin}`);
+  lines.push("-".repeat(maxLine));
+
+  // Table header
+  lines.push("Item         Qty   Price   Total");
+  lines.push("-".repeat(maxLine));
+
+  // Items
+  (sale?.items || []).forEach((item) => {
+    const name =
+      productsMap[item.productId] || item.product?.name || item.productId;
+    const wrapped = wrapText(name, 12);
+    const lineTotal = (item.qty * item.price).toFixed(2);
+    wrapped.forEach((line, idx) => {
+      if (idx === 0) {
+        const qtyStr = String(item.qty).padStart(3, " ");
+        const priceStr = item.price.toFixed(2).padStart(6, " ");
+        const totalStr = lineTotal.padStart(7, " ");
+        lines.push(
+          `${line.padEnd(12, " ")}  ${qtyStr}  ${priceStr}  ${totalStr}`
+        );
+      } else {
+        lines.push(line);
+      }
+    });
+    lines.push("-".repeat(maxLine));
+  });
+
+  // Totals
+  lines.push(
+    `Subtotal:`.padEnd(32, " ") + subtotal.toFixed(2).padStart(10, " ")
+  );
+  lines.push(
+    `Tax (${(taxRate * 100).toFixed(0)}%):`.padEnd(32, " ") +
+      tax.toFixed(2).padStart(10, " ")
+  );
+  lines.push(`TOTAL:`.padEnd(32, " ") + total.toFixed(2).padStart(10, " "));
+
+  // Payment
+  if (sale?.payments?.length) {
     lines.push(`Payment: ${sale.payments[0].method.toUpperCase()}`);
   }
 
-  lines.push(divider);
+  lines.push("-".repeat(maxLine));
   lines.push(`MPESA Paybill: ${paybill}`);
   lines.push(`Cashier: ${cashier}`);
-  lines.push(divider);
+  lines.push("-".repeat(maxLine));
   lines.push("      THANK YOU FOR SHOPPING!");
   lines.push("       Visit us again soon!");
-  lines.push(divider);
+  lines.push("-".repeat(maxLine));
 
   return lines.join("\n");
 }
