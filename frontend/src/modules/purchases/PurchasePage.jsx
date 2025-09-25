@@ -23,20 +23,19 @@ import { AddIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
 import { fetchPurchases, receivePurchase } from "./purchaseApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
-import { fetchVendors } from "../vendors/vendorsApi.js";
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
+import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 
 export default function PurchasesPage() {
   const toast = useToast();
+  const { vendors, vendorsMap } = useVendors(); // ✅ VendorsContext
+
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [vendors, setVendors] = useState([]);
   const [locations, setLocations] = useState([]);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
-
-  // **Add this state**
   const [editingPurchase, setEditingPurchase] = useState(null);
 
   const loadPurchases = async () => {
@@ -53,16 +52,6 @@ export default function PurchasesPage() {
       setPurchases([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadVendors = async () => {
-    try {
-      const vens = await fetchVendors();
-      setVendors(vens || []);
-    } catch {
-      toast({ title: "Error loading vendors", status: "error" });
-      setVendors([]);
     }
   };
 
@@ -88,11 +77,9 @@ export default function PurchasesPage() {
 
   useEffect(() => {
     loadPurchases();
-    loadVendors();
     loadLocations();
   }, []);
 
-  const getVendorName = (id) => vendors.find((v) => v.id === id)?.name || id;
   const getLocationName = (id) =>
     locations.find((l) => l.id === id)?.name || id;
 
@@ -115,7 +102,7 @@ export default function PurchasesPage() {
       <Tbody>
         {purchaseList.length === 0 ? (
           <Tr>
-            <Td colSpan={6} textAlign="center">
+            <Td colSpan={7} textAlign="center">
               No purchases found
             </Td>
           </Tr>
@@ -127,14 +114,13 @@ export default function PurchasesPage() {
                   {p.purchaseUuid}
                 </Button>
               </Td>
-              <Td>{getVendorName(p.vendorId)}</Td>
+              <Td>{vendorsMap[p.vendorId] || p.vendorId}</Td>
               <Td>{getLocationName(p.locationId)}</Td>
               <Td>${p.total.toFixed(2)}</Td>
               <Td>{p.received ? "Yes" : "No"}</Td>
               <Td>
                 {p.receivedByUser ? p.receivedByUser.name : p.receivedBy || "-"}
               </Td>
-
               <Td>
                 {showReceiveButton && (
                   <Button
@@ -197,7 +183,6 @@ export default function PurchasesPage() {
           setEditingPurchase(null);
         }}
         onSaved={loadPurchases}
-        vendors={vendors}
         locations={locations}
         purchase={editingPurchase}
       />
@@ -207,11 +192,10 @@ export default function PurchasesPage() {
         isOpen={!!selectedPurchase}
         onClose={() => setSelectedPurchase(null)}
         onEdit={(purchase) => {
-          setEditingPurchase(purchase); // pass to form
+          setEditingPurchase(purchase);
           setShowForm(true);
-          setSelectedPurchase(null); // close details modal
+          setSelectedPurchase(null);
         }}
-        vendors={vendors}
         locations={locations}
       />
     </Box>

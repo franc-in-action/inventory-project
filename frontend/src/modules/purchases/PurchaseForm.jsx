@@ -19,30 +19,28 @@ import {
   ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
-import { fetchLocations } from "../locations/locationsApi.js";
-import { fetchStockForProducts } from "../stock/stockApi.js";
 import { createPurchase, fetchProductsForVendor } from "./purchaseApi.js";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
+import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 
 export default function PurchaseForm({
   isOpen,
   onClose,
   onSaved,
-  vendors,
   locations: initialLocations = [],
   purchase,
 }) {
   const toast = useToast();
   const { products } = useProducts();
+  const { vendors } = useVendors(); // ✅ from VendorsContext
+
   const [locationId, setLocationId] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
-  // const [locations, setLocations] = useState(initialLocations);
-  const [stockByProduct, setStockByProduct] = useState({});
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  // Initialize form if editing
+  // Initialize form when modal opens
   useEffect(() => {
     if (!isOpen) return;
     if (purchase) {
@@ -56,7 +54,7 @@ export default function PurchaseForm({
     }
   }, [purchase, isOpen]);
 
-  // ✅ Load products for selected vendor from backend
+  // Load products for selected vendor
   useEffect(() => {
     if (!vendorId) {
       setFilteredProducts([]);
@@ -120,6 +118,7 @@ export default function PurchaseForm({
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
+            {/* ✅ Vendors from context */}
             <Select
               placeholder="Select Vendor"
               value={vendorId}

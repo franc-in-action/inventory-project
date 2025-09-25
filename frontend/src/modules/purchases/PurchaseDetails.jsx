@@ -18,16 +18,18 @@ import {
   ButtonGroup,
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
+import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 
 export default function PurchaseDetails({
   purchase,
   isOpen,
   onClose,
   onEdit,
-  vendors,
   locations,
 }) {
   const { products } = useProducts();
+  const { vendorsMap } = useVendors(); // ✅ use VendorsContext
+
   const totalAmount = (purchase?.items || []).reduce(
     (sum, i) => sum + i.qty * i.price,
     0
@@ -43,8 +45,7 @@ export default function PurchaseDetails({
           <VStack spacing={4} align="stretch">
             <Text>
               <strong>Vendor:</strong>{" "}
-              {vendors.find((v) => v.id === purchase?.vendorId)?.name ||
-                "Unknown Vendor"}
+              {vendorsMap[purchase?.vendorId] || "Unknown Vendor"}
             </Text>
             <Text>
               <strong>Location:</strong>{" "}
@@ -63,7 +64,7 @@ export default function PurchaseDetails({
                 </Tr>
               </Thead>
               <Tbody>
-                {purchase?.items.map((item, idx) => {
+                {(purchase?.items || []).map((item, idx) => {
                   const product = products.find((p) => p.id === item.productId);
                   return (
                     <Tr key={idx}>
