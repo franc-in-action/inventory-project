@@ -13,6 +13,7 @@ import {
   FaWarehouse,
 } from "react-icons/fa";
 import { getUserFromToken } from "../modules/auth/authApi.js";
+import { fetchProducts } from "../modules/products/productsApi.js";
 import { getPayments } from "../modules/payments/paymentsApi.js";
 import { apiFetch } from "../utils/commonApi.js";
 
@@ -47,49 +48,63 @@ export default function Dashboard() {
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        const payments = await getPayments();
-        const totalPayments = payments.length;
+        // Fetch products with total count
+        const productsData = await fetchProducts({ limit: 1 }); // limit 1 is enough to get total
+
+        // Fetch other resources
         const [
-          products,
           stock,
           sales,
           purchases,
           locations,
           customers,
           vendors,
+          payments,
         ] = await Promise.all([
-          apiFetch("/products"),
-          apiFetch("/stock/all"), // <- stock count
+          apiFetch("/stock/all"), // Assuming this returns array
           apiFetch("/sales"),
           apiFetch("/purchases"),
           apiFetch("/locations"),
           apiFetch("/customers"),
           apiFetch("/vendors"),
+          getPayments(),
         ]);
 
         setSummaryData([
-          { label: "Total Products", value: products.length, icon: FaBox },
+          {
+            label: "Total Products",
+            value: productsData.total || 0,
+            icon: FaBox,
+          },
           {
             label: "Total Stock Items",
-            value: stock.length,
+            value: stock.length || 0,
             icon: FaWarehouse,
           },
-          { label: "Total Sales", value: sales.length, icon: FaCashRegister },
+          {
+            label: "Total Sales",
+            value: sales.length || 0,
+            icon: FaCashRegister,
+          },
           {
             label: "Total Purchases",
-            value: purchases.length,
+            value: purchases.length || 0,
             icon: FaShoppingCart,
           },
           {
             label: "Total Locations",
-            value: locations.length,
+            value: locations.length || 0,
             icon: FaMapMarkerAlt,
           },
-          { label: "Total Customers", value: customers.length, icon: FaUsers },
-          { label: "Total Vendors", value: vendors.length, icon: FaTruck },
+          {
+            label: "Total Customers",
+            value: customers.length || 0,
+            icon: FaUsers,
+          },
+          { label: "Total Vendors", value: vendors.length || 0, icon: FaTruck },
           {
             label: "Total Payments",
-            value: totalPayments,
+            value: payments.length || 0,
             icon: FaMoneyBillWave,
           },
         ]);
@@ -98,8 +113,10 @@ export default function Dashboard() {
           status: "error",
           description: "Failed to load dashboard counts",
         });
+        console.error("[Dashboard] loadCounts error:", err);
       }
     };
+
     loadCounts();
   }, []);
 
