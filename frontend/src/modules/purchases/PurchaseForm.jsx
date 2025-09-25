@@ -19,32 +19,32 @@ import {
   ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
-import { createPurchase, fetchProductsForVendor } from "./purchaseApi.js";
-import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
+import { usePurchases } from "./contexts/PurchasesContext.jsx";
 
 export default function PurchaseForm({
   isOpen,
   onClose,
   onSaved,
-  locations: initialLocations = [],
+  locations = [],
   purchase,
 }) {
   const toast = useToast();
-  const { products } = useProducts();
-  const { vendors } = useVendors();
+  const { vendors, fetchProductsForVendor } = useVendors();
+  const { addPurchase } = usePurchases();
 
-  const [locationId, setLocationId] = useState("");
   const [vendorId, setVendorId] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  // 🔒 Determine if editing is allowed
   const isReadOnly = purchase?.received ?? false;
 
+  // Initialize form when modal opens or purchase changes
   useEffect(() => {
     if (!isOpen) return;
+
     if (purchase) {
       setVendorId(purchase.vendorId || "");
       setLocationId(purchase.locationId || "");
@@ -56,24 +56,28 @@ export default function PurchaseForm({
     }
   }, [purchase, isOpen]);
 
+  // Load vendor-specific products whenever vendor changes
   useEffect(() => {
     if (!vendorId) {
       setFilteredProducts([]);
       return;
     }
-    fetchProductsForVendor(vendorId)
+
+    fetchProductsForVendor(Number(vendorId))
       .then(setFilteredProducts)
       .catch(() => setFilteredProducts([]));
-  }, [vendorId]);
+  }, [vendorId, fetchProductsForVendor]);
 
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
+
       if (field === "productId") {
         const product = filteredProducts.find((p) => p.id === Number(value));
         if (product) copy[index].price = product.purchasePrice || 0;
       }
+
       return copy;
     });
   };
@@ -85,20 +89,29 @@ export default function PurchaseForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isReadOnly) return; // 🔒 prevent submission if already received
+    if (isReadOnly) return;
+
     if (!vendorId || !locationId || items.length === 0) {
       toast({ status: "error", description: "Fill all required fields" });
       return;
     }
+
     setSaving(true);
     try {
-      const payload = { vendorId, locationId, items };
+      const payload = {
+        vendorId: Number(vendorId),
+        locationId: Number(locationId),
+        items,
+      };
       if (purchase) payload.purchaseUuid = purchase.purchaseUuid;
-      await createPurchase(payload);
+
+      await addPurchase(payload);
+
       toast({
         status: "success",
         description: purchase ? "Purchase updated" : "Purchase created",
       });
+
       onSaved();
       onClose();
     } catch (err) {
@@ -124,13 +137,15 @@ export default function PurchaseForm({
               This purchase has been received and can no longer be edited.
             </Text>
           )}
+
           <VStack spacing={4}>
+            {/* Vendor */}
             <Select
               placeholder="Select Vendor"
               value={vendorId}
               onChange={(e) => setVendorId(e.target.value)}
+              isDisabled={isReadOnly}
               isRequired
-              isDisabled={isReadOnly} // 🔒 disable if read-only
             >
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -139,20 +154,22 @@ export default function PurchaseForm({
               ))}
             </Select>
 
+            {/* Location */}
             <Select
               placeholder="Select Location"
               value={locationId}
               onChange={(e) => setLocationId(e.target.value)}
+              isDisabled={isReadOnly}
               isRequired
-              isDisabled={isReadOnly} // 🔒
             >
-              {initialLocations.map((l) => (
+              {locations.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.name}
                 </option>
               ))}
             </Select>
 
+            {/* Items */}
             <Text>Items</Text>
             <VStack spacing={2} align="stretch">
               {items.map((item, idx) => (
@@ -163,8 +180,8 @@ export default function PurchaseForm({
                     onChange={(e) =>
                       handleItemChange(idx, "productId", e.target.value)
                     }
+                    isDisabled={isReadOnly}
                     isRequired
-                    isDisabled={isReadOnly} // 🔒
                   >
                     {filteredProducts.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -179,7 +196,7 @@ export default function PurchaseForm({
                     onChange={(val) =>
                       handleItemChange(idx, "qty", Number(val))
                     }
-                    isDisabled={isReadOnly} // 🔒
+                    isDisabled={isReadOnly}
                   >
                     <NumberInputField placeholder="Qty" />
                   </NumberInput>
@@ -190,7 +207,7 @@ export default function PurchaseForm({
                     onChange={(val) =>
                       handleItemChange(idx, "price", Number(val))
                     }
-                    isDisabled={isReadOnly} // 🔒
+                    isDisabled={isReadOnly}
                   >
                     <NumberInputField placeholder="Price" />
                   </NumberInput>
@@ -198,28 +215,30 @@ export default function PurchaseForm({
                   <IconButton
                     icon={<DeleteIcon />}
                     onClick={() => removeItemRow(idx)}
-                    isDisabled={isReadOnly} // 🔒
+                    isDisabled={isReadOnly}
                   />
                 </HStack>
               ))}
+
               <Button
                 leftIcon={<AddIcon />}
                 onClick={addItemRow}
-                isDisabled={isReadOnly} // 🔒
+                isDisabled={isReadOnly}
               >
                 Add Item
               </Button>
             </VStack>
           </VStack>
         </ModalBody>
+
         <ModalFooter>
           <ButtonGroup>
             <Button onClick={onClose}>Cancel</Button>
             <Button
               type="submit"
-              isLoading={saving}
               colorScheme="blue"
-              isDisabled={isReadOnly} // 🔒
+              isLoading={saving}
+              isDisabled={isReadOnly}
             >
               {purchase
                 ? `Update Purchase - ${purchase.purchaseUuid}`

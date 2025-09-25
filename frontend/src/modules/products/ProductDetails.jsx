@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -29,39 +29,52 @@ import {
 } from "@chakra-ui/react";
 
 import { useSales } from "../sales/contexts/SalesContext.jsx";
-import { fetchPurchases } from "../purchases/purchaseApi.js";
+import { usePurchases } from "../purchases/contexts/PurchasesContext.jsx";
 import { fetchStockMovements } from "../stock/stockApi.js";
+import { useProducts } from "./contexts/ProductsContext.jsx";
 
 export default function ProductDetails({
   isOpen,
   onClose,
-  product,
-  stock,
+  productId,
   locationId,
 }) {
+  const { getProductById, stockMap } = useProducts();
   const { sales, loading: salesLoading } = useSales();
-  const [purchases, setPurchases] = useState([]);
+  const {
+    purchases,
+    loadPurchases,
+    loading: loadingPurchases,
+  } = usePurchases();
+
+  const [product, setProduct] = useState(null);
   const [stockMovement, setStockMovement] = useState([]);
-  const [loadingPurchases, setLoadingPurchases] = useState(true);
   const [loadingStock, setLoadingStock] = useState(true);
+  const stock = product ? stockMap[product.id] ?? 0 : 0;
 
-  const productSales = sales.filter((s) =>
-    s.items?.some((i) => i.productId === product?.id)
-  );
-  const qtySold = productSales.reduce(
-    (sum, s) =>
-      sum + (s.items?.find((i) => i.productId === product.id)?.qty || 0),
-    0
-  );
+  // Load product data from context
+  useEffect(() => {
+    if (!productId || !isOpen) return;
 
+    (async () => {
+      try {
+        const data = await getProductById(productId);
+        setProduct(data);
+      } catch {
+        setProduct(null);
+      }
+    })();
+  }, [productId, isOpen, getProductById]);
+
+  // Load purchases when modal opens or product changes
   useEffect(() => {
     if (!product?.id || !isOpen) return;
+    loadPurchases({ productId: product.id });
+  }, [product, isOpen, loadPurchases]);
 
-    setLoadingPurchases(true);
-    fetchPurchases({ productId: product.id })
-      .then((res) => setPurchases(res.items || res || []))
-      .catch(() => setPurchases([]))
-      .finally(() => setLoadingPurchases(false));
+  // Load stock movements for this product and location
+  useEffect(() => {
+    if (!product?.id || !isOpen) return;
 
     setLoadingStock(true);
     fetchStockMovements(product.id, locationId)
@@ -70,7 +83,21 @@ export default function ProductDetails({
       .finally(() => setLoadingStock(false));
   }, [product, isOpen, locationId]);
 
-  if (!product) return null;
+  if (!product) return <Spinner />;
+
+  // Filter purchases & sales for this product
+  const productPurchases = purchases.filter((p) =>
+    p.items?.some((i) => i.productId === product.id)
+  );
+
+  const productSales = sales.filter((s) =>
+    s.items?.some((i) => i.productId === product.id)
+  );
+  const qtySold = productSales.reduce(
+    (sum, s) =>
+      sum + (s.items?.find((i) => i.productId === product.id)?.qty || 0),
+    0
+  );
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl">
@@ -178,7 +205,7 @@ export default function ProductDetails({
               <TabPanel>
                 {loadingPurchases ? (
                   <Spinner />
-                ) : purchases.length === 0 ? (
+                ) : productPurchases.length === 0 ? (
                   <Text>No purchases found for this product.</Text>
                 ) : (
                   <Table>
@@ -191,14 +218,21 @@ export default function ProductDetails({
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {purchases.map((p) => (
-                        <Tr key={p.id}>
-                          <Td>{new Date(p.createdAt).toLocaleDateString()}</Td>
-                          <Td>{p.vendorId || p.vendor_name || "—"}</Td>
-                          <Td isNumeric>{p.product_qty ?? "—"}</Td>
-                          <Td isNumeric>{p.total}</Td>
-                        </Tr>
-                      ))}
+                      {productPurchases.map((p) => {
+                        const item = p.items.find(
+                          (i) => i.productId === product.id
+                        );
+                        return (
+                          <Tr key={p.id}>
+                            <Td>
+                              {new Date(p.createdAt).toLocaleDateString()}
+                            </Td>
+                            <Td>{p.vendorId || p.vendor_name || "—"}</Td>
+                            <Td isNumeric>{item?.qty || "—"}</Td>
+                            <Td isNumeric>{item?.total || "—"}</Td>
+                          </Tr>
+                        );
+                      })}
                     </Tbody>
                   </Table>
                 )}

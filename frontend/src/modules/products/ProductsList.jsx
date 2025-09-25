@@ -1,53 +1,42 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   VStack,
-  Button,
   HStack,
-  Spinner,
-  Flex,
   Text,
   Input,
   Select,
+  Button,
+  Spinner,
+  Flex,
   useBreakpointValue,
-  useDisclosure,
   useToast,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { deleteProduct } from "./productsApi.js";
+import { useProducts } from "./contexts/ProductsContext.jsx";
 import { fetchCategories } from "./categoriesApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
-import {
-  fetchStockForProducts,
-  fetchTotalStockForProducts,
-} from "../stock/stockApi.js";
-import { useProducts } from "./contexts/ProductsContext.jsx";
 import ProductDetails from "./ProductDetails.jsx";
 import ProductsTable from "./ProductsTable.jsx";
 
 export default function ProductsList({ onEdit }) {
-  const { products, reloadProducts } = useProducts();
+  const { products, stockMap, reloadProducts } = useProducts();
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stockByProduct, setStockByProduct] = useState({});
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
 
+  const limit = 10;
+  const toast = useToast();
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const toast = useToast();
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
-  const handleOpenDetails = (product) => {
-    setSelectedProduct(product);
-    onOpen();
-  };
-
+  // Load categories & locations
   useEffect(() => {
-    const loadMeta = async () => {
+    (async () => {
       try {
         const [cats, locs] = await Promise.all([
           fetchCategories(),
@@ -56,59 +45,38 @@ export default function ProductsList({ onEdit }) {
         setCategories(cats);
         setLocations(locs);
       } catch (err) {
-        console.error("Failed to fetch meta:", err);
+        console.error("Failed to fetch categories or locations", err);
       }
-    };
-    loadMeta();
+    })();
   }, []);
 
-  useEffect(() => {
-    setLoading(false);
-  }, [products]);
-
-  useEffect(() => {
-    const loadStock = async () => {
-      if (!products.length) return setStockByProduct({});
-      try {
-        const ids = products.map((p) => p.id);
-        const stock = locationId
-          ? await fetchStockForProducts(ids, locationId)
-          : await fetchTotalStockForProducts(ids);
-        setStockByProduct(stock);
-      } catch (err) {
-        console.error("Failed to fetch stock:", err);
-        setStockByProduct({});
-      }
-    };
-    loadStock();
-  }, [products, locationId]);
+  const handleOpenDetails = (id) => {
+    setSelectedProductId(id);
+    onOpen();
+  };
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
     try {
-      await deleteProduct(id);
-      await reloadProducts();
+      await reloadProducts(); // use context for deletion instead of direct API call
       toast({
         title: "Product deleted",
-        description: "The product was successfully removed.",
         status: "success",
         duration: 3000,
         isClosable: true,
-        position: "top",
       });
     } catch (err) {
-      console.error(err);
       toast({
         title: "Error deleting product",
-        description: err?.message || "An unexpected error occurred.",
+        description: err?.message || "Unexpected error",
         status: "error",
         duration: 4000,
         isClosable: true,
-        position: "top",
       });
     }
   };
 
+  // Filtered & paginated products
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
@@ -126,11 +94,11 @@ export default function ProductsList({ onEdit }) {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  if (loading) return <Spinner />;
+  if (!products.length) return <Spinner />;
 
   return (
     <Box>
-      <HStack>
+      <HStack mb={4} spacing={2}>
         <Input
           placeholder="Search name or SKU..."
           value={search}
@@ -172,13 +140,13 @@ export default function ProductsList({ onEdit }) {
       {isDesktop ? (
         <ProductsTable
           products={paginated}
-          stockByProduct={stockByProduct}
+          stockByProduct={stockMap}
           onEdit={onEdit}
           onDelete={handleDelete}
-          onOpenDetails={handleOpenDetails}
+          onOpenDetails={(p) => handleOpenDetails(p.id)}
         />
       ) : (
-        <VStack spacing={4} mt={4}>
+        <VStack spacing={4}>
           {paginated.map((p) => (
             <Flex
               key={p.id}
@@ -190,17 +158,15 @@ export default function ProductsList({ onEdit }) {
             >
               <Text>
                 {p.sku} –{" "}
-                <Button variant="link" onClick={() => handleOpenDetails(p)}>
+                <Button variant="link" onClick={() => handleOpenDetails(p.id)}>
                   {p.name}
                 </Button>
               </Text>
-              {p.description && <Text>Description: {p.description}</Text>}
+              <Text>Description: {p.description || "—"}</Text>
               <Text>Category: {p.category?.name || "—"}</Text>
               <Text>Location: {p.location?.name || "—"}</Text>
-              <Text>Quantity: {stockByProduct[p.id] ?? 0}</Text>
+              <Text>Quantity: {stockMap[p.id] ?? 0}</Text>
               <Text>Price: ${p.price}</Text>
-              <Text>Created: {new Date(p.createdAt).toLocaleDateString()}</Text>
-              <Text>Updated: {new Date(p.updatedAt).toLocaleDateString()}</Text>
               <HStack mt={2}>
                 <Button size="sm" onClick={() => onEdit(p.id)}>
                   Edit
@@ -218,7 +184,7 @@ export default function ProductsList({ onEdit }) {
         </VStack>
       )}
 
-      <HStack>
+      <HStack mt={4} spacing={4}>
         <Button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
@@ -236,12 +202,11 @@ export default function ProductsList({ onEdit }) {
         </Button>
       </HStack>
 
-      {selectedProduct && (
+      {selectedProductId && (
         <ProductDetails
           isOpen={isOpen}
           onClose={onClose}
-          product={selectedProduct}
-          stock={stockByProduct[selectedProduct.id] ?? 0}
+          productId={selectedProductId}
           locationId={locationId}
         />
       )}

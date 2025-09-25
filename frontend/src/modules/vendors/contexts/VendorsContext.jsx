@@ -12,6 +12,7 @@ import {
   updateVendor,
   deleteVendor,
 } from "../vendorsApi.js";
+import { fetchProductsForVendor as apiFetchProductsForVendor } from "../../purchases/purchaseApi.js";
 
 const VendorsContext = createContext();
 
@@ -19,7 +20,6 @@ export function VendorsProvider({ children }) {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Map vendorId → vendorName for quick lookup
   const vendorsMap = vendors.reduce((map, v) => {
     map[v.id] = v.name;
     return map;
@@ -38,7 +38,6 @@ export function VendorsProvider({ children }) {
     }
   }, []);
 
-  // Convenience methods that also refresh the list when appropriate
   const addVendor = async (vendorData) => {
     await createVendor(vendorData);
     await loadVendors();
@@ -54,7 +53,21 @@ export function VendorsProvider({ children }) {
     await loadVendors();
   };
 
-  const getVendorById = fetchVendorById; // just re-export the API call
+  const getVendorById = fetchVendorById;
+
+  // ✅ New: fetch products for a specific vendor
+  const fetchProductsForVendor = async (vendorId) => {
+    try {
+      const products = await apiFetchProductsForVendor(vendorId);
+      return products;
+    } catch (err) {
+      console.error(
+        `[VendorsContext] Failed to fetch products for vendor ${vendorId}`,
+        err
+      );
+      return [];
+    }
+  };
 
   useEffect(() => {
     loadVendors();
@@ -71,6 +84,7 @@ export function VendorsProvider({ children }) {
         editVendor,
         removeVendor,
         getVendorById,
+        fetchProductsForVendor, // expose in context
       }}
     >
       {children}

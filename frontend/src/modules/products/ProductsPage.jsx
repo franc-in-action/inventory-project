@@ -1,13 +1,12 @@
 import { useState } from "react";
 import {
-  Heading,
   Box,
-  Button,
-  useDisclosure,
   Flex,
-  HStack,
-  ButtonGroup,
+  Heading,
   Spacer,
+  Button,
+  ButtonGroup,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import ProductsList from "./ProductsList.jsx";
@@ -30,20 +29,18 @@ export default function Products() {
   };
 
   const handleSaved = async () => {
-    await reloadProducts(); // 🔄 Refresh after create/update
+    await reloadProducts();
     onClose();
     setEditingId(null);
   };
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
-        <Box p="2">
-          <Heading size="md">Products</Heading>
-        </Box>
+      <Flex align="center" gap="2">
+        <Heading size="md">Products</Heading>
         <Spacer />
-        <ButtonGroup gap="2">
-          <Button variant="primary" leftIcon={<AddIcon />} onClick={handleAdd}>
+        <ButtonGroup>
+          <Button leftIcon={<AddIcon />} onClick={handleAdd}>
             New
           </Button>
         </ButtonGroup>

@@ -1,4 +1,4 @@
-import { Flex, Heading, Text, Icon, Card, useToast } from "@chakra-ui/react";
+import { Flex, Heading, Text, Icon, Card } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBox,
@@ -11,6 +11,7 @@ import {
   FaMoneyBillWave,
   FaWarehouse,
 } from "react-icons/fa";
+
 import { getUserFromToken } from "../modules/auth/authApi.js";
 import { useProducts } from "../modules/products/contexts/ProductsContext.jsx";
 import { useCustomers } from "../modules/customers/contexts/CustomersContext.jsx";
@@ -18,6 +19,7 @@ import { useVendors } from "../modules/vendors/contexts/VendorsContext.jsx";
 import { usePayments } from "../modules/payments/contexts/PaymentsContext.jsx";
 import { useLocations } from "../modules/locations/contexts/LocationsContext.jsx";
 import { useSales } from "../modules/sales/contexts/SalesContext.jsx";
+import { usePurchases } from "../modules/purchases/contexts/PurchasesContext.jsx";
 
 const dashboardLinks = [
   { label: "Products", href: "/products", icon: FaBox },
@@ -34,7 +36,6 @@ const dashboardLinks = [
 export default function Dashboard() {
   const user = getUserFromToken();
   const navigate = useNavigate();
-  const toast = useToast();
 
   const { products, stockMap } = useProducts();
   const { customers } = useCustomers();
@@ -42,6 +43,12 @@ export default function Dashboard() {
   const { payments } = usePayments();
   const { locations } = useLocations();
   const { sales, loading: salesLoading } = useSales();
+  const {
+    purchases,
+    loading: purchasesLoading,
+    total,
+    qtyPurchased,
+  } = usePurchases();
 
   const totalStock = Object.values(stockMap).reduce((sum, qty) => sum + qty, 0);
 
@@ -49,7 +56,7 @@ export default function Dashboard() {
     { label: "Total Products", value: products.length, icon: FaBox },
     { label: "Total Stock Items", value: totalStock, icon: FaWarehouse },
     { label: "Total Sales", value: sales.length, icon: FaCashRegister },
-    { label: "Total Purchases", value: 0, icon: FaShoppingCart }, // Replace with context if available
+    { label: "Total Purchases", value: total, icon: FaShoppingCart },
     { label: "Total Locations", value: locations.length, icon: FaMapMarkerAlt },
     { label: "Total Customers", value: customers.length, icon: FaUsers },
     { label: "Total Vendors", value: vendors.length, icon: FaTruck },
@@ -94,7 +101,8 @@ export default function Dashboard() {
           >
             <Icon as={item.icon} w={8} h={8} mb={2} />
             <Text fontSize="xl" fontWeight="bold">
-              {salesLoading && item.label === "Total Sales"
+              {(salesLoading && item.label === "Total Sales") ||
+              (purchasesLoading && item.label === "Total Purchases")
                 ? "..."
                 : item.value}
             </Text>

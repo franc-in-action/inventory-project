@@ -18,19 +18,19 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import ComboBox from "../../components/ComboBox.jsx";
-import {
-  fetchProductById,
-  createProduct,
-  updateProduct,
-} from "./productsApi.js";
-import { fetchCategories, createCategory } from "./categoriesApi.js";
-import { fetchLocations } from "../locations/locationsApi.js";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
+import { useLocations } from "../locations/contexts/LocationsContext.jsx";
+import { useProducts } from "./contexts/ProductsContext.jsx";
+import { fetchCategories, createCategory } from "./categoriesApi.js";
 
 export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const toast = useToast();
-  const { vendors, loading: vendorsLoading, reloadVendors } = useVendors();
 
+  const { vendors, loading: vendorsLoading, reloadVendors } = useVendors();
+  const { locations, loading: locationsLoading } = useLocations();
+  const { getProductById, addProduct, updateProductById } = useProducts();
+
+  const [categories, setCategories] = useState([]);
   const [product, setProduct] = useState({
     name: "",
     sku: "",
@@ -41,29 +41,23 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     locationId: "",
     vendorIds: [],
   });
-  const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load categories & locations; vendors come from context
+  // Load categories & vendors when modal opens
   useEffect(() => {
     if (!isOpen) return;
+
     (async () => {
       try {
-        const [cats, locs] = await Promise.all([
-          fetchCategories(),
-          fetchLocations(),
-        ]);
+        const cats = await fetchCategories();
         setCategories(cats || []);
-        setLocations(locs || []);
-        // ensure vendors are loaded if context is empty
         if (!vendors.length) await reloadVendors();
       } catch {
-        toast({ status: "error", description: "Failed to load data." });
+        toast({ status: "error", description: "Failed to load categories." });
       }
     })();
-  }, [isOpen, toast, vendors.length, reloadVendors]);
+  }, [isOpen, vendors.length, reloadVendors, toast]);
 
   // Load product for editing
   useEffect(() => {
@@ -81,10 +75,11 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
       });
       return;
     }
+
     setLoading(true);
     (async () => {
       try {
-        const data = await fetchProductById(productId);
+        const data = await getProductById(productId);
         if (data) {
           setProduct({
             ...data,
@@ -100,7 +95,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         setLoading(false);
       }
     })();
-  }, [productId, isOpen, toast]);
+  }, [productId, isOpen, getProductById, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,9 +112,9 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     };
     try {
       if (productId) {
-        await updateProduct(productId, payload);
+        await updateProductById(productId, payload);
       } else {
-        await createProduct(payload);
+        await addProduct(payload);
       }
       toast({
         status: "success",
@@ -143,7 +138,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {loading ? (
+          {loading || locationsLoading ? (
             <Spinner />
           ) : (
             <VStack>
@@ -200,14 +195,19 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
 
               <FormControl isRequired>
                 <FormLabel>Location</FormLabel>
-                <ComboBox
-                  items={locations}
-                  selectedItemId={product.locationId}
+                <Select
                   placeholder="Select location"
-                  onSelect={(item) =>
-                    setProduct((p) => ({ ...p, locationId: item.id }))
+                  value={product.locationId}
+                  onChange={(e) =>
+                    setProduct((p) => ({ ...p, locationId: e.target.value }))
                   }
-                />
+                >
+                  {locations.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
 
               <FormControl>

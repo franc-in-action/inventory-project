@@ -5,7 +5,13 @@ import {
   useContext,
   useCallback,
 } from "react";
-import { fetchProducts } from "../productsApi.js";
+import {
+  fetchProducts as apiFetchProducts,
+  fetchProductById as apiFetchProductById,
+  createProduct as apiCreateProduct,
+  updateProduct as apiUpdateProduct,
+  deleteProduct as apiDeleteProduct,
+} from "../productsApi.js";
 import { fetchTotalStockForProducts } from "../../stock/stockApi.js";
 
 const ProductsContext = createContext();
@@ -24,7 +30,7 @@ export function ProductsProvider({ children }) {
   const loadProductsAndStock = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetchProducts({ limit: 1000 });
+      const result = await apiFetchProducts({ limit: 1000 });
       const prods = result.items || [];
       setProducts(prods);
 
@@ -44,6 +50,30 @@ export function ProductsProvider({ children }) {
     loadProductsAndStock();
   }, [loadProductsAndStock]);
 
+  // ---------------- CRUD ---------------- //
+  const getProductById = async (id) => {
+    const product = products.find((p) => p.id === id);
+    if (product) return product; // cached
+    return apiFetchProductById(id);
+  };
+
+  const addProduct = async (payload) => {
+    const newProduct = await apiCreateProduct(payload);
+    await loadProductsAndStock();
+    return newProduct;
+  };
+
+  const updateProductById = async (id, payload) => {
+    const updated = await apiUpdateProduct(id, payload);
+    await loadProductsAndStock();
+    return updated;
+  };
+
+  const deleteProductById = async (id) => {
+    await apiDeleteProduct(id);
+    await loadProductsAndStock();
+  };
+
   return (
     <ProductsContext.Provider
       value={{
@@ -52,6 +82,10 @@ export function ProductsProvider({ children }) {
         stockMap,
         loading,
         reloadProducts: loadProductsAndStock,
+        getProductById,
+        addProduct,
+        updateProductById,
+        deleteProductById,
       }}
     >
       {children}

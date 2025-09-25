@@ -19,6 +19,7 @@ import {
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
+import { usePurchases } from "./contexts/PurchasesContext.jsx";
 
 export default function PurchaseDetails({
   purchase,
@@ -29,11 +30,21 @@ export default function PurchaseDetails({
 }) {
   const { products } = useProducts();
   const { vendorsMap } = useVendors();
+  const { markReceived } = usePurchases();
 
   const totalAmount = (purchase?.items || []).reduce(
     (sum, i) => sum + i.qty * i.price,
     0
   );
+
+  const handleReceive = async () => {
+    if (!purchase) return;
+    try {
+      await markReceived(purchase.id);
+    } catch (err) {
+      console.error("Failed to mark received", err);
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -93,10 +104,10 @@ export default function PurchaseDetails({
             </Table>
           </VStack>
         </ModalBody>
+
         <ModalFooter>
           <ButtonGroup>
             <Button onClick={onClose}>Close</Button>
-            {/* 🔒 Disable edit button if purchase is already received */}
             <Button
               colorScheme="blue"
               onClick={() => onEdit(purchase)}
@@ -109,6 +120,11 @@ export default function PurchaseDetails({
             >
               Edit
             </Button>
+            {!purchase?.received && (
+              <Button colorScheme="green" onClick={handleReceive}>
+                Receive
+              </Button>
+            )}
           </ButtonGroup>
         </ModalFooter>
       </ModalContent>

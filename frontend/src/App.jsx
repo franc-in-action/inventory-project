@@ -12,6 +12,7 @@ import { LocationsProvider } from "./modules/locations/contexts/LocationsContext
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
 import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
+import { PurchasesProvider } from "./modules/purchases/contexts/PurchasesContext.jsx"; // ✅ new
 import { PaymentsProvider } from "./modules/payments/contexts/PaymentsContext.jsx"; // ✅ new
 import { SalesProvider } from "./modules/sales/contexts/SalesContext.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -100,7 +101,9 @@ export default function App() {
                           <CustomersProvider>
                             <SalesProvider>
                               <PaymentsProvider>
-                                <Dashboard />
+                                <PurchasesProvider>
+                                  <Dashboard />
+                                </PurchasesProvider>
                               </PaymentsProvider>
                             </SalesProvider>
                           </CustomersProvider>
@@ -122,7 +125,9 @@ export default function App() {
                       <VendorsProvider>
                         <ProductsProvider>
                           <SalesProvider>
-                            <ProductsPage />
+                            <PurchasesProvider>
+                              <ProductsPage />
+                            </PurchasesProvider>
                           </SalesProvider>
                         </ProductsProvider>
                       </VendorsProvider>
@@ -139,7 +144,9 @@ export default function App() {
                   <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
                     <ProtectedLayout>
                       <ProductsProvider>
-                        <StockPage />
+                        <PurchasesProvider>
+                          <StockPage />
+                        </PurchasesProvider>
                       </ProductsProvider>
                     </ProtectedLayout>
                   </RoleRoute>
@@ -191,7 +198,9 @@ export default function App() {
                   <RoleRoute allowedRoles={PERMISSIONS.VENDORS}>
                     <ProtectedLayout>
                       <VendorsProvider>
-                        <VendorsPage />
+                        <PurchasesProvider>
+                          <VendorsPage />
+                        </PurchasesProvider>
                       </VendorsProvider>
                     </ProtectedLayout>
                   </RoleRoute>
@@ -245,7 +254,9 @@ export default function App() {
                     <ProtectedLayout>
                       <VendorsProvider>
                         <ProductsProvider>
-                          <PurchasesPage />
+                          <PurchasesProvider>
+                            <PurchasesPage />
+                          </PurchasesProvider>
                         </ProductsProvider>
                       </VendorsProvider>
                     </ProtectedLayout>

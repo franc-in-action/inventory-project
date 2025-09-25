@@ -21,41 +21,23 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
-import { fetchPurchases, receivePurchase } from "./purchaseApi.js";
 import { fetchLocations } from "../locations/locationsApi.js";
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
+import { usePurchases } from "./contexts/PurchasesContext.jsx";
 
 export default function PurchasesPage() {
   const toast = useToast();
-  const { vendors, vendorsMap } = useVendors(); // ✅ VendorsContext
+  const { vendors, vendorsMap } = useVendors();
+  const { purchases, loading, loadPurchases, markReceived } = usePurchases();
 
-  const [purchases, setPurchases] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
   const [locations, setLocations] = useState([]);
+  const [showForm, setShowForm] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [editingPurchase, setEditingPurchase] = useState(null);
 
-  const loadPurchases = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchPurchases();
-      setPurchases(data.items || []);
-    } catch (err) {
-      toast({
-        title: "Error loading purchases",
-        status: "error",
-        description: err.message,
-      });
-      setPurchases([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadLocations = async () => {
+  const loadLocationsData = async () => {
     try {
       const locs = await fetchLocations();
       setLocations(locs || []);
@@ -65,20 +47,19 @@ export default function PurchasesPage() {
     }
   };
 
+  useEffect(() => {
+    loadPurchases();
+    loadLocationsData();
+  }, [loadPurchases]);
+
   const handleReceive = async (purchaseId) => {
     try {
-      await receivePurchase(purchaseId);
+      await markReceived(purchaseId);
       toast({ title: "Purchase received", status: "success" });
-      await loadPurchases();
     } catch {
       toast({ title: "Error receiving purchase", status: "error" });
     }
   };
-
-  useEffect(() => {
-    loadPurchases();
-    loadLocations();
-  }, []);
 
   const getLocationName = (id) =>
     locations.find((l) => l.id === id)?.name || id;
@@ -168,7 +149,6 @@ export default function PurchasesPage() {
             </Tab>
             <Tab>Received ({receivedPurchases.length})</Tab>
           </TabList>
-
           <TabPanels>
             <TabPanel>{renderPurchaseTable(pendingPurchases, true)}</TabPanel>
             <TabPanel>{renderPurchaseTable(receivedPurchases)}</TabPanel>
@@ -182,7 +162,7 @@ export default function PurchasesPage() {
           setShowForm(false);
           setEditingPurchase(null);
         }}
-        onSaved={loadPurchases}
+        // onSaved={loadPurchases}
         locations={locations}
         purchase={editingPurchase}
       />

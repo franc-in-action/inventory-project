@@ -1,4 +1,4 @@
-// src/utils/productsApi.js
+// src/utils/categoriesApi.js
 import { apiFetch } from "../../utils/commonApi.js";
 
 // ---------- CATEGORY API ---------- //
