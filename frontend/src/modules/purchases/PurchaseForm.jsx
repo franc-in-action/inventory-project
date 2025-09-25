@@ -32,7 +32,7 @@ export default function PurchaseForm({
 }) {
   const toast = useToast();
   const { products } = useProducts();
-  const { vendors } = useVendors(); // ✅ from VendorsContext
+  const { vendors } = useVendors();
 
   const [locationId, setLocationId] = useState("");
   const [vendorId, setVendorId] = useState("");
@@ -40,7 +40,9 @@ export default function PurchaseForm({
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  // Initialize form when modal opens
+  // 🔒 Determine if editing is allowed
+  const isReadOnly = purchase?.received ?? false;
+
   useEffect(() => {
     if (!isOpen) return;
     if (purchase) {
@@ -54,7 +56,6 @@ export default function PurchaseForm({
     }
   }, [purchase, isOpen]);
 
-  // Load products for selected vendor
   useEffect(() => {
     if (!vendorId) {
       setFilteredProducts([]);
@@ -84,6 +85,7 @@ export default function PurchaseForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isReadOnly) return; // 🔒 prevent submission if already received
     if (!vendorId || !locationId || items.length === 0) {
       toast({ status: "error", description: "Fill all required fields" });
       return;
@@ -117,13 +119,18 @@ export default function PurchaseForm({
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
+          {isReadOnly && (
+            <Text color="red.500" fontWeight="bold" mb={2}>
+              This purchase has been received and can no longer be edited.
+            </Text>
+          )}
           <VStack spacing={4}>
-            {/* ✅ Vendors from context */}
             <Select
               placeholder="Select Vendor"
               value={vendorId}
               onChange={(e) => setVendorId(e.target.value)}
               isRequired
+              isDisabled={isReadOnly} // 🔒 disable if read-only
             >
               {vendors.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -137,6 +144,7 @@ export default function PurchaseForm({
               value={locationId}
               onChange={(e) => setLocationId(e.target.value)}
               isRequired
+              isDisabled={isReadOnly} // 🔒
             >
               {initialLocations.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -156,6 +164,7 @@ export default function PurchaseForm({
                       handleItemChange(idx, "productId", e.target.value)
                     }
                     isRequired
+                    isDisabled={isReadOnly} // 🔒
                   >
                     {filteredProducts.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -170,6 +179,7 @@ export default function PurchaseForm({
                     onChange={(val) =>
                       handleItemChange(idx, "qty", Number(val))
                     }
+                    isDisabled={isReadOnly} // 🔒
                   >
                     <NumberInputField placeholder="Qty" />
                   </NumberInput>
@@ -180,6 +190,7 @@ export default function PurchaseForm({
                     onChange={(val) =>
                       handleItemChange(idx, "price", Number(val))
                     }
+                    isDisabled={isReadOnly} // 🔒
                   >
                     <NumberInputField placeholder="Price" />
                   </NumberInput>
@@ -187,10 +198,15 @@ export default function PurchaseForm({
                   <IconButton
                     icon={<DeleteIcon />}
                     onClick={() => removeItemRow(idx)}
+                    isDisabled={isReadOnly} // 🔒
                   />
                 </HStack>
               ))}
-              <Button leftIcon={<AddIcon />} onClick={addItemRow}>
+              <Button
+                leftIcon={<AddIcon />}
+                onClick={addItemRow}
+                isDisabled={isReadOnly} // 🔒
+              >
                 Add Item
               </Button>
             </VStack>
@@ -199,7 +215,12 @@ export default function PurchaseForm({
         <ModalFooter>
           <ButtonGroup>
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="submit" isLoading={saving} colorScheme="blue">
+            <Button
+              type="submit"
+              isLoading={saving}
+              colorScheme="blue"
+              isDisabled={isReadOnly} // 🔒
+            >
               {purchase
                 ? `Update Purchase - ${purchase.purchaseUuid}`
                 : "Create Purchase"}

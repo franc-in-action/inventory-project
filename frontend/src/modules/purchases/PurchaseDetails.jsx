@@ -28,7 +28,7 @@ export default function PurchaseDetails({
   locations,
 }) {
   const { products } = useProducts();
-  const { vendorsMap } = useVendors(); // ✅ use VendorsContext
+  const { vendorsMap } = useVendors();
 
   const totalAmount = (purchase?.items || []).reduce(
     (sum, i) => sum + i.qty * i.price,
@@ -51,6 +51,10 @@ export default function PurchaseDetails({
               <strong>Location:</strong>{" "}
               {locations.find((l) => l.id === purchase?.locationId)?.name ||
                 "Unknown Location"}
+            </Text>
+            <Text>
+              <strong>Status:</strong>{" "}
+              {purchase?.received ? "✅ Received" : "⏳ Pending"}
             </Text>
 
             <Text fontWeight="bold">Items</Text>
@@ -92,7 +96,17 @@ export default function PurchaseDetails({
         <ModalFooter>
           <ButtonGroup>
             <Button onClick={onClose}>Close</Button>
-            <Button colorScheme="blue" onClick={() => onEdit(purchase)}>
+            {/* 🔒 Disable edit button if purchase is already received */}
+            <Button
+              colorScheme="blue"
+              onClick={() => onEdit(purchase)}
+              isDisabled={purchase?.received}
+              title={
+                purchase?.received
+                  ? "Cannot edit a purchase that has been received"
+                  : ""
+              }
+            >
               Edit
             </Button>
           </ButtonGroup>
