@@ -1,3 +1,4 @@
+// src/modules/locations/LocationList.jsx
 import { useState } from "react";
 import {
   Table,
@@ -12,8 +13,10 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import LocationDetails from "./LocationDetails.jsx";
+import { useLocations } from "./contexts/LocationsContext.jsx";
 
-export default function LocationList({ locations, onEdit, onDelete }) {
+export default function LocationList({ locations, onEdit }) {
+  const { deleteLocationById, loading } = useLocations();
   const [selectedId, setSelectedId] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -26,6 +29,18 @@ export default function LocationList({ locations, onEdit, onDelete }) {
     setSelectedId(null);
     setDetailsOpen(false);
   };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this location?")) return;
+    try {
+      await deleteLocationById(id);
+    } catch (err) {
+      console.error("Failed to delete location:", err);
+      alert("Error deleting location");
+    }
+  };
+
+  if (loading) return <p>Loading locations...</p>;
 
   return (
     <>
@@ -56,7 +71,7 @@ export default function LocationList({ locations, onEdit, onDelete }) {
                   <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Delete"
-                    onClick={() => onDelete(loc.id)}
+                    onClick={() => handleDelete(loc.id)}
                   />
                 </ButtonGroup>
               </Td>

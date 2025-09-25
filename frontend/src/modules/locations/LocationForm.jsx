@@ -1,3 +1,4 @@
+// src/modules/locations/LocationForm.jsx
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -16,24 +17,25 @@ import {
   useToast,
   Spinner,
 } from "@chakra-ui/react";
-import {
-  fetchLocationById,
-  createLocation,
-  updateLocation,
-} from "./locationsApi.js";
+import { useLocations } from "./contexts/LocationsContext.jsx";
+import { fetchLocationById } from "./locationsApi.js";
 
-export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
+export default function LocationForm({ locationId, isOpen, onClose }) {
   const toast = useToast();
+  const { addLocation, updateLocationById } = useLocations();
+
   const [location, setLocation] = useState({ name: "", address: "" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
+
     if (!locationId) {
       setLocation({ name: "", address: "" });
       return;
     }
+
     setLoading(true);
     (async () => {
       try {
@@ -58,13 +60,12 @@ export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
     setSaving(true);
     try {
       if (locationId) {
-        await updateLocation(locationId, location);
+        await updateLocationById(locationId, location);
         toast({ status: "success", description: "Location updated" });
       } else {
-        await createLocation(location);
+        await addLocation(location);
         toast({ status: "success", description: "Location created" });
       }
-      onSaved();
       onClose();
     } catch (err) {
       console.error("Error saving location:", err);
@@ -95,7 +96,6 @@ export default function LocationForm({ locationId, isOpen, onClose, onSaved }) {
                   onChange={handleChange}
                 />
               </FormControl>
-
               <FormControl>
                 <FormLabel>Address</FormLabel>
                 <Textarea

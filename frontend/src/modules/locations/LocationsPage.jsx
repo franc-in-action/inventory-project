@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// src/modules/locations/LocationsPage.jsx
+import { useState } from "react";
 import {
   Box,
   Heading,
@@ -11,33 +12,23 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
-import { fetchLocations } from "./locationsApi.js";
-import { apiFetch } from "../../utils/commonApi.js";
 import LocationForm from "./LocationForm.jsx";
 import LocationList from "./LocationList.jsx";
+import { useLocations } from "./contexts/LocationsContext.jsx";
 
 export default function LocationsPage() {
-  const [locations, setLocations] = useState([]);
+  const { locations, loading, deleteLocationById, loadLocations } =
+    useLocations();
   const [filter, setFilter] = useState("");
   const [editingLocationId, setEditingLocationId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
 
-  const loadLocations = async () => {
-    const data = await fetchLocations();
-    setLocations(data);
-  };
-
-  useEffect(() => {
-    loadLocations();
-  }, []);
-
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this location?")) return;
     try {
-      await apiFetch(`/locations/${id}`, { method: "DELETE" });
+      await deleteLocationById(id);
       toast({ title: "Location deleted", status: "success" });
-      loadLocations();
     } catch (err) {
       toast({ title: "Error deleting location", status: "error" });
     }
@@ -85,6 +76,7 @@ export default function LocationsPage() {
         locations={filteredLocations}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        loading={loading}
       />
 
       <LocationForm

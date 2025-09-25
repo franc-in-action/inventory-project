@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// src/modules/locations/LocationDetails.jsx
+import { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -10,26 +11,19 @@ import {
   Text,
   Spinner,
 } from "@chakra-ui/react";
-import { fetchLocationById } from "./locationsApi.js";
+import { useLocations } from "./contexts/LocationsContext.jsx";
 
 export default function LocationDetails({ locationId, isOpen, onClose }) {
+  const { locations, loading: locationsLoading } = useLocations();
   const [location, setLocation] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !locationId) return;
-    setLoading(true);
-    (async () => {
-      try {
-        const data = await fetchLocationById(locationId);
-        setLocation(data);
-      } catch (err) {
-        console.error("Failed to fetch location details:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [locationId, isOpen]);
+
+    // Find the location from the context
+    const loc = locations.find((l) => l.id === locationId);
+    setLocation(loc || null);
+  }, [locationId, isOpen, locations]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -38,10 +32,10 @@ export default function LocationDetails({ locationId, isOpen, onClose }) {
         <ModalHeader>Location Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {loading ? (
+          {locationsLoading ? (
             <Spinner />
           ) : location ? (
-            <VStack>
+            <VStack spacing={2} align="start">
               <Text>
                 <strong>Name:</strong> {location.name}
               </Text>
@@ -50,11 +44,15 @@ export default function LocationDetails({ locationId, isOpen, onClose }) {
               </Text>
               <Text>
                 <strong>Created At:</strong>{" "}
-                {new Date(location.createdAt).toLocaleString()}
+                {location.createdAt
+                  ? new Date(location.createdAt).toLocaleString()
+                  : "N/A"}
               </Text>
               <Text>
                 <strong>Updated At:</strong>{" "}
-                {new Date(location.updatedAt).toLocaleString()}
+                {location.updatedAt
+                  ? new Date(location.updatedAt).toLocaleString()
+                  : "N/A"}
               </Text>
             </VStack>
           ) : (
