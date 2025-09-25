@@ -22,7 +22,6 @@ export async function createSale(saleData) {
 export async function fetchSales(params = {}) {
   if (window.api) {
     // ... unchanged Electron code ...
-    // (kept for brevity)
   }
 
   const query = new URLSearchParams(params).toString();
@@ -52,23 +51,44 @@ export async function deleteSale(saleId) {
   return apiFetch(`/sales/${saleId}`, { method: "DELETE" });
 }
 
-export function formatReceipt(sale) {
-  const lines = [
-    `SALE RECEIPT: ${sale.saleUuid}`,
-    `Date: ${new Date(sale.createdAt).toLocaleString()}`,
-    `Customer: ${sale.customer?.name || "Walk-in"}`,
-    `Items:`,
-  ];
-  sale.items?.forEach((item) => {
-    lines.push(
-      `${item.qty} x ${item.product?.name || item.productId} @ ${
-        item.price
-      } = ${item.qty * item.price}`
-    );
+/**
+ * Generate a plain-text receipt matching the "generateReceiptText" format
+ * @param {Object} sale - sale object with items & payments
+ * @param {Object} [productsMap] - optional { productId: productName } map
+ * @returns {string}
+ */
+export function formatReceipt(sale, productsMap = {}) {
+  const lines = [];
+  lines.push("==== MY STORE ====");
+  lines.push(`Sale: ${sale?.saleUuid || sale?.id}`);
+  lines.push(`Date: ${new Date(sale?.createdAt).toLocaleString()}`);
+  lines.push(`Customer: ${sale?.customer?.name || "Walk-in"}`);
+  lines.push("-----------------------------");
+
+  let total = 0;
+  (sale.items || []).forEach((item) => {
+    // ✅ Prefer productsMap name if available, otherwise fallback to id
+    const name =
+      productsMap[item.productId] || item.product?.name || item.productId;
+    const lineTotal = item.qty * item.price;
+    total += lineTotal;
+    lines.push(`${name} x${item.qty}`);
+    lines.push(`  ${item.price.toFixed(2)}  ${lineTotal.toFixed(2)}`);
   });
-  lines.push(`Total: ${sale.total}`);
-  sale.payments?.forEach((p) =>
-    lines.push(`Paid: ${p.amount} via ${p.method}`)
-  );
+
+  lines.push("-----------------------------");
+  lines.push(`TOTAL: ${total.toFixed(2)}`);
+
+  if (sale.payments?.length) {
+    lines.push("Payments:");
+    sale.payments.forEach((p) => {
+      lines.push(`  ${p.amount.toFixed(2)} via ${p.method}`);
+    });
+  }
+
+  lines.push("-----------------------------");
+  lines.push("Thank you for your purchase!");
+  lines.push("\n\n");
+
   return lines.join("\n");
 }
