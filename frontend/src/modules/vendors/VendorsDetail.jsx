@@ -86,7 +86,12 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   {vendor.productVendors?.length === 0 ? (
                     <Text>No products linked</Text>
                   ) : (
-                    <Table variant="simple" size="sm">
+                    <Table
+                      variant="simple"
+                      size="sm"
+                      overflow={"auto"}
+                      height={"200px"}
+                    >
                       <Thead>
                         <Tr>
                           <Th>Name</Th>

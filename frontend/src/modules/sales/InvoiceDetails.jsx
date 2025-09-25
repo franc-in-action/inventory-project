@@ -20,6 +20,7 @@ import {
   HStack,
   Spacer,
   useToast,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
@@ -105,8 +106,10 @@ export default function InvoiceDetails({ sale, isOpen, onClose }) {
 
         <ModalFooter>
           <HStack>
-            <Button onClick={onClose}>Close</Button>
-            <Button onClick={handlePrint}>Print</Button>
+            <ButtonGroup>
+              <Button onClick={onClose}>Close</Button>
+              <Button onClick={handlePrint}>Print</Button>
+            </ButtonGroup>
           </HStack>
         </ModalFooter>
       </ModalContent>

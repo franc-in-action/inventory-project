@@ -10,6 +10,7 @@ import {
   Button,
   VStack,
   Text,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 
@@ -72,8 +73,10 @@ export default function SaleInvoiceThermal({ sale, isOpen, onClose }) {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose}>Close</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <ButtonGroup>
+            <Button onClick={onClose}>Close</Button>
+            <Button onClick={handlePrint}>Print</Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>
