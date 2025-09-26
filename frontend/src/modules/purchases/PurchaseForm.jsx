@@ -151,13 +151,13 @@ export default function PurchaseForm({
         await updatePurchase(purchase.id, payload);
         toast({
           status: "success",
-          description: "Purchase updated successfully.",
+          description: `Purchase ${purchase.purchaseUuid} updated successfully.`,
         });
       } else {
         await addPurchase(payload);
         toast({
           status: "success",
-          description: "Purchase created successfully.",
+          description: `Purchase ${purchase.purchaseUuid} created successfully.`,
         });
       }
 
@@ -180,7 +180,7 @@ export default function PurchaseForm({
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
           {purchase
-            ? `Edit Purchase – ${purchase.purchaseNumber}`
+            ? `Edit Purchase – ${purchase.purchaseUuid}`
             : "Create Purchase"}
         </ModalHeader>
 
@@ -290,7 +290,7 @@ export default function PurchaseForm({
               isDisabled={isReadOnly || !isFormValid}
             >
               {purchase
-                ? `Update Purchase – ${purchase.purchaseNumber}`
+                ? `Update Purchase – ${purchase.purchaseUuid}`
                 : "Create Purchase"}
             </Button>
           </ButtonGroup>
