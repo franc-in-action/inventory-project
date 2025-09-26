@@ -125,6 +125,9 @@ export default {
     Table: {
       baseStyle: {
         th: {
+          position: "sticky", // sticky header
+          top: 0,
+          zIndex: 1,
           bg: light.macLight,
           borderBottom: "1px solid",
           borderColor: light.macDark,
@@ -145,6 +148,9 @@ export default {
           bg: light.macLight,
           borderRadius: "12px",
           boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+          w: "800px",
+          minW: "800px",
+          h: "600px",
           _dark: {
             bg: dark.macLight,
             boxShadow: "0 20px 40px rgba(0,0,0,0.6)",

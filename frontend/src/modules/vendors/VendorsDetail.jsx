@@ -8,6 +8,7 @@ import {
   ModalCloseButton,
   VStack,
   Text,
+  Box,
   Spinner,
   Tabs,
   TabList,
@@ -55,10 +56,17 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{vendor.name} Details</ModalHeader>
+        <ModalHeader>
+          {loading
+            ? "Loading..."
+            : vendor
+            ? `${vendor.name} Details`
+            : "No data"}
+        </ModalHeader>
+
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
@@ -73,25 +81,32 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
               <TabPanels>
                 {/* --- Overview --- */}
                 <TabPanel>
-                  <VStack align="start" spacing={3}>
-                    <Text>
-                      <strong>Name:</strong> {vendor.name}
-                    </Text>
-                    <Text>
-                      <strong>Email:</strong> {vendor.email || "N/A"}
-                    </Text>
-                    <Text>
-                      <strong>Phone:</strong> {vendor.phone || "N/A"}
-                    </Text>
-                    <Text>
-                      <strong>Created At:</strong>{" "}
-                      {new Date(vendor.createdAt).toLocaleString()}
-                    </Text>
-                    <Text>
-                      <strong>Updated At:</strong>{" "}
-                      {new Date(vendor.updatedAt).toLocaleString()}
-                    </Text>
-                  </VStack>
+                  <Box
+                    h="300px"
+                    overflowY="auto"
+                    border="1px solid #e2e8f0"
+                    borderRadius="md"
+                  >
+                    <VStack align="start" spacing={3}>
+                      <Text>
+                        <strong>Name:</strong> {vendor.name}
+                      </Text>
+                      <Text>
+                        <strong>Email:</strong> {vendor.email || "N/A"}
+                      </Text>
+                      <Text>
+                        <strong>Phone:</strong> {vendor.phone || "N/A"}
+                      </Text>
+                      <Text>
+                        <strong>Created At:</strong>{" "}
+                        {new Date(vendor.createdAt).toLocaleString()}
+                      </Text>
+                      <Text>
+                        <strong>Updated At:</strong>{" "}
+                        {new Date(vendor.updatedAt).toLocaleString()}
+                      </Text>
+                    </VStack>
+                  </Box>
                 </TabPanel>
 
                 {/* --- Products --- */}
@@ -99,29 +114,36 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   {vendor.productVendors?.length === 0 ? (
                     <Text>No products linked</Text>
                   ) : (
-                    <Table>
-                      <Thead>
-                        <Tr>
-                          <Th>Name</Th>
-                          <Th>SKU</Th>
-                          <Th isNumeric>Price</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {vendor.productVendors?.map((pv) => (
-                          <Tr key={pv.product.id}>
-                            <Td>{pv.product.name}</Td>
-                            <Td>{pv.product.sku}</Td>
-                            <Td isNumeric>
-                              {pv.product.price?.toLocaleString(undefined, {
-                                style: "currency",
-                                currency: "USD",
-                              })}
-                            </Td>
+                    <Box
+                      h="300px"
+                      overflowY="auto"
+                      border="1px solid #e2e8f0"
+                      borderRadius="md"
+                    >
+                      <Table variant="striped" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th>Name</Th>
+                            <Th>SKU</Th>
+                            <Th isNumeric>Price</Th>
                           </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
+                        </Thead>
+                        <Tbody>
+                          {vendor.productVendors?.map((pv) => (
+                            <Tr key={pv.product.id}>
+                              <Td>{pv.product.name}</Td>
+                              <Td>{pv.product.sku}</Td>
+                              <Td isNumeric>
+                                {pv.product.price?.toLocaleString(undefined, {
+                                  style: "currency",
+                                  currency: "USD",
+                                })}
+                              </Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </Table>
+                    </Box>
                   )}
                 </TabPanel>
 
@@ -132,33 +154,40 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   ) : vendorPayments.length === 0 ? (
                     <Text>No issued payments for this vendor</Text>
                   ) : (
-                    <Table>
-                      <Thead>
-                        <Tr>
-                          <Th>Payment #</Th>
-                          <Th isNumeric>Amount</Th>
-                          <Th>Method</Th>
-                          <Th>Date</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {vendorPayments.map((payment) => (
-                          <Tr key={payment.id}>
-                            <Td>{payment.paymentNumber || payment.id}</Td>
-                            <Td isNumeric>
-                              {payment.amount.toLocaleString(undefined, {
-                                style: "currency",
-                                currency: "USD",
-                              })}
-                            </Td>
-                            <Td>{payment.method}</Td>
-                            <Td>
-                              {new Date(payment.createdAt).toLocaleString()}
-                            </Td>
+                    <Box
+                      h="300px"
+                      overflowY="auto"
+                      border="1px solid #e2e8f0"
+                      borderRadius="md"
+                    >
+                      <Table>
+                        <Thead>
+                          <Tr>
+                            <Th>Payment #</Th>
+                            <Th isNumeric>Amount</Th>
+                            <Th>Method</Th>
+                            <Th>Date</Th>
                           </Tr>
-                        ))}
-                      </Tbody>
-                    </Table>
+                        </Thead>
+                        <Tbody>
+                          {vendorPayments.map((payment) => (
+                            <Tr key={payment.id}>
+                              <Td>{payment.paymentNumber || payment.id}</Td>
+                              <Td isNumeric>
+                                {payment.amount.toLocaleString(undefined, {
+                                  style: "currency",
+                                  currency: "USD",
+                                })}
+                              </Td>
+                              <Td>{payment.method}</Td>
+                              <Td>
+                                {new Date(payment.createdAt).toLocaleString()}
+                              </Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </Table>
+                    </Box>
                   )}
                 </TabPanel>
               </TabPanels>
