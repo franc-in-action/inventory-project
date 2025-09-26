@@ -69,6 +69,7 @@ model Product {
   saleItems      SaleItem[]
   purchaseItems  PurchaseItem[]
   productVendors ProductVendor[]
+  ReturnItem     ReturnItem[]
 }
 
 model StockLevel {
@@ -122,6 +123,7 @@ model Customer {
   sales            Sale[]
   receivedPayments ReceivedPayment[]
   ledger           LedgerEntry[]
+  Return           Return[]
 }
 
 model Vendor {
@@ -152,6 +154,7 @@ model Sale {
   payments ReceivedPayment[]
 
   ledger LedgerEntry[] @relation("SaleLedger")
+  Return Return[]
 }
 
 model SaleItem {
@@ -166,32 +169,31 @@ model SaleItem {
 }
 
 model Return {
-  id          String       @id @default(uuid())
-  returnUuid  String       @unique
+  id          String   @id @default(uuid())
+  returnUuid  String   @unique
   saleId      String
   customerId  String?
   totalAmount Float
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  sale     Sale        @relation(fields: [saleId], references: [id])
-  customer Customer?   @relation(fields: [customerId], references: [id])
+  sale     Sale         @relation(fields: [saleId], references: [id])
+  customer Customer?    @relation(fields: [customerId], references: [id])
   items    ReturnItem[]
 
   @@index([saleId])
 }
 
 model ReturnItem {
-  id        Int     @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   returnId  String
   productId String
   qty       Int
   price     Float
 
-  return   Return  @relation(fields: [returnId], references: [id])
-  product  Product @relation(fields: [productId], references: [id])
+  return  Return  @relation(fields: [returnId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
-
 
 model ReceivedPayment {
   id            String   @id @default(uuid())

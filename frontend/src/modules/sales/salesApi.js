@@ -45,7 +45,8 @@ export async function getSaleById(saleId) {
 export async function fetchReturns(params = {}) {
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/returns?${query}`);
-  return result.items || result.returns || [];
+  // Backend returns an array directly, so just return it
+  return Array.isArray(result) ? result : [];
 }
 
 /** Create a new return */
