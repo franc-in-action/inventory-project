@@ -1,4 +1,3 @@
-// src/contexts/CustomersContext.js
 import {
   createContext,
   useContext,
@@ -20,7 +19,6 @@ export function CustomersProvider({ children }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Map of id → name for quick lookups
   const customersMap = customers.reduce((map, c) => {
     map[c.id] = c.name;
     return map;
@@ -29,7 +27,6 @@ export function CustomersProvider({ children }) {
   const reloadCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      // Backend computes ledger balance dynamically
       const data = await getCustomers();
       setCustomers(data || []);
     } catch (err) {
@@ -55,10 +52,7 @@ export function CustomersProvider({ children }) {
     await reloadCustomers();
   };
 
-  const fetchCustomerById = async (id) => {
-    const customer = await getCustomerById(id);
-    return customer;
-  };
+  const fetchCustomerById = async (id) => getCustomerById(id);
 
   useEffect(() => {
     reloadCustomers();

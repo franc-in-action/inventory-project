@@ -11,8 +11,8 @@ import {
   createVendor,
   updateVendor,
   deleteVendor,
+  fetchVendorProducts as apiFetchVendorProducts,
 } from "../vendorsApi.js";
-import { fetchProductsForVendor as apiFetchProductsForVendor } from "../../purchases/purchaseApi.js";
 
 const VendorsContext = createContext();
 
@@ -20,6 +20,7 @@ export function VendorsProvider({ children }) {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Map for quick lookups
   const vendorsMap = vendors.reduce((map, v) => {
     map[v.id] = v.name;
     return map;
@@ -28,8 +29,8 @@ export function VendorsProvider({ children }) {
   const loadVendors = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchVendors();
-      setVendors(data);
+      const data = await fetchVendors(true); // include balances
+      setVendors(data || []);
     } catch (err) {
       console.error("[VendorsContext] Failed to fetch vendors", err);
       setVendors([]);
@@ -53,12 +54,13 @@ export function VendorsProvider({ children }) {
     await loadVendors();
   };
 
-  const getVendorById = fetchVendorById;
+  const getVendorById = async (id) => {
+    return fetchVendorById(id, true); // include balance
+  };
 
-  // ✅ New: fetch products for a specific vendor
   const fetchProductsForVendor = async (vendorId) => {
     try {
-      const products = await apiFetchProductsForVendor(vendorId);
+      const products = await apiFetchVendorProducts(vendorId);
       return products;
     } catch (err) {
       console.error(
@@ -84,7 +86,7 @@ export function VendorsProvider({ children }) {
         editVendor,
         removeVendor,
         getVendorById,
-        fetchProductsForVendor, // expose in context
+        fetchProductsForVendor,
       }}
     >
       {children}

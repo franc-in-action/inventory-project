@@ -5,7 +5,7 @@ import { computeCustomerBalances } from "../utils/customersHelpers.js";
 
 const router = express.Router();
 
-// -------------------- CREATE --------------------
+// -------------------- CREATE CUSTOMER --------------------
 router.post(
   "/",
   authMiddleware,
@@ -16,12 +16,7 @@ router.post(
 
     try {
       const customer = await prisma.customer.create({
-        data: {
-          name,
-          email,
-          phone,
-          credit_limit: credit_limit || 0,
-        },
+        data: { name, email, phone, credit_limit: credit_limit || 0 },
       });
       res.status(201).json(customer);
     } catch (err) {
@@ -30,7 +25,7 @@ router.post(
   }
 );
 
-// -------------------- READ ALL --------------------
+// -------------------- READ ALL CUSTOMERS --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const includeBalance = req.query.includeBalance === "true";
@@ -39,11 +34,10 @@ router.get("/", authMiddleware, async (req, res) => {
 
     if (!includeBalance) return res.json(customers);
 
-    // Compute balances for all customers in a single helper call
+    // Compute balances dynamically from ledger
     const balanceMap = await computeCustomerBalances(
       customers.map((c) => c.id)
     );
-
     const customersWithBalance = customers.map((c) => ({
       ...c,
       balance: balanceMap[c.id] || 0,
@@ -55,17 +49,14 @@ router.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// -------------------- READ ONE --------------------
+// -------------------- READ SINGLE CUSTOMER --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
     const customer = await prisma.customer.findUnique({
       where: { id },
       include: {
-        sales: {
-          include: { payments: true },
-          orderBy: { createdAt: "desc" },
-        },
+        sales: { include: { payments: true }, orderBy: { createdAt: "desc" } },
         payments: true,
         ledger: true,
       },
@@ -82,7 +73,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// -------------------- UPDATE --------------------
+// -------------------- UPDATE CUSTOMER --------------------
 router.put(
   "/:id",
   authMiddleware,
@@ -103,7 +94,7 @@ router.put(
   }
 );
 
-// -------------------- DELETE --------------------
+// -------------------- DELETE CUSTOMER --------------------
 router.delete(
   "/:id",
   authMiddleware,
