@@ -10,6 +10,8 @@ import Text from "./components/text";
 import ButtonGroup from "./components/buttongroup";
 import Table from "./components/table";
 import Card from "./components/card";
+import Modal from "./components/modal";
+import ModalContent from "./components/modalContent";
 
 // Define a custom color palette
 const colors = {
@@ -48,6 +50,7 @@ const theme = extendTheme({
     Table,
     Card,
     Modal,
+    ModalContent, // ✅ this is the one that affects <ModalContent />
   },
 });
 
