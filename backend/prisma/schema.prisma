@@ -46,7 +46,7 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products Product[]
+  products Product[] @relation("CategoryProducts")
 }
 
 model Product {
@@ -61,8 +61,8 @@ model Product {
   locationId String
   location   Location @relation(fields: [locationId], references: [id])
 
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   Category @relation("CategoryProducts", fields: [categoryId], references: [id], onDelete: Restrict)
 
   stockLevels    StockLevel[]
   stockMovements StockMovement[]

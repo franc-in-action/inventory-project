@@ -1,4 +1,3 @@
-// src/modules/locations/LocationForm.jsx
 import { useState, useEffect } from "react";
 import {
   Modal,
@@ -18,11 +17,10 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useLocations } from "./contexts/LocationsContext.jsx";
-import { fetchLocationById } from "./locationsApi.js";
 
 export default function LocationForm({ locationId, isOpen, onClose }) {
   const toast = useToast();
-  const { addLocation, updateLocationById } = useLocations();
+  const { addLocation, updateLocationById, getLocationById } = useLocations();
 
   const [location, setLocation] = useState({ name: "", address: "" });
   const [loading, setLoading] = useState(false);
@@ -39,7 +37,7 @@ export default function LocationForm({ locationId, isOpen, onClose }) {
     setLoading(true);
     (async () => {
       try {
-        const data = await fetchLocationById(locationId);
+        const data = await getLocationById(locationId);
         if (data) setLocation(data);
       } catch (err) {
         console.error("Failed to load location:", err);
@@ -48,7 +46,7 @@ export default function LocationForm({ locationId, isOpen, onClose }) {
         setLoading(false);
       }
     })();
-  }, [locationId, isOpen, toast]);
+  }, [locationId, isOpen, getLocationById, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

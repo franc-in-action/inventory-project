@@ -1,13 +1,9 @@
 import { Box, Input } from "@chakra-ui/react";
 import { useCombobox } from "downshift";
+import { useCategories } from "../modules/categories/contexts/CategoriesContext.jsx";
 
-export default function ComboBox({
-  items,
-  selectedItemId,
-  placeholder,
-  onSelect,
-  createNewItem,
-}) {
+export default function ComboBox({ selectedItemId, placeholder, onSelect }) {
+  const { categories, addCategory } = useCategories();
   const {
     isOpen,
     getMenuProps,
@@ -18,16 +14,17 @@ export default function ComboBox({
     setInputValue,
     selectItem,
   } = useCombobox({
-    items,
+    items: categories,
     itemToString: (item) => (item ? item.name : ""),
-    selectedItem: items.find((c) => c.id === selectedItemId) || null,
+    selectedItem: categories.find((c) => c.id === selectedItemId) || null,
     onSelectedItemChange: async ({ selectedItem }) => {
       if (!selectedItem) return;
 
-      if (typeof selectedItem === "string" && createNewItem) {
+      // If user typed a string that's not an existing category
+      if (typeof selectedItem === "string") {
         try {
-          const newItem = await createNewItem(selectedItem);
-          onSelect(newItem);
+          const newItem = await addCategory(selectedItem);
+          onSelect(newItem); // notify parent
         } catch (err) {
           console.error("[ComboBox] Error creating new item:", err);
         }
@@ -40,7 +37,7 @@ export default function ComboBox({
     },
   });
 
-  const filtered = items.filter((item) =>
+  const filtered = categories.filter((item) =>
     item.name.toLowerCase().includes(inputValue?.toLowerCase() || "")
   );
 
@@ -61,17 +58,25 @@ export default function ComboBox({
       <Box {...getMenuProps()}>
         {isOpen &&
           filtered.map((item, index) => (
-            <Box key={item.id} {...getItemProps({ item, index })}>
+            <Box
+              key={item.id}
+              {...getItemProps({ item, index })}
+              bg={highlightedIndex === index ? "gray.100" : "transparent"}
+              cursor="pointer"
+              px={2}
+              py={1}
+            >
               {item.name}
             </Box>
           ))}
 
         {isOpen && canCreate && (
           <Box
-            onClick={() => {
-              if (!createNewItem) return;
-              selectItem(inputValue);
-            }}
+            onClick={() => selectItem(inputValue)}
+            bg="gray.50"
+            cursor="pointer"
+            px={2}
+            py={1}
           >
             + Create "{inputValue}"
           </Box>

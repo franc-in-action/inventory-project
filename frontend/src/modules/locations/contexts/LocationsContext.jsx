@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   fetchLocations,
+  fetchLocationById,
   createLocation,
   updateLocation,
   deleteLocation as deleteLocationApi,
@@ -49,6 +50,20 @@ export function LocationsProvider({ children }) {
     setLocations((prev) => prev.filter((loc) => loc.id !== id));
   };
 
+  // NEW: get a location by ID from state or fallback to API
+  const getLocationById = async (id) => {
+    const loc = locations.find((l) => l.id === id);
+    if (loc) return loc;
+
+    try {
+      const data = await fetchLocationById(id);
+      return data;
+    } catch (err) {
+      console.error("[LocationsContext] Failed to fetch location by ID:", err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     loadLocations();
   }, [loadLocations]);
@@ -62,6 +77,7 @@ export function LocationsProvider({ children }) {
         addLocation,
         updateLocationById,
         deleteLocationById,
+        getLocationById, // exposed helper
       }}
     >
       {children}

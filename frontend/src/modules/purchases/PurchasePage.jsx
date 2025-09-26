@@ -20,37 +20,22 @@ import {
   TabPanel,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import { useEffect, useState } from "react";
-import { fetchLocations } from "../locations/locationsApi.js";
+import { useState } from "react";
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { usePurchases } from "./contexts/PurchasesContext.jsx";
+import { useLocations } from "../locations/contexts/LocationsContext.jsx";
 
 export default function PurchasesPage() {
   const toast = useToast();
   const { vendors, vendorsMap } = useVendors();
   const { purchases, loading, loadPurchases, markReceived } = usePurchases();
+  const { locations, loading: locationsLoading } = useLocations();
 
-  const [locations, setLocations] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [editingPurchase, setEditingPurchase] = useState(null);
-
-  const loadLocationsData = async () => {
-    try {
-      const locs = await fetchLocations();
-      setLocations(locs || []);
-    } catch {
-      toast({ title: "Error loading locations", status: "error" });
-      setLocations([]);
-    }
-  };
-
-  useEffect(() => {
-    loadPurchases();
-    loadLocationsData();
-  }, [loadPurchases]);
 
   const handleReceive = async (purchaseId) => {
     try {
@@ -120,6 +105,8 @@ export default function PurchasesPage() {
     </Table>
   );
 
+  if (loading || locationsLoading) return <Spinner />;
+
   return (
     <Box>
       <Flex align="center" mb={4}>
@@ -136,25 +123,21 @@ export default function PurchasesPage() {
         </ButtonGroup>
       </Flex>
 
-      {loading ? (
-        <Spinner />
-      ) : (
-        <Tabs variant="enclosed">
-          <TabList>
-            <Tab
-              color={pendingPurchases.length > 0 ? "red.500" : "gray.500"}
-              fontWeight={pendingPurchases.length > 0 ? "bold" : "normal"}
-            >
-              Pending ({pendingPurchases.length})
-            </Tab>
-            <Tab>Received ({receivedPurchases.length})</Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel>{renderPurchaseTable(pendingPurchases, true)}</TabPanel>
-            <TabPanel>{renderPurchaseTable(receivedPurchases)}</TabPanel>
-          </TabPanels>
-        </Tabs>
-      )}
+      <Tabs variant="enclosed">
+        <TabList>
+          <Tab
+            color={pendingPurchases.length > 0 ? "red.500" : "gray.500"}
+            fontWeight={pendingPurchases.length > 0 ? "bold" : "normal"}
+          >
+            Pending ({pendingPurchases.length})
+          </Tab>
+          <Tab>Received ({receivedPurchases.length})</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>{renderPurchaseTable(pendingPurchases, true)}</TabPanel>
+          <TabPanel>{renderPurchaseTable(receivedPurchases)}</TabPanel>
+        </TabPanels>
+      </Tabs>
 
       <PurchaseForm
         isOpen={showForm}
@@ -162,7 +145,6 @@ export default function PurchasesPage() {
           setShowForm(false);
           setEditingPurchase(null);
         }}
-        // onSaved={loadPurchases}
         locations={locations}
         purchase={editingPurchase}
       />

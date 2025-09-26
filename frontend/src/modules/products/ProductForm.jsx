@@ -21,7 +21,7 @@ import ComboBox from "../../components/ComboBox.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { useLocations } from "../locations/contexts/LocationsContext.jsx";
 import { useProducts } from "./contexts/ProductsContext.jsx";
-import { fetchCategories, createCategory } from "./categoriesApi.js";
+import { useCategories } from "../categories/contexts/CategoriesContext.jsx";
 
 export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const toast = useToast();
@@ -29,8 +29,8 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const { vendors, loading: vendorsLoading, reloadVendors } = useVendors();
   const { locations, loading: locationsLoading } = useLocations();
   const { getProductById, addProduct, updateProductById } = useProducts();
+  const { addCategory } = useCategories(); // Use context directly
 
-  const [categories, setCategories] = useState([]);
   const [product, setProduct] = useState({
     name: "",
     sku: "",
@@ -44,20 +44,11 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load categories & vendors when modal opens
+  // Load vendors when modal opens
   useEffect(() => {
     if (!isOpen) return;
-
-    (async () => {
-      try {
-        const cats = await fetchCategories();
-        setCategories(cats || []);
-        if (!vendors.length) await reloadVendors();
-      } catch {
-        toast({ status: "error", description: "Failed to load categories." });
-      }
-    })();
-  }, [isOpen, vendors.length, reloadVendors, toast]);
+    if (!vendors.length) reloadVendors().catch(() => {});
+  }, [isOpen, vendors.length, reloadVendors]);
 
   // Load product for editing
   useEffect(() => {
@@ -178,18 +169,12 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
               <FormControl isRequired>
                 <FormLabel>Category</FormLabel>
                 <ComboBox
-                  items={categories}
                   selectedItemId={product.categoryId}
                   placeholder="Select or add category"
-                  createNewItem={createCategory}
-                  onSelect={(item) => {
-                    setCategories((prev) =>
-                      prev.some((c) => c.id === item.id)
-                        ? prev
-                        : [...prev, item]
-                    );
-                    setProduct((p) => ({ ...p, categoryId: item.id }));
-                  }}
+                  onSelect={(item) =>
+                    setProduct((p) => ({ ...p, categoryId: item.id }))
+                  }
+                  createNewItem={addCategory}
                 />
               </FormControl>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   VStack,
@@ -14,15 +14,16 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { useProducts } from "./contexts/ProductsContext.jsx";
-import { fetchCategories } from "./categoriesApi.js";
-import { fetchLocations } from "../locations/locationsApi.js";
+import { useCategories } from "../categories/contexts/CategoriesContext.jsx";
+import { useLocations } from "../locations/contexts/LocationsContext.jsx";
 import ProductDetails from "./ProductDetails.jsx";
 import ProductsTable from "./ProductsTable.jsx";
 
 export default function ProductsList({ onEdit }) {
   const { products, stockMap, reloadProducts } = useProducts();
-  const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const { categories } = useCategories();
+  const { locations, loading: locationsLoading } = useLocations();
+
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -34,22 +35,6 @@ export default function ProductsList({ onEdit }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedProductId, setSelectedProductId] = useState(null);
 
-  // Load categories & locations
-  useEffect(() => {
-    (async () => {
-      try {
-        const [cats, locs] = await Promise.all([
-          fetchCategories(),
-          fetchLocations(),
-        ]);
-        setCategories(cats);
-        setLocations(locs);
-      } catch (err) {
-        console.error("Failed to fetch categories or locations", err);
-      }
-    })();
-  }, []);
-
   const handleOpenDetails = (id) => {
     setSelectedProductId(id);
     onOpen();
@@ -58,7 +43,7 @@ export default function ProductsList({ onEdit }) {
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
     try {
-      await reloadProducts(); // use context for deletion instead of direct API call
+      await reloadProducts();
       toast({
         title: "Product deleted",
         status: "success",
@@ -76,7 +61,6 @@ export default function ProductsList({ onEdit }) {
     }
   };
 
-  // Filtered & paginated products
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
@@ -94,7 +78,7 @@ export default function ProductsList({ onEdit }) {
     return filtered.slice(start, start + limit);
   }, [filtered, page]);
 
-  if (!products.length) return <Spinner />;
+  if (!products.length || locationsLoading) return <Spinner />;
 
   return (
     <Box>
@@ -164,7 +148,10 @@ export default function ProductsList({ onEdit }) {
               </Text>
               <Text>Description: {p.description || "—"}</Text>
               <Text>Category: {p.category?.name || "—"}</Text>
-              <Text>Location: {p.location?.name || "—"}</Text>
+              <Text>
+                Location:{" "}
+                {locations.find((l) => l.id === p.locationId)?.name || "—"}
+              </Text>
               <Text>Quantity: {stockMap[p.id] ?? 0}</Text>
               <Text>Price: ${p.price}</Text>
               <HStack mt={2}>
