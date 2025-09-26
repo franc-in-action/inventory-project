@@ -12,21 +12,34 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import PaymentDetail from "./PaymentDetail.jsx";
+import InvoiceDetails from "../sales/InvoiceDetails.jsx";
 import { usePayments } from "./contexts/PaymentsContext.jsx";
 
 export default function PaymentList({ onEdit, filter = "" }) {
   const { payments, deletePayment } = usePayments();
-  const [selectedId, setSelectedId] = useState(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedSaleId, setSelectedSaleId] = useState(null);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
-  const handleOpenDetails = (id) => {
-    setSelectedId(id);
-    setDetailsOpen(true);
+  const handleOpenPayment = (id) => {
+    setSelectedPaymentId(id);
+    setPaymentModalOpen(true);
   };
 
-  const handleCloseDetails = () => {
-    setSelectedId(null);
-    setDetailsOpen(false);
+  const handleClosePayment = () => {
+    setSelectedPaymentId(null);
+    setPaymentModalOpen(false);
+  };
+
+  const handleOpenInvoice = (saleId) => {
+    setSelectedSaleId(saleId);
+    setInvoiceModalOpen(true);
+  };
+
+  const handleCloseInvoice = () => {
+    setSelectedSaleId(null);
+    setInvoiceModalOpen(false);
   };
 
   const handleDelete = async (id) => {
@@ -43,8 +56,13 @@ export default function PaymentList({ onEdit, filter = "" }) {
   const filteredPayments = payments.filter((p) => {
     const customerName = p.customer?.name?.toLowerCase() || "";
     const saleUuid = p.sale?.saleUuid?.toLowerCase() || "";
+    const paymentNumber = p.paymentNumber?.toLowerCase() || "";
     const query = filter.toLowerCase();
-    return customerName.includes(query) || saleUuid.includes(query);
+    return (
+      customerName.includes(query) ||
+      saleUuid.includes(query) ||
+      paymentNumber.includes(query)
+    );
   });
 
   return (
@@ -52,8 +70,9 @@ export default function PaymentList({ onEdit, filter = "" }) {
       <Table variant="striped" size="sm">
         <Thead>
           <Tr>
+            <Th>Payment #</Th>
             <Th>Customer</Th>
-            <Th>Sale UUID</Th>
+            <Th>Sale #</Th>
             <Th>Amount</Th>
             <Th>Method</Th>
             <Th>Created At</Th>
@@ -64,11 +83,27 @@ export default function PaymentList({ onEdit, filter = "" }) {
           {filteredPayments.map((p) => (
             <Tr key={p.id}>
               <Td>
-                <Link onClick={() => handleOpenDetails(p.id)}>
-                  {p.customer?.name || "N/A"}
+                <Link
+                  color="teal.600"
+                  fontWeight="bold"
+                  onClick={() => handleOpenPayment(p.id)}
+                >
+                  {p.paymentNumber}
                 </Link>
               </Td>
-              <Td>{p.sale?.saleUuid || "N/A"}</Td>
+              <Td>{p.customer?.name || "N/A"}</Td>
+              <Td>
+                {p.sale ? (
+                  <Link
+                    color="blue.600"
+                    onClick={() => handleOpenInvoice(p.sale.id)}
+                  >
+                    {p.sale.saleUuid}
+                  </Link>
+                ) : (
+                  "N/A"
+                )}
+              </Td>
               <Td>{p.amount.toFixed(2)}</Td>
               <Td>{p.method}</Td>
               <Td>{new Date(p.createdAt).toLocaleString()}</Td>
@@ -91,11 +126,21 @@ export default function PaymentList({ onEdit, filter = "" }) {
         </Tbody>
       </Table>
 
-      {selectedId && (
+      {/* Payment Details Modal */}
+      {selectedPaymentId && (
         <PaymentDetail
-          paymentId={selectedId}
-          isOpen={detailsOpen}
-          onClose={handleCloseDetails}
+          paymentId={selectedPaymentId}
+          isOpen={paymentModalOpen}
+          onClose={handleClosePayment}
+        />
+      )}
+
+      {/* Invoice Details Modal */}
+      {selectedSaleId && (
+        <InvoiceDetails
+          saleId={selectedSaleId}
+          isOpen={invoiceModalOpen}
+          onClose={handleCloseInvoice}
         />
       )}
     </>

@@ -1,6 +1,8 @@
+// backend/src/seed.js
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import Chance from "chance";
+import { generateSequentialId } from "../src/utils/idGenerator.js";
 
 const prisma = new PrismaClient();
 const chance = new Chance();
@@ -12,24 +14,28 @@ async function main() {
   });
 
   // --- 2. Users ---
-  const hashedAdminPassword = await bcrypt.hash("adminpassword", 10);
-  await prisma.user.create({
+  const hashedPasswords = {
+    ADMIN: await bcrypt.hash("adminpassword", 10),
+    MANAGER: await bcrypt.hash("managerpassword", 10),
+    STAFF: await bcrypt.hash("staffpassword", 10),
+  };
+
+  const admin = await prisma.user.create({
     data: {
       email: "admin@example.com",
-      password: hashedAdminPassword,
+      password: hashedPasswords.ADMIN,
       name: "System Admin",
       role: "ADMIN",
       locationId: location.id,
     },
   });
 
-  const hashedManagerPassword = await bcrypt.hash("managerpassword", 10);
   const managers = await Promise.all(
     Array.from({ length: 2 }, (_, i) =>
       prisma.user.create({
         data: {
           email: `manager${i + 1}@example.com`,
-          password: hashedManagerPassword,
+          password: hashedPasswords.MANAGER,
           name: `Manager ${i + 1}`,
           role: "MANAGER",
           locationId: location.id,
@@ -38,13 +44,12 @@ async function main() {
     )
   );
 
-  const hashedStaffPassword = await bcrypt.hash("staffpassword", 10);
   const staffUsers = await Promise.all(
     Array.from({ length: 3 }, (_, i) =>
       prisma.user.create({
         data: {
           email: `staff${i + 1}@example.com`,
-          password: hashedStaffPassword,
+          password: hashedPasswords.STAFF,
           name: `Staff ${i + 1}`,
           role: "STAFF",
           locationId: location.id,
@@ -94,12 +99,12 @@ async function main() {
   // --- 6. ProductVendor relations ---
   for (const product of products) {
     const vendorCount = chance.integer({ min: 1, max: 3 });
-    const selected = chance.pickset(vendors, vendorCount);
-    for (const v of selected) {
+    const selectedVendors = chance.pickset(vendors, vendorCount);
+    for (const vendor of selectedVendors) {
       await prisma.productVendor.create({
         data: {
           productId: product.id,
-          vendorId: v.id,
+          vendorId: vendor.id,
           vendorPrice:
             product.price * chance.floating({ min: 0.9, max: 1.1, fixed: 2 }),
           leadTimeDays: chance.integer({ min: 2, max: 14 }),
@@ -123,24 +128,31 @@ async function main() {
   );
 
   // --- 8. Purchases + Ledger + IssuedPayments ---
-  for (let i = 1; i <= 50; i++) {
+  for (let i = 0; i < 50; i++) {
     const vendor = vendors[i % vendors.length];
+
+    // Get products supplied by this vendor
     const supplied = await prisma.productVendor.findMany({
       where: { vendorId: vendor.id },
       select: { productId: true, vendorPrice: true },
     });
-    if (!supplied.length) continue;
+
+    if (!supplied?.length) continue; // skip if vendor has no products
 
     const { productId, vendorPrice } = chance.pickone(supplied);
     const product = products.find((p) => p.id === productId);
+    if (!product) continue; // safety check
+
     const qty = chance.integer({ min: 1, max: 20 });
     const received = chance.bool();
     const receivedByUser = received ? chance.pickone(allUsers) : null;
     const priceToUse = vendorPrice ?? product.price;
 
+    const purchaseUuid = await generateSequentialId("Purchase");
+
     const purchase = await prisma.purchase.create({
       data: {
-        purchaseUuid: `PUR-${String(i).padStart(3, "0")}`,
+        purchaseUuid,
         vendorId: vendor.id,
         locationId: location.id,
         total: qty * priceToUse,
@@ -166,7 +178,6 @@ async function main() {
       }
     }
 
-    // Ledger for purchase
     await prisma.ledgerEntry.create({
       data: {
         purchaseId: purchase.id,
@@ -177,19 +188,20 @@ async function main() {
       },
     });
 
-    // Optional issued payment
     if (chance.bool()) {
       const amountPaid = parseFloat(
         (
           purchase.total * chance.floating({ min: 0.3, max: 1, fixed: 2 })
         ).toFixed(2)
       );
+      const paymentNumber = await generateSequentialId("IssuedPayment");
       const issuedPayment = await prisma.issuedPayment.create({
         data: {
           purchaseId: purchase.id,
           vendorId: vendor.id,
           amount: amountPaid,
           method: chance.pickone(["CASH", "BANK_TRANSFER"]),
+          paymentNumber,
         },
       });
       await prisma.ledgerEntry.create({
@@ -200,14 +212,13 @@ async function main() {
           type: "PAYMENT_ISSUED",
           amount: amountPaid,
           method: issuedPayment.method,
-          description: `Payment for ${purchase.purchaseUuid}`,
+          description: `Payment ${paymentNumber} for ${purchase.purchaseUuid}`,
         },
       });
     }
   }
 
   // --- 9. Sales + Ledger + ReceivedPayments ---
-  let saleCounter = 1;
   for (let i = 0; i < 50; i++) {
     const customer = customers[i % customers.length];
     const product = chance.pickone(products);
@@ -227,10 +238,11 @@ async function main() {
       max: Math.min(stock.quantity, 5),
     });
     const total = qtySold * product.price;
+    const saleUuid = await generateSequentialId("Sale");
 
     const sale = await prisma.sale.create({
       data: {
-        saleUuid: `SALE-${String(saleCounter).padStart(3, "0")}`,
+        saleUuid,
         locationId: location.id,
         customerId: customer.id,
         total,
@@ -247,28 +259,28 @@ async function main() {
       data: { quantity: stock.quantity - qtySold },
     });
 
-    // Ledger for sale
     await prisma.ledgerEntry.create({
       data: {
         saleId: sale.id,
         customerId: customer.id,
         type: "SALE",
         amount: total,
-        description: `Sale to ${customer.name}`,
+        description: `Sale ${saleUuid} to ${customer.name}`,
       },
     });
 
-    // Optional received payment
     if (chance.bool()) {
       const amountPaid = parseFloat(
         (total * chance.floating({ min: 0.3, max: 1, fixed: 2 })).toFixed(2)
       );
+      const paymentNumber = await generateSequentialId("ReceivedPayment");
       const receivedPayment = await prisma.receivedPayment.create({
         data: {
           saleId: sale.id,
           customerId: customer.id,
           amount: amountPaid,
           method: chance.pickone(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
+          paymentNumber,
         },
       });
       await prisma.ledgerEntry.create({
@@ -279,12 +291,50 @@ async function main() {
           type: "PAYMENT_RECEIVED",
           amount: amountPaid,
           method: receivedPayment.method,
-          description: `Payment for ${sale.saleUuid}`,
+          description: `Payment ${paymentNumber} for ${saleUuid}`,
         },
       });
     }
+  }
 
-    saleCounter++;
+  // --- 10. Returns + Ledger ---
+  for (let i = 0; i < 20; i++) {
+    const customer = chance.pickone(customers);
+    const sale = await prisma.sale.findFirst({
+      where: { customerId: customer.id },
+      include: { items: true },
+    });
+    if (!sale || !sale.items.length) continue;
+
+    const qtyReturn = chance.integer({ min: 1, max: 2 });
+    const totalReturn = qtyReturn * chance.pickone(sale.items).price;
+    const returnNumber = await generateSequentialId("Return");
+
+    await prisma.ledgerEntry.create({
+      data: {
+        saleId: sale.id,
+        customerId: customer.id,
+        type: "RETURN",
+        amount: totalReturn,
+        description: `Return ${returnNumber} for sale ${sale.saleUuid}`,
+      },
+    });
+  }
+
+  // --- 11. Ledger Adjustments ---
+  for (let i = 0; i < 15; i++) {
+    const customer = chance.pickone(customers);
+    const adjustmentAmount = chance.floating({ min: -500, max: 500, fixed: 2 });
+    const adjustmentNumber = await generateSequentialId("Adjustment");
+
+    await prisma.ledgerEntry.create({
+      data: {
+        customerId: customer.id,
+        type: "ADJUSTMENT",
+        amount: adjustmentAmount,
+        description: `Adjustment ${adjustmentNumber} for customer ${customer.name}`,
+      },
+    });
   }
 
   console.log("✅ Seed completed successfully!");

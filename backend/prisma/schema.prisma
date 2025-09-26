@@ -166,12 +166,13 @@ model SaleItem {
 }
 
 model ReceivedPayment {
-  id         String   @id @default(uuid())
-  saleId     String? // optional for standalone payments
-  customerId String
-  amount     Float
-  method     String
-  createdAt  DateTime @default(now())
+  id            String   @id @default(uuid())
+  paymentNumber String   @unique @default("TEMP") // temporary
+  saleId        String? // optional for standalone payments
+  customerId    String
+  amount        Float
+  method        String
+  createdAt     DateTime @default(now())
 
   sale     Sale?         @relation(fields: [saleId], references: [id], onDelete: Restrict)
   customer Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
@@ -210,12 +211,13 @@ model PurchaseItem {
 }
 
 model IssuedPayment {
-  id         String   @id @default(uuid())
-  purchaseId String? // optional if standalone payment
-  vendorId   String
-  amount     Float
-  method     String
-  createdAt  DateTime @default(now())
+  id            String   @id @default(uuid())
+  paymentNumber String   @unique @default("TEMP") // temporary
+  purchaseId    String? // optional if standalone payment
+  vendorId      String
+  amount        Float
+  method        String
+  createdAt     DateTime @default(now())
 
   purchase Purchase?     @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
   vendor   Vendor        @relation(fields: [vendorId], references: [id], onDelete: Restrict)

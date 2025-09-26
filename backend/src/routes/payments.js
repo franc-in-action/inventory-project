@@ -2,6 +2,7 @@
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
+import { generateSequentialId } from "../utils/idGenerator.js";
 
 const router = express.Router();
 
@@ -27,9 +28,12 @@ router.post(
           if (!customer) throw new Error("Customer not found");
         }
 
+        // Generate human-readable payment number
+        const paymentNumber = await generateSequentialId("ReceivedPayment");
+
         // Create ReceivedPayment
         const payment = await tx.receivedPayment.create({
-          data: { customerId, saleId, amount, method },
+          data: { customerId, saleId, amount, method, paymentNumber },
         });
 
         // Create corresponding ledger entry
@@ -71,11 +75,13 @@ router.put(
 
     try {
       const result = await prisma.$transaction(async (tx) => {
+        // Update the received payment (keep paymentNumber unchanged)
         const payment = await tx.receivedPayment.update({
           where: { id },
-          data: { customerId, saleId, amount, method },
+          data: { customerId, saleId, amount, method }, // no paymentNumber update
         });
 
+        // Update the corresponding ledger entry if it exists
         const ledgerEntry = await tx.ledgerEntry.findFirst({
           where: { receivedPaymentId: id, type: "PAYMENT_RECEIVED" },
         });
@@ -136,8 +142,18 @@ router.delete(
     const id = req.params.id;
     try {
       const result = await prisma.$transaction(async (tx) => {
-        const payment = await tx.receivedPayment.delete({ where: { id } });
+        // Fetch the payment first to get paymentNumber
+        const payment = await tx.receivedPayment.findUnique({
+          where: { id },
+          select: { id: true, paymentNumber: true },
+        });
 
+        if (!payment) throw new Error("Payment not found");
+
+        // Delete the payment
+        await tx.receivedPayment.delete({ where: { id } });
+
+        // Delete associated ledger entries
         await tx.ledgerEntry.deleteMany({
           where: { receivedPaymentId: id, type: "PAYMENT_RECEIVED" },
         });
@@ -145,7 +161,10 @@ router.delete(
         return payment;
       });
 
-      res.json({ message: "Payment deleted", deleted: result });
+      res.json({
+        message: `Payment ${result.paymentNumber} deleted`,
+        deletedPaymentNumber: result.paymentNumber,
+      });
     } catch (err) {
       res.status(400).json({ error: err.message });
     }

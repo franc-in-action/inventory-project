@@ -136,7 +136,12 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
-        <ModalHeader>{paymentId ? "Edit Payment" : "Add Payment"}</ModalHeader>
+        <ModalHeader>
+          {paymentId
+            ? `Edit Payment #${payment.paymentNumber || ""}`
+            : "Add Payment"}
+        </ModalHeader>
+
         <ModalCloseButton />
         <ModalBody>
           {loading || customersLoading ? (

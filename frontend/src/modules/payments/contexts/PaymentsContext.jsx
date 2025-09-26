@@ -38,10 +38,8 @@ export function PaymentsProvider({ children }) {
 
   const createPayment = async (paymentData) => {
     const result = await apiCreatePayment(paymentData);
-    // result = { payment, ledgerEntry }
-    setPayments((prev) => [...prev, result.payment]);
+    setPayments((prev) => [...prev, result.payment]); // payment.paymentNumber is included
 
-    // Refresh customer data (for balances etc.)
     if (paymentData.customerId) {
       await getCustomerById(paymentData.customerId);
     }
@@ -60,9 +58,7 @@ export function PaymentsProvider({ children }) {
     return result;
   };
 
-  const getPayment = async (id) => {
-    return getPaymentById(id);
-  };
+  const getPayment = async (id) => getPaymentById(id);
 
   const deletePayment = async (id) => {
     const payment = payments.find((p) => p.id === id);

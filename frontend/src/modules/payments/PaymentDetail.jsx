@@ -45,10 +45,13 @@ export default function PaymentDetail({ paymentId, isOpen, onClose }) {
           ) : payment ? (
             <VStack spacing={2} align="start">
               <Text>
+                <strong>Payment #:</strong> {payment.paymentNumber || "N/A"}
+              </Text>
+              <Text>
                 <strong>Customer:</strong> {payment.customer?.name || "N/A"}
               </Text>
               <Text>
-                <strong>Sale ID:</strong> {payment.saleId || "N/A"}
+                <strong>Sale UUID:</strong> {payment.sale?.saleUuid || "N/A"}
               </Text>
               <Text>
                 <strong>Amount:</strong> {payment.amount}

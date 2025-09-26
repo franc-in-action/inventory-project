@@ -45,8 +45,13 @@ export default function PaymentsPage() {
   const filteredPayments = payments.filter((p) => {
     const customerName = p.customer?.name?.toLowerCase() || "";
     const saleUuid = p.sale?.saleUuid?.toLowerCase() || "";
+    const paymentNumber = p.paymentNumber?.toLowerCase() || "";
     const query = filter.toLowerCase();
-    return customerName.includes(query) || saleUuid.includes(query);
+    return (
+      customerName.includes(query) ||
+      saleUuid.includes(query) ||
+      paymentNumber.includes(query)
+    );
   });
 
   return (
@@ -66,7 +71,7 @@ export default function PaymentsPage() {
       </Flex>
 
       <Input
-        placeholder="Search by customer or sale UUID..."
+        placeholder="Search by customer or payment number or sale UUID..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         mb={4}
@@ -76,6 +81,7 @@ export default function PaymentsPage() {
         payments={filteredPayments}
         onEdit={openEditModal}
         onDelete={handleDelete}
+        filter={filter}
       />
 
       <PaymentForm

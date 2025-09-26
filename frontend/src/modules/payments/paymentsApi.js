@@ -5,7 +5,7 @@ export async function createPayment(paymentData) {
   return apiFetch("/payments", {
     method: "POST",
     body: JSON.stringify(paymentData),
-  }); // returns { payment, ledgerEntry }
+  }); // returns { payment, ledgerEntry } including payment.paymentNumber
 }
 
 // Update an existing payment
@@ -18,7 +18,7 @@ export async function updatePayment(id, paymentData) {
 
 // Get all payments
 export async function getPayments() {
-  return apiFetch("/payments"); // returns array of receivedPayment objects
+  return apiFetch("/payments"); // returns array of receivedPayment objects including paymentNumber
 }
 
 // Get a single payment by ID
