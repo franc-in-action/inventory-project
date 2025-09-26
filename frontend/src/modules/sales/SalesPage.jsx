@@ -38,10 +38,7 @@ export default function SalesPage() {
     return sales.filter(
       (s) =>
         s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-        (s.saleUuid || s.id)
-          .toString()
-          .toLowerCase()
-          .includes(search.toLowerCase())
+        s.saleUuid.toLowerCase().includes(search.toLowerCase())
     );
   }, [sales, search]);
 
@@ -57,9 +54,9 @@ export default function SalesPage() {
     return salesArray.slice(start, start + limit);
   };
 
-  const handleSelectSale = (sale) => setSelectedSaleId(sale.id);
+  const handleSelectSale = (sale) => setSelectedSaleId(sale.id); // keep id internally
   const handlePrint = (sale) => {
-    setSelectedSaleId(sale.id);
+    setSelectedSaleId(sale.id); // keep UUID for context fetch
     setThermalOpen(true);
   };
 

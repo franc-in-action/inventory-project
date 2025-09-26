@@ -53,7 +53,7 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
             fontSize="sm"
             p={2}
           >
-            <Text>Invoice #: {sale.saleUuid || sale.id}</Text>
+            <Text>Invoice #: {sale.saleUuid}</Text>
             <Text>Customer: {sale.customer?.name || "Walk-in"}</Text>
             <Divider />
             <Table size="sm" variant="simple">

@@ -29,7 +29,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const { vendors, loading: vendorsLoading, reloadVendors } = useVendors();
   const { locations, loading: locationsLoading } = useLocations();
   const { getProductById, addProduct, updateProductById } = useProducts();
-  const { addCategory } = useCategories(); // Use context directly
+  const { categories, addCategory } = useCategories();
 
   const [product, setProduct] = useState({
     name: "",
@@ -169,6 +169,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
               <FormControl isRequired>
                 <FormLabel>Category</FormLabel>
                 <ComboBox
+                  items={categories} // now dynamic
                   selectedItemId={product.categoryId}
                   placeholder="Select or add category"
                   onSelect={(item) =>

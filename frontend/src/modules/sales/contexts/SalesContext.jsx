@@ -38,16 +38,10 @@ export function SalesProvider({ children }) {
     [sales]
   );
 
-  // Fully reactive creation of a sale
   const addSale = useCallback(async (saleData) => {
-    try {
-      const newSale = await apiCreateSale(saleData);
-      setSales((prev) => [newSale, ...prev]); // prepend new sale
-      return newSale;
-    } catch (err) {
-      console.error("[SalesContext] Failed to create sale", err);
-      throw err;
-    }
+    const newSale = await apiCreateSale(saleData);
+    setSales((prev) => [newSale, ...prev]);
+    return newSale;
   }, []);
 
   const updateSale = useCallback((updatedSale) => {

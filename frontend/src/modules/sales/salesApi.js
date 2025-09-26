@@ -1,31 +1,16 @@
-//
-
 import { apiFetch } from "../../utils/commonApi.js";
 
 /**
  * Create a new sale
  */
 export async function createSale(saleData) {
-  if (window.api) {
-    const { locationId, customerId, items, total } = saleData;
-    return window.api.run(
-      `INSERT INTO sales (saleUuid, locationId, customerId, total, createdAt)
-       VALUES (?, ?, ?, ?, datetime('now'))`,
-      [saleData.saleUuid, locationId, customerId, total]
-    );
-  }
-
   return apiFetch("/sales", { method: "POST", body: JSON.stringify(saleData) });
 }
 
 /**
- * Fetch sales (Electron or API)
+ * Fetch sales
  */
 export async function fetchSales(params = {}) {
-  if (window.api) {
-    // ... unchanged Electron code ...
-  }
-
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/sales?${query}`);
   const sales = result.sales || result.items || result;
@@ -36,21 +21,27 @@ export async function fetchSales(params = {}) {
   };
 }
 
+/**
+ * Get sale by ID (UUID)
+ */
 export async function getSaleById(saleId) {
-  if (window.api) {
-    const [sale] = await window.api.query("SELECT * FROM sales WHERE id = ?", [
-      saleId,
-    ]);
-    return sale || null;
-  }
   return apiFetch(`/sales/${saleId}`);
 }
 
+/**
+ * Delete a sale
+ */
 export async function deleteSale(saleId) {
-  if (window.api) {
-    return window.api.run("DELETE FROM sales WHERE id = ?", [saleId]);
-  }
   return apiFetch(`/sales/${saleId}`, { method: "DELETE" });
+}
+
+export async function fetchNextSaleNumber() {
+  if (window.api) {
+    // fallback for Electron if needed
+    return window.api.run("SELECT NEXTVAL('sale_seq')"); // optional placeholder
+  }
+  const result = await apiFetch("/sales/next-number");
+  return result.saleUuid;
 }
 
 /**

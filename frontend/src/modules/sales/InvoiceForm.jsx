@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Modal,
@@ -28,95 +28,90 @@ import ComboBox from "../../components/ComboBox.jsx";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
+import { fetchNextSaleNumber } from "./salesApi.js";
 
 export default function InvoiceForm({ isOpen, onClose }) {
   const toast = useToast();
   const { products, stockMap } = useProducts();
-  const { customers, refreshCustomers, getCustomerById, createCustomer } =
+  const { customers, reloadCustomers, fetchCustomerById, createCustomer } =
     useCustomers();
-  const { addSale } = useSales(); // <-- use context addSale
+  const { addSale } = useSales();
 
+  const [saleUuid, setSaleUuid] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerData, setCustomerData] = useState(null);
-  const [cart, setCart] = useState([
-    { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
-  ]);
+  const [cart, setCart] = useState([{ productId: "", qty: 1 }]);
   const [payment, setPayment] = useState({ amount: 0, method: "cash" });
-  const [loading, setLoading] = useState(false);
   const [isCashSale, setIsCashSale] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Fetch next invoice number & customers when modal opens
   useEffect(() => {
-    if (isOpen) refreshCustomers();
-  }, [isOpen, refreshCustomers]);
-
-  useEffect(() => {
-    if (!selectedCustomer) return setCustomerData(null);
+    if (!isOpen) return;
     (async () => {
       try {
-        const data = await getCustomerById(selectedCustomer.id);
-        setCustomerData(data);
+        setSaleUuid(await fetchNextSaleNumber());
       } catch {
-        setCustomerData(null);
+        setSaleUuid("N/A");
       }
+      reloadCustomers();
     })();
-  }, [selectedCustomer, getCustomerById]);
+  }, [isOpen, reloadCustomers]);
 
+  // Load selected customer data
   useEffect(() => {
-    setCart((prev) =>
-      prev.map((item) => {
+    if (!selectedCustomer) return setCustomerData(null);
+    fetchCustomerById(selectedCustomer.id)
+      .then(setCustomerData)
+      .catch(() => setCustomerData(null));
+  }, [selectedCustomer, fetchCustomerById]);
+
+  // Update cart items with latest product info
+  const enrichedCart = useMemo(
+    () =>
+      cart.map((item) => {
         const product = products.find((p) => p.id === item.productId);
-        if (!product) return item;
         return {
           ...item,
-          price: product.price || 0,
-          locationId: product.locationId || "",
-          stockQty: stockMap[product.id] || 0,
+          price: product?.price || 0,
+          locationId: product?.locationId || "",
+          stockQty: stockMap[product?.id] || 0,
         };
-      })
-    );
-  }, [products, stockMap]);
+      }),
+    [cart, products, stockMap]
+  );
 
+  // Compute total amount
+  const totalAmount = useMemo(
+    () => enrichedCart.reduce((sum, i) => sum + i.qty * i.price, 0),
+    [enrichedCart]
+  );
+
+  // Auto-set payment amount for cash sale
   useEffect(() => {
-    if (isCashSale)
-      setPayment((prev) => ({
-        ...prev,
-        amount: cart.reduce((sum, i) => sum + i.qty * i.price, 0),
-      }));
-  }, [isCashSale, cart]);
+    if (isCashSale) setPayment((prev) => ({ ...prev, amount: totalAmount }));
+  }, [isCashSale, totalAmount]);
 
   const handleCartChange = (index, field, value) => {
     setCart((prev) => {
       const copy = [...prev];
       copy[index][field] = value;
-      if (field === "productId") {
-        const product = products.find((p) => p.id === value);
-        copy[index].locationId = product?.locationId || "";
-        copy[index].price = product?.price || 0;
-        copy[index].stockQty = stockMap[product?.id] || 0;
-      }
       return copy;
     });
   };
 
   const addCartRow = () =>
-    setCart((prev) => [
-      ...prev,
-      { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
-    ]);
-  const removeCartRow = (i) =>
-    setCart((prev) => prev.filter((_, idx) => idx !== i));
-
-  const totalAmount = cart.reduce(
-    (sum, item) => sum + item.qty * item.price,
-    0
-  );
+    setCart((prev) => [...prev, { productId: "", qty: 1 }]);
+  const removeCartRow = (index) =>
+    setCart((prev) => prev.filter((_, i) => i !== index));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (
       !selectedCustomer ||
-      cart.length === 0 ||
-      cart.some((i) => !i.productId || i.qty <= 0)
+      enrichedCart.length === 0 ||
+      enrichedCart.some((i) => !i.productId || i.qty <= 0)
     ) {
       return toast({
         status: "warning",
@@ -124,17 +119,15 @@ export default function InvoiceForm({ isOpen, onClose }) {
       });
     }
 
-    const locationId = cart[0].locationId;
-    if (cart.some((item) => item.locationId !== locationId)) {
+    const locationId = enrichedCart[0].locationId;
+    if (enrichedCart.some((i) => i.locationId !== locationId)) {
       return toast({
         status: "error",
         description: "All products must belong to the same location",
       });
     }
 
-    const insufficient = cart.find(
-      (item) => item.qty > (stockMap[item.productId] || 0)
-    );
+    const insufficient = enrichedCart.find((i) => i.qty > i.stockQty);
     if (insufficient) {
       const product = products.find((p) => p.id === insufficient.productId);
       return toast({
@@ -145,8 +138,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
 
     if (!isCashSale && customerData) {
       const remainingCredit = customerData.credit_limit - customerData.balance;
-      const creditRequired = totalAmount - (payment.amount || 0);
-      if (creditRequired > remainingCredit) {
+      if (totalAmount - payment.amount > remainingCredit) {
         return toast({
           status: "error",
           description: `Credit limit exceeded. Available credit: ${remainingCredit.toFixed(
@@ -159,9 +151,10 @@ export default function InvoiceForm({ isOpen, onClose }) {
     setLoading(true);
     try {
       await addSale({
+        saleUuid,
         locationId,
         customerId: selectedCustomer.id,
-        items: cart.map(({ productId, qty, price }) => ({
+        items: enrichedCart.map(({ productId, qty, price }) => ({
           productId,
           qty,
           price,
@@ -172,14 +165,12 @@ export default function InvoiceForm({ isOpen, onClose }) {
 
       toast({ status: "success", description: "Invoice created successfully" });
 
-      setCart([
-        { productId: "", qty: 1, price: 0, locationId: "", stockQty: 0 },
-      ]);
+      setCart([{ productId: "", qty: 1 }]);
       setSelectedCustomer(null);
       setCustomerData(null);
       setPayment({ amount: 0, method: "cash" });
       setIsCashSale(false);
-
+      setSaleUuid("");
       onClose();
     } catch (err) {
       toast({ status: "error", description: err.message });
@@ -196,7 +187,12 @@ export default function InvoiceForm({ isOpen, onClose }) {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
-            {/* Customer Selection */}
+            <Box>
+              <Text fontWeight="bold">
+                Invoice #: {saleUuid || "Generating..."}
+              </Text>
+            </Box>
+
             <Box>
               <Text>Customer</Text>
               <ComboBox
@@ -206,9 +202,10 @@ export default function InvoiceForm({ isOpen, onClose }) {
                 onSelect={setSelectedCustomer}
                 createNewItem={async (name) => {
                   const newCust = await createCustomer({ name });
-                  refreshCustomers();
+                  reloadCustomers();
                   return newCust;
                 }}
+                itemToString={(c) => c.name}
               />
               {customerData && (
                 <Text>
@@ -227,22 +224,21 @@ export default function InvoiceForm({ isOpen, onClose }) {
               />
             </FormControl>
 
-            {/* Products */}
             <Box>
               <Text>Products</Text>
               <VStack>
-                {cart.map((item, idx) => {
+                {enrichedCart.map((item, idx) => {
                   const stockExceeded = item.qty > item.stockQty;
                   const product = products.find((p) => p.id === item.productId);
                   return (
                     <Box key={idx}>
                       <HStack spacing={2}>
                         <Select
-                          placeholder="Select Product"
                           value={item.productId}
                           onChange={(e) =>
                             handleCartChange(idx, "productId", e.target.value)
                           }
+                          placeholder="Select Product"
                           required
                         >
                           {products.map((p) => (
@@ -294,7 +290,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
 
             <Divider />
 
-            {/* Payment */}
             <HStack spacing={2}>
               <NumberInput
                 min={0}

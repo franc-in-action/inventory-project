@@ -1,9 +1,14 @@
 import { Box, Input } from "@chakra-ui/react";
 import { useCombobox } from "downshift";
-import { useCategories } from "../modules/categories/contexts/CategoriesContext.jsx";
 
-export default function ComboBox({ selectedItemId, placeholder, onSelect }) {
-  const { categories, addCategory } = useCategories();
+export default function ComboBox({
+  items = [],
+  selectedItemId,
+  placeholder = "",
+  onSelect,
+  createNewItem, // optional async function to create new item
+  itemToString = (item) => (item ? item.name : ""), // default display
+}) {
   const {
     isOpen,
     getMenuProps,
@@ -14,17 +19,16 @@ export default function ComboBox({ selectedItemId, placeholder, onSelect }) {
     setInputValue,
     selectItem,
   } = useCombobox({
-    items: categories,
-    itemToString: (item) => (item ? item.name : ""),
-    selectedItem: categories.find((c) => c.id === selectedItemId) || null,
+    items,
+    itemToString,
+    selectedItem: items.find((i) => i.id === selectedItemId) || null,
     onSelectedItemChange: async ({ selectedItem }) => {
       if (!selectedItem) return;
-
-      // If user typed a string that's not an existing category
-      if (typeof selectedItem === "string") {
+      // If user typed a string that's not in the list
+      if (typeof selectedItem === "string" && createNewItem) {
         try {
-          const newItem = await addCategory(selectedItem);
-          onSelect(newItem); // notify parent
+          const newItem = await createNewItem(selectedItem);
+          onSelect(newItem);
         } catch (err) {
           console.error("[ComboBox] Error creating new item:", err);
         }
@@ -37,14 +41,17 @@ export default function ComboBox({ selectedItemId, placeholder, onSelect }) {
     },
   });
 
-  const filtered = categories.filter((item) =>
-    item.name.toLowerCase().includes(inputValue?.toLowerCase() || "")
+  const filtered = items.filter((item) =>
+    itemToString(item)
+      .toLowerCase()
+      .includes(inputValue?.toLowerCase() || "")
   );
 
   const canCreate =
     inputValue &&
+    createNewItem &&
     !filtered.some(
-      (item) => item.name.toLowerCase() === inputValue.toLowerCase()
+      (item) => itemToString(item).toLowerCase() === inputValue.toLowerCase()
     );
 
   return (
@@ -66,7 +73,7 @@ export default function ComboBox({ selectedItemId, placeholder, onSelect }) {
               px={2}
               py={1}
             >
-              {item.name}
+              {itemToString(item)}
             </Box>
           ))}
 

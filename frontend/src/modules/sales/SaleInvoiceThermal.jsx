@@ -60,7 +60,7 @@ export default function SaleInvoiceThermal({ saleId, isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Invoice - {sale.saleUuid || sale.id}</ModalHeader>
+        <ModalHeader>Invoice - {sale.saleUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack>

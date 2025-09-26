@@ -14,10 +14,11 @@ import {
 import { FiPrinter } from "react-icons/fi";
 import { useSales } from "./contexts/SalesContext.jsx";
 
-export default function SalesList({ onSelectSale, onPrint }) {
-  const { sales, loading } = useSales(); // <-- context-driven
-
-  if (loading) return <Spinner label="Loading sales..." />;
+export default function SalesList({ sales, onSelectSale, onPrint }) {
+  if (!sales) {
+    const { loading } = useSales();
+    if (loading) return <Spinner label="Loading sales..." />;
+  }
 
   if (!sales || sales.length === 0) return <Text>No sales found.</Text>;
 
@@ -43,7 +44,6 @@ export default function SalesList({ onSelectSale, onPrint }) {
           ).toFixed(2);
           const total = (s.total || 0).toFixed(2);
           const unpaid = (s.total - paid).toFixed(2);
-
           const bgColor = parseFloat(unpaid) > 0 ? "red.50" : undefined;
 
           return (
@@ -51,7 +51,7 @@ export default function SalesList({ onSelectSale, onPrint }) {
               <Td>{new Date(s.createdAt).toLocaleDateString()}</Td>
               <Td>
                 <Link onClick={() => onSelectSale && onSelectSale(s)}>
-                  {s.saleUuid || s.id}
+                  {s.saleUuid}
                 </Link>
               </Td>
               <Td>{s.customer?.name || "—"}</Td>
