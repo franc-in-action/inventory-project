@@ -87,8 +87,13 @@ export default function PurchasesPage() {
               <Td>${p.total.toFixed(2)}</Td>
               <Td>{p.received ? "Yes" : "No"}</Td>
               <Td>
-                {p.receivedByUser ? p.receivedByUser.name : p.receivedBy || "-"}
+                {p.receivedByUser
+                  ? p.receivedByUser.name
+                  : p.receivedBy
+                  ? "Unknown User"
+                  : "-"}
               </Td>
+
               <Td>
                 {showReceiveButton && (
                   <Button

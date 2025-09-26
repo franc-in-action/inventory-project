@@ -143,7 +143,12 @@ router.get("/", authMiddleware, async (req, res) => {
 
     const purchases = await prisma.purchase.findMany({
       where,
-      include: { items: true, vendor: true, ledger: true },
+      include: {
+        items: true,
+        vendor: true,
+        ledger: true,
+        receivedByUser: true,
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -159,7 +164,12 @@ router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const purchase = await prisma.purchase.findUnique({
       where: { id },
-      include: { items: true, vendor: true, ledger: true },
+      include: {
+        items: true,
+        vendor: true,
+        ledger: true,
+        receivedByUser: true,
+      },
     });
     if (!purchase) return res.status(404).json({ error: "Purchase not found" });
     res.json(purchase);
@@ -225,7 +235,10 @@ router.put(
         const purchase = await tx.purchase.update({
           where: { id: purchaseId },
           data: { received: true, receivedBy: userId },
-          include: { items: true }, // ✅ include items for stock updates
+          include: {
+            items: true, // for stock updates
+            receivedByUser: true, // ✅ include the user who received
+          },
         });
 
         if (!purchase.items || purchase.items.length === 0) {
