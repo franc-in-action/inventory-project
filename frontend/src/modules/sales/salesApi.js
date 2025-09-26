@@ -10,6 +10,9 @@ import { apiFetch } from "../../utils/commonApi.js";
 export async function fetchSales(params = {}) {
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/sales?${query}`);
+  if (Array.isArray(result)) {
+    return { items: result, total: result.length };
+  }
   return {
     items: result.sales || result.items || [],
     total: result.sales?.length || result.items?.length || 0,
