@@ -10,6 +10,7 @@ import {
   createPayment as apiCreatePayment,
   updatePayment as apiUpdatePayment,
   getPaymentById,
+  deletePayment as apiDeletePayment,
 } from "../paymentsApi.js";
 import { getCustomerById } from "../../customers/customersApi.js";
 
@@ -29,38 +30,43 @@ export function PaymentsProvider({ children }) {
     } catch (err) {
       console.error("[PaymentsContext] Failed to fetch payments", err);
       setError(err);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const createPayment = async (paymentData) => {
-    const newPayment = await apiCreatePayment(paymentData);
-    setPayments((prev) => [...prev, newPayment]);
+    const result = await apiCreatePayment(paymentData);
+    // result = { payment, ledgerEntry }
+    setPayments((prev) => [...prev, result.payment]);
 
+    // Refresh customer data (for balances etc.)
     if (paymentData.customerId) {
       await getCustomerById(paymentData.customerId);
     }
 
-    return newPayment;
+    return result;
   };
 
   const updatePayment = async (id, paymentData) => {
-    const updated = await apiUpdatePayment(id, paymentData);
-    setPayments((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    const result = await apiUpdatePayment(id, paymentData);
+    setPayments((prev) => prev.map((p) => (p.id === id ? result.payment : p)));
 
     if (paymentData.customerId) {
       await getCustomerById(paymentData.customerId);
     }
 
-    return updated;
+    return result;
   };
 
-  const getPayment = async (id) => getPaymentById(id);
+  const getPayment = async (id) => {
+    return getPaymentById(id);
+  };
 
   const deletePayment = async (id) => {
     const payment = payments.find((p) => p.id === id);
-    await fetch(`/payments/${id}`, { method: "DELETE" });
+    await apiDeletePayment(id);
     setPayments((prev) => prev.filter((p) => p.id !== id));
 
     if (payment?.customerId) {
