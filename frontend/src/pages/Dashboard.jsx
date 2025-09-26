@@ -11,6 +11,8 @@ import {
   FaTruck,
   FaMoneyBillWave,
   FaWarehouse,
+  FaBalanceScale,
+  FaUndoAlt,
 } from "react-icons/fa";
 
 import { getUserFromToken } from "../modules/auth/authApi.js";
@@ -27,11 +29,13 @@ const dashboardLinks = [
   { label: "Products", href: "/products", icon: FaBox },
   { label: "Stock", href: "/stock", icon: FaWarehouse },
   { label: "Sales", href: "/sales", icon: FaCashRegister },
+  { label: "Returns", href: "/returns", icon: FaUndoAlt },
   { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
   { label: "Customers", href: "/customers", icon: FaUsers },
   { label: "Vendors", href: "/vendors", icon: FaTruck },
   { label: "Payments", href: "/payments", icon: FaMoneyBillWave },
+  { label: "Adjustments", href: "/adjustments", icon: FaBalanceScale },
   { label: "Admin Tools", href: "/admin-tools", icon: FaTools },
 ];
 
@@ -70,6 +74,12 @@ export default function Dashboard() {
       label: "Total Sales",
       value: sales.length,
       icon: FaCashRegister,
+      isLoading: salesLoading,
+    },
+    {
+      label: "Total Returns",
+      value: sales.filter((s) => s.isReturn).length,
+      icon: FaUndoAlt,
       isLoading: salesLoading,
     },
     {

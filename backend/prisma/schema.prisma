@@ -165,6 +165,34 @@ model SaleItem {
   product Product @relation(fields: [productId], references: [id])
 }
 
+model Return {
+  id          String       @id @default(uuid())
+  returnUuid  String       @unique
+  saleId      String
+  customerId  String?
+  totalAmount Float
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  sale     Sale        @relation(fields: [saleId], references: [id])
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  items    ReturnItem[]
+
+  @@index([saleId])
+}
+
+model ReturnItem {
+  id        Int     @id @default(autoincrement())
+  returnId  String
+  productId String
+  qty       Int
+  price     Float
+
+  return   Return  @relation(fields: [returnId], references: [id])
+  product  Product @relation(fields: [productId], references: [id])
+}
+
+
 model ReceivedPayment {
   id            String   @id @default(uuid())
   paymentNumber String   @unique @default("TEMP") // temporary

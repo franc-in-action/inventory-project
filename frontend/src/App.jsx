@@ -23,7 +23,9 @@ import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
 import VendorsPage from "./modules/vendors/VendorsPage.jsx";
 import SalesPage from "./modules/sales/SalesPage.jsx";
+import ReturnsPage from "./modules/returns/ReturnsPage.jsx"; // new import
 import PaymentsPage from "./modules/payments/PaymentsPage.jsx";
+import AdjustmentsPage from "./modules/adjustments/AdjustmentsPage.jsx";
 import PurchasesPage from "./modules/purchases/PurchasePage.jsx";
 import LocationsPage from "./modules/locations/LocationsPage.jsx";
 import StockPage from "./modules/stock/StockPage.jsx";
@@ -262,6 +264,21 @@ function ThemeConsumerApp() {
               }
             />
 
+            <Route
+              path="/returns"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.SALES}>
+                    <ProtectedLayout>
+                      <SalesProvider>
+                        <ReturnsPage />
+                      </SalesProvider>
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+
             {/* ---------- Payments ---------- */}
             <Route
               path="/payments"
@@ -275,6 +292,25 @@ function ThemeConsumerApp() {
                             <SalesProvider>
                               <PaymentsPage />
                             </SalesProvider>
+                          </PaymentsProvider>
+                        </CustomersProvider>
+                      </ProductsProvider>
+                    </ProtectedLayout>
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/adjustments"
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={PERMISSIONS.ADJUSTMENTS}>
+                    <ProtectedLayout>
+                      <ProductsProvider>
+                        <CustomersProvider>
+                          <PaymentsProvider>
+                            <AdjustmentsPage />
                           </PaymentsProvider>
                         </CustomersProvider>
                       </ProductsProvider>

@@ -12,6 +12,7 @@ import {
   getPaymentById,
   deletePayment as apiDeletePayment,
   createAdjustment as apiCreateAdjustment,
+  updateAdjustment as apiUpdateAdjustment,
   getAdjustments as apiGetAdjustments,
   getAdjustmentById as apiGetAdjustmentById,
   deleteAdjustment as apiDeleteAdjustment,
@@ -22,6 +23,7 @@ const PaymentsContext = createContext();
 
 export function PaymentsProvider({ children }) {
   const [payments, setPayments] = useState([]);
+  const [adjustments, setAdjustments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,8 +31,7 @@ export function PaymentsProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await getPayments();
-      setPayments(data || []);
+      setPayments((await getPayments()) || []);
     } catch (err) {
       console.error("[PaymentsContext] Failed to fetch payments", err);
       setError(err);
@@ -40,11 +41,9 @@ export function PaymentsProvider({ children }) {
     }
   }, []);
 
-  // --- Load adjustments ---
   const loadAdjustments = useCallback(async () => {
     try {
-      const data = await apiGetAdjustments();
-      setAdjustments(data || []);
+      setAdjustments((await apiGetAdjustments()) || []);
     } catch (err) {
       console.error("[PaymentsContext] Failed to fetch adjustments", err);
       setAdjustments([]);
@@ -56,57 +55,45 @@ export function PaymentsProvider({ children }) {
     loadAdjustments();
   }, [loadPayments, loadAdjustments]);
 
-  const createPayment = async (paymentData) => {
-    const result = await apiCreatePayment(paymentData);
-    setPayments((prev) => [...prev, result.payment]); // payment.paymentNumber is included
-
-    if (paymentData.customerId) {
-      await getCustomerById(paymentData.customerId);
-    }
-
+  // PAYMENTS
+  const createPayment = async (data) => {
+    const result = await apiCreatePayment(data);
+    setPayments((prev) => [...prev, result.payment]);
+    if (data.customerId) await getCustomerById(data.customerId);
     return result;
   };
-
-  const updatePayment = async (id, paymentData) => {
-    const result = await apiUpdatePayment(id, paymentData);
+  const updatePayment = async (id, data) => {
+    const result = await apiUpdatePayment(id, data);
     setPayments((prev) => prev.map((p) => (p.id === id ? result.payment : p)));
-
-    if (paymentData.customerId) {
-      await getCustomerById(paymentData.customerId);
-    }
-
+    if (data.customerId) await getCustomerById(data.customerId);
     return result;
   };
-
-  const getPayment = async (id) => getPaymentById(id);
-
   const deletePayment = async (id) => {
     const payment = payments.find((p) => p.id === id);
     await apiDeletePayment(id);
     setPayments((prev) => prev.filter((p) => p.id !== id));
-
-    if (payment?.customerId) {
-      await getCustomerById(payment.customerId);
-    }
+    if (payment?.customerId) await getCustomerById(payment.customerId);
   };
+  const getPayment = async (id) => apiGetPaymentById(id);
 
-  // --- Adjustments ---
-  const createAdjustment = async (adjustmentData) => {
-    const result = await apiCreateAdjustment(adjustmentData);
-    setAdjustments((prev) => [...prev, result]);
-    if (adjustmentData.customerId)
-      await getCustomerById(adjustmentData.customerId);
-    return result;
+  // ADJUSTMENTS
+  const createAdjustment = async (data) => {
+    await apiCreateAdjustment(data);
+    await loadAdjustments();
+    if (data.customerId) await getCustomerById(data.customerId);
   };
-
-  const getAdjustment = async (id) => apiGetAdjustmentById(id);
-
+  const updateAdjustment = async (id, data) => {
+    await apiUpdateAdjustment(id, data);
+    await loadAdjustments();
+    if (data.customerId) await getCustomerById(data.customerId);
+  };
   const deleteAdjustment = async (id) => {
     const adjustment = adjustments.find((a) => a.id === id);
     await apiDeleteAdjustment(id);
-    setAdjustments((prev) => prev.filter((a) => a.id !== id));
+    await loadAdjustments();
     if (adjustment?.customerId) await getCustomerById(adjustment.customerId);
   };
+  const getAdjustment = async (id) => apiGetAdjustmentById(id);
 
   return (
     <PaymentsContext.Provider
@@ -119,11 +106,12 @@ export function PaymentsProvider({ children }) {
         reloadAdjustments: loadAdjustments,
         createPayment,
         updatePayment,
-        getPayment,
         deletePayment,
+        getPayment,
         createAdjustment,
-        getAdjustment,
+        updateAdjustment,
         deleteAdjustment,
+        getAdjustment,
       }}
     >
       {children}

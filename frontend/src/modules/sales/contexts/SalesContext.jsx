@@ -8,14 +8,16 @@ import {
 import {
   fetchSales as apiFetchSales,
   createSale as apiCreateSale,
-  createReturn as apiCreateReturn,
   fetchReturns as apiFetchReturns,
+  createReturn as apiCreateReturn,
+  formatReceipt,
 } from "../salesApi.js";
 
 const SalesContext = createContext();
 
 export function SalesProvider({ children }) {
   const [sales, setSales] = useState([]);
+  const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadSales = useCallback(async () => {
@@ -24,56 +26,55 @@ export function SalesProvider({ children }) {
       const result = await apiFetchSales();
       setSales(result.items || []);
     } catch (err) {
-      console.error("[SalesContext] Failed to fetch sales", err);
+      console.error(err);
       setSales([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // --- Load returns ---
   const loadReturns = useCallback(async () => {
     try {
       const result = await apiFetchReturns();
       setReturns(result || []);
     } catch (err) {
-      console.error("[SalesContext] Failed to fetch returns", err);
+      console.error(err);
       setReturns([]);
     }
   }, []);
 
   useEffect(() => {
     loadSales();
-  }, [loadSales]);
+    loadReturns();
+  }, [loadSales, loadReturns]);
+
+  const addSale = useCallback(async (saleData, receiptOptions = {}) => {
+    const newSale = await apiCreateSale(saleData);
+    setSales((prev) => [newSale, ...prev]);
+    const receipt = formatReceipt(
+      newSale,
+      saleData.productsMap,
+      receiptOptions
+    );
+    return { sale: newSale, receipt };
+  }, []);
+
+  const addReturn = useCallback(async (returnData, receiptOptions = {}) => {
+    const newReturn = await apiCreateReturn(returnData);
+    setReturns((prev) => [newReturn, ...prev]);
+    const receipt = formatReceipt(
+      newReturn,
+      returnData.productsMap,
+      receiptOptions,
+      true
+    );
+    return { return: newReturn, receipt };
+  }, []);
 
   const getSaleById = useCallback(
     (id) => sales.find((s) => s.id === id) || null,
     [sales]
   );
-
-  const addSale = useCallback(async (saleData) => {
-    const newSale = await apiCreateSale(saleData);
-    setSales((prev) => [newSale, ...prev]);
-    return newSale;
-  }, []);
-
-  const updateSale = useCallback((updatedSale) => {
-    setSales((prev) =>
-      prev.map((s) => (s.id === updatedSale.id ? updatedSale : s))
-    );
-  }, []);
-
-  const deleteSale = useCallback((id) => {
-    setSales((prev) => prev.filter((s) => s.id !== id));
-  }, []);
-
-  // --- Returns helpers ---
-  const addReturn = useCallback(async (returnData) => {
-    const newReturn = await apiCreateReturn(returnData);
-    setReturns((prev) => [newReturn, ...prev]);
-    return newReturn;
-  }, []);
-
   const getReturnById = useCallback(
     (id) => returns.find((r) => r.id === id) || null,
     [returns]
@@ -87,12 +88,10 @@ export function SalesProvider({ children }) {
         loading,
         reloadSales: loadSales,
         reloadReturns: loadReturns,
-        getSaleById,
         addSale,
-        updateSale,
-        deleteSale,
-        getReturnById,
         addReturn,
+        getSaleById,
+        getReturnById,
       }}
     >
       {children}

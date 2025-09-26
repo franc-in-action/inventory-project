@@ -2,6 +2,7 @@ import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
 import { v4 as uuidv4 } from "uuid";
+import { generateSequentialId } from "../utils/idGenerator.js";
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.post(
     const { saleId, items, customerId } = req.body;
     const userId = req.user.userId;
 
-    if (!saleId || !items || items.length === 0) {
+    if (!saleId || !items?.length) {
       return res.status(400).json({ error: "Sale and items are required" });
     }
 
@@ -22,33 +23,34 @@ router.post(
       const result = await prisma.$transaction(async (tx) => {
         const sale = await tx.sale.findUnique({
           where: { id: saleId },
-          include: { items: true, customer: true },
+          include: { items: true },
         });
         if (!sale) throw new Error("Sale not found");
 
         // Validate return quantities
         for (const item of items) {
-          const originalItem = sale.items.find(
+          const soldItem = sale.items.find(
             (i) => i.productId === item.productId
           );
-          if (!originalItem)
+          if (!soldItem)
             throw new Error(`Product ${item.productId} not in sale`);
-          if (item.qty > originalItem.qty)
+          if (item.qty > soldItem.qty)
             throw new Error(
-              `Return quantity exceeds sold quantity for product ${item.productId}`
+              `Return qty exceeds sold qty for ${item.productId}`
             );
         }
 
-        // Process return: create ledger entries & optionally restock
-        let totalReturnAmount = 0;
+        const returnUuid = await generateSequentialId("Return");
+        let totalAmount = 0;
+
         for (const item of items) {
-          const originalItem = sale.items.find(
+          const soldItem = sale.items.find(
             (i) => i.productId === item.productId
           );
-          const amount = item.qty * originalItem.price;
-          totalReturnAmount += amount;
+          const amount = item.qty * soldItem.price;
+          totalAmount += amount;
 
-          // Create ledger entry
+          // Ledger entry
           if (customerId) {
             await tx.ledgerEntry.create({
               data: {
@@ -56,12 +58,12 @@ router.post(
                 saleId,
                 amount,
                 type: "RETURN",
-                description: `Return of ${item.qty} x ${originalItem.productId} from sale`,
+                description: `Return of ${item.qty} x ${item.productId}`,
               },
             });
           }
 
-          // Restock product
+          // Restock
           await tx.stockLevel.update({
             where: {
               productId_locationId: {
@@ -72,31 +74,50 @@ router.post(
             data: { quantity: { increment: item.qty } },
           });
 
+          // Stock movement
           await tx.stockMovement.create({
             data: {
               movementUuid: uuidv4(),
               delta: item.qty,
               reason: "Return",
               refId: sale.saleUuid,
-              product: { connect: { id: item.productId } },
-              location: { connect: { id: sale.locationId } },
-              user: { connect: { id: userId } },
+              productId: item.productId,
+              locationId: sale.locationId,
+              performedBy: userId,
             },
           });
         }
 
-        // Audit log
+        // Create return record
+        const newReturn = await tx.return.create({
+          data: {
+            returnUuid,
+            saleId,
+            customerId,
+            totalAmount,
+            items: {
+              create: items.map((i) => ({
+                productId: i.productId,
+                qty: i.qty,
+                price: i.price,
+              })),
+            },
+          },
+          include: { items: true },
+        });
+
+        // Audit
         await tx.auditLog.create({
           data: {
             action: "RETURN_CREATED",
-            entity: "Sale",
-            entityId: saleId,
+            entity: "Return",
+            entityId: newReturn.id,
             performedBy: userId,
-            metadata: { items, totalReturnAmount },
+            metadata: { items, totalAmount },
           },
         });
 
-        return { saleId, totalReturnAmount };
+        return newReturn;
       });
 
       res.status(201).json(result);
@@ -105,5 +126,33 @@ router.post(
     }
   }
 );
+
+// -------------------- GET ALL RETURNS --------------------
+router.get("/", authMiddleware, async (req, res) => {
+  try {
+    const returns = await prisma.return.findMany({
+      include: { items: true, customer: true },
+    });
+    res.json(returns);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------- GET RETURN BY ID --------------------
+router.get("/:id", authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const returnRecord = await prisma.return.findUnique({
+      where: { id },
+      include: { items: true, customer: true },
+    });
+    if (!returnRecord)
+      return res.status(404).json({ error: "Return not found" });
+    res.json(returnRecord);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

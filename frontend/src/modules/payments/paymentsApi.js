@@ -31,22 +31,25 @@ export async function deletePayment(id) {
   return apiFetch(`/payments/${id}`, { method: "DELETE" });
 }
 
-// --- New Adjustments API ---
+// ADJUSTMENTS
 export async function createAdjustment(adjustmentData) {
   return apiFetch("/adjustments", {
     method: "POST",
     body: JSON.stringify(adjustmentData),
   });
 }
-
+export async function updateAdjustment(id, adjustmentData) {
+  return apiFetch(`/adjustments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(adjustmentData),
+  });
+}
 export async function getAdjustments() {
   return apiFetch("/adjustments");
 }
-
 export async function getAdjustmentById(id) {
   return apiFetch(`/adjustments/${id}`);
 }
-
 export async function deleteAdjustment(id) {
   return apiFetch(`/adjustments/${id}`, { method: "DELETE" });
 }

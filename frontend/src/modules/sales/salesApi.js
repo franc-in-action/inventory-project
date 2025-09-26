@@ -1,50 +1,54 @@
 import { apiFetch } from "../../utils/commonApi.js";
 
-/**
- * Create a new sale
- */
-export async function createSale(saleData) {
-  return apiFetch("/sales", { method: "POST", body: JSON.stringify(saleData) });
-}
+// -------------------- SALES API --------------------
 
 /**
- * Fetch sales
+ * Fetch sales from backend
+ * @param {Object} params - optional query params
+ * @returns {Object} { items: [], total: number }
  */
 export async function fetchSales(params = {}) {
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/sales?${query}`);
-  const sales = result.sales || result.items || result;
   return {
-    items: sales,
-    total: sales.length,
-    qtySold: result.qtySold || 0,
+    items: result.sales || result.items || [],
+    total: result.sales?.length || result.items?.length || 0,
   };
 }
 
-/**
- * Get sale by ID (UUID)
- */
-export async function getSaleById(saleId) {
-  return apiFetch(`/sales/${saleId}`);
+/** Create a new sale */
+export async function createSale(saleData) {
+  return apiFetch("/sales", { method: "POST", body: JSON.stringify(saleData) });
 }
 
-/**
- * Delete a sale
- */
+/** Update an existing sale */
+export async function updateSale(saleId, saleData) {
+  return apiFetch(`/sales/${saleId}`, {
+    method: "PUT",
+    body: JSON.stringify(saleData),
+  });
+}
+
+/** Delete a sale */
 export async function deleteSale(saleId) {
   return apiFetch(`/sales/${saleId}`, { method: "DELETE" });
 }
 
-export async function fetchNextSaleNumber() {
-  if (window.api) {
-    // fallback for Electron if needed
-    return window.api.run("SELECT NEXTVAL('sale_seq')"); // optional placeholder
-  }
-  const result = await apiFetch("/sales/next-number");
-  return result.saleUuid;
+/** Get sale by ID */
+export async function getSaleById(saleId) {
+  return apiFetch(`/sales/${saleId}`);
 }
 
-// --- New Returns API ---
+// -------------------- RETURNS API --------------------
+
+/** Fetch returns */
+export async function fetchReturns(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const result = await apiFetch(`/returns?${query}`);
+  return result.items || result.returns || [];
+}
+
+/** Create a new return */
 export async function createReturn(returnData) {
   return apiFetch("/returns", {
     method: "POST",
@@ -52,24 +56,50 @@ export async function createReturn(returnData) {
   });
 }
 
-export async function fetchReturns(params = {}) {
-  const query = new URLSearchParams(params).toString();
-  const result = await apiFetch(`/returns?${query}`);
-  return result.items || result.returns || [];
+/** Update a return */
+export async function updateReturn(returnId, returnData) {
+  return apiFetch(`/returns/${returnId}`, {
+    method: "PUT",
+    body: JSON.stringify(returnData),
+  });
 }
 
+/** Delete a return */
+export async function deleteReturn(returnId) {
+  return apiFetch(`/returns/${returnId}`, { method: "DELETE" });
+}
+
+/** Get return by ID */
 export async function getReturnById(returnId) {
   return apiFetch(`/returns/${returnId}`);
 }
 
+/** Fetch next sale number (for POS numbering) */
+export async function fetchNextSaleNumber() {
+  if (window.api) {
+    // fallback for Electron
+    return window.api.run("SELECT NEXTVAL('sale_seq')");
+  }
+  const result = await apiFetch("/sales/next-number");
+  return result.saleUuid;
+}
+
+// -------------------- POS RECEIPT FORMATTER --------------------
+
 /**
- * Format a sale receipt in POS-style text
- * @param {Object} sale
- * @param {Object} productsMap - Map productId -> productName
- * @param {Object} options - Additional options (store info, tax, cashier)
- * @returns {string}
+ * Format a sale or return receipt in POS-style text
+ * @param {Object} transaction - sale or return object
+ * @param {Object} productsMap - Map of productId -> product name
+ * @param {Object} options - store info, cashier, tax, etc.
+ * @param {boolean} isReturn - true for return receipt
+ * @returns {string} formatted receipt
  */
-export function formatReceipt(sale, productsMap = {}, options = {}) {
+export function formatReceipt(
+  transaction,
+  productsMap = {},
+  options = {},
+  isReturn = false
+) {
   const {
     storeName = "★ MY STORE ★",
     storeAddress = "123 Main St\nCity, State ZIP",
@@ -82,57 +112,64 @@ export function formatReceipt(sale, productsMap = {}, options = {}) {
   } = options;
 
   const lines = [];
-  const date = new Date(sale?.createdAt || Date.now());
-  const subtotal = (sale?.items || []).reduce(
+  const maxLine = 42;
+  const date = new Date(transaction?.createdAt || Date.now());
+
+  const wrapText = (text, length = 12) => {
+    const result = [];
+    for (let i = 0; i < text.length; i += length)
+      result.push(text.slice(i, i + length));
+    return result;
+  };
+
+  // Calculate totals
+  const subtotal = (transaction?.items || []).reduce(
     (sum, i) => sum + i.qty * i.price,
     0
   );
   const tax = subtotal * taxRate;
-  const total = subtotal + tax;
+  const total = isReturn ? -subtotal : subtotal + tax;
 
-  const maxLine = 42;
-
-  const wrapText = (text, length = 12) => {
-    const result = [];
-    let start = 0;
-    while (start < text.length) {
-      result.push(text.slice(start, start + length));
-      start += length;
-    }
-    return result;
-  };
-
-  // Header
+  // -------- Header --------
   lines.push(storeName.padStart((maxLine + storeName.length) / 2));
   lines.push(...storeAddress.split("\n"));
   lines.push(storeTel);
   lines.push(`Tax PIN: ${storeTaxPin}`);
   lines.push("-".repeat(maxLine));
 
-  // Customer info
+  // -------- Customer Info --------
   lines.push(
     `Date: ${date.toLocaleDateString()}   Time: ${date.toLocaleTimeString()}`
   );
-  lines.push(`Receipt #: ${sale?.saleUuid || sale?.id}`);
-  lines.push(`Customer: ${sale?.customer?.name || "Walk-in"}`);
+  lines.push(
+    `${isReturn ? "Return" : "Receipt"} #: ${
+      transaction?.saleUuid || transaction?.id
+    }`
+  );
+  lines.push(`Customer: ${transaction?.customer?.name || "Walk-in"}`);
   lines.push(`Tax PIN: ${customerTaxPin}`);
   lines.push("-".repeat(maxLine));
 
-  // Table header
+  // -------- Items --------
   lines.push("Item         Qty   Price   Total");
   lines.push("-".repeat(maxLine));
 
-  // Items
-  (sale?.items || []).forEach((item) => {
+  (transaction?.items || []).forEach((item) => {
     const name =
       productsMap[item.productId] || item.product?.name || item.productId;
     const wrapped = wrapText(name, 12);
     const lineTotal = (item.qty * item.price).toFixed(2);
+
     wrapped.forEach((line, idx) => {
       if (idx === 0) {
-        const qtyStr = String(item.qty).padStart(3, " ");
+        const qtyStr = (isReturn ? `-${item.qty}` : item.qty)
+          .toString()
+          .padStart(3, " ");
         const priceStr = item.price.toFixed(2).padStart(6, " ");
-        const totalStr = lineTotal.padStart(7, " ");
+        const totalStr = (isReturn ? `-${lineTotal}` : lineTotal).padStart(
+          7,
+          " "
+        );
         lines.push(
           `${line.padEnd(12, " ")}  ${qtyStr}  ${priceStr}  ${totalStr}`
         );
@@ -143,19 +180,27 @@ export function formatReceipt(sale, productsMap = {}, options = {}) {
     lines.push("-".repeat(maxLine));
   });
 
-  // Totals
-  lines.push(
-    `Subtotal:`.padEnd(32, " ") + subtotal.toFixed(2).padStart(10, " ")
-  );
-  lines.push(
-    `Tax (${(taxRate * 100).toFixed(0)}%):`.padEnd(32, " ") +
-      tax.toFixed(2).padStart(10, " ")
-  );
-  lines.push(`TOTAL:`.padEnd(32, " ") + total.toFixed(2).padStart(10, " "));
+  // -------- Totals --------
+  if (isReturn) {
+    lines.push(
+      `Total Refunded:`.padEnd(32, " ") +
+        (-subtotal).toFixed(2).padStart(10, " ")
+    );
+  } else {
+    lines.push(
+      `Subtotal:`.padEnd(32, " ") + subtotal.toFixed(2).padStart(10, " ")
+    );
+    lines.push(
+      `Tax (${(taxRate * 100).toFixed(0)}%):`.padEnd(32, " ") +
+        tax.toFixed(2).padStart(10, " ")
+    );
+    lines.push(`TOTAL:`.padEnd(32, " ") + total.toFixed(10).padStart(10, " "));
+  }
 
-  // Payment
-  if (sale?.payments?.length) {
-    lines.push(`Payment: ${sale.payments[0].method.toUpperCase()}`);
+  // -------- Payment / Refund Info --------
+  if (transaction?.payments?.length) {
+    const method = transaction.payments[0].method.toUpperCase();
+    lines.push(`${isReturn ? "Refund" : "Payment"}: ${method}`);
   }
 
   lines.push("-".repeat(maxLine));

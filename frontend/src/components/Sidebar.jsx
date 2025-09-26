@@ -57,7 +57,7 @@ export default function Sidebar({ isOpen, onClose }) {
         { to: "/stock", label: "Stock", roles: PERMISSIONS.STOCK },
         {
           to: "/stock-adjustments",
-          label: "Adjustments",
+          label: "Stock Adjustments",
           roles: PERMISSIONS.STOCK_ADJUSTMENTS,
         },
         { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
@@ -70,6 +70,7 @@ export default function Sidebar({ isOpen, onClose }) {
       roles: [PERMISSIONS.SALES, PERMISSIONS.CUSTOMERS, PERMISSIONS.PAYMENTS],
       submenu: [
         { to: "/sales", label: "Invoices", roles: PERMISSIONS.SALES },
+        { to: "/returns", label: "Returns", roles: PERMISSIONS.RETURNS },
         { to: "/customers", label: "Customers", roles: PERMISSIONS.CUSTOMERS },
         { to: "/payments", label: "Payments", roles: PERMISSIONS.PAYMENTS },
       ],
@@ -81,6 +82,16 @@ export default function Sidebar({ isOpen, onClose }) {
       submenu: [
         { to: "/customers", label: "Customers", roles: PERMISSIONS.CUSTOMERS },
         { to: "/payments", label: "Payments", roles: PERMISSIONS.PAYMENTS },
+        {
+          to: "/adjustments",
+          label: "Adjustments",
+          roles: PERMISSIONS.ADJUSTMENTS,
+        },
+        {
+          to: "/returns",
+          label: "Returns",
+          roles: PERMISSIONS.RETURNS, // adjust role if needed
+        },
       ],
     },
     {
