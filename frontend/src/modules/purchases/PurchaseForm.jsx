@@ -63,7 +63,7 @@ export default function PurchaseForm({
       return;
     }
 
-    fetchProductsForVendor(Number(vendorId))
+    fetchProductsForVendor(vendorId)
       .then(setAvailableProducts)
       .catch(() => setAvailableProducts([]));
   }, [vendorId, fetchProductsForVendor]);
