@@ -56,22 +56,36 @@ export function ProductsProvider({ children }) {
     if (product) return product; // cached
     return apiFetchProductById(id);
   };
-
   const addProduct = async (payload) => {
-    const newProduct = await apiCreateProduct(payload);
-    await loadProductsAndStock();
-    return newProduct;
+    try {
+      const newProduct = await apiCreateProduct(payload);
+      await loadProductsAndStock();
+      return newProduct;
+    } catch (err) {
+      console.error("Failed to create product", err);
+      throw new Error(err?.message || "Failed to create product");
+    }
   };
 
   const updateProductById = async (id, payload) => {
-    const updated = await apiUpdateProduct(id, payload);
-    await loadProductsAndStock();
-    return updated;
+    try {
+      const updated = await apiUpdateProduct(id, payload);
+      await loadProductsAndStock();
+      return updated;
+    } catch (err) {
+      console.error(`Failed to update product ${id}`, err);
+      throw new Error(err?.message || "Failed to update product");
+    }
   };
 
   const deleteProductById = async (id) => {
-    await apiDeleteProduct(id);
-    await loadProductsAndStock();
+    try {
+      await apiDeleteProduct(id);
+      await loadProductsAndStock();
+    } catch (err) {
+      console.error(`Failed to delete product ${id}`, err);
+      throw new Error(err?.message || "Failed to delete product");
+    }
   };
 
   return (

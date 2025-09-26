@@ -93,6 +93,7 @@ router.post(
       locationId,
       vendorIds = [],
     } = req.body;
+
     try {
       const product = await prisma.product.create({
         data: {
@@ -110,10 +111,22 @@ router.post(
           productVendors: { include: { vendor: true } },
         },
       });
+
       res.status(201).json(product);
     } catch (err) {
       console.error("[POST /products] Error creating product:", err);
-      res.status(400).json({ error: err.message });
+
+      let friendlyMessage = "Failed to create product.";
+
+      if (err.code === "P2002") {
+        friendlyMessage = "A product with this SKU already exists.";
+      }
+      if (err.code === "P2003") {
+        friendlyMessage =
+          "Cannot create product because one of the selected vendors does not exist.";
+      }
+
+      res.status(400).json({ error: friendlyMessage });
     }
   }
 );
@@ -150,7 +163,19 @@ router.put(
       res.json(product);
     } catch (err) {
       console.error(`[PUT /products/${id}] Error updating product:`, err);
-      res.status(400).json({ error: err.message });
+
+      let friendlyMessage = "Failed to update product.";
+
+      if (err.code === "P2002") {
+        friendlyMessage =
+          "Cannot update: a product with this SKU already exists.";
+      }
+      if (err.code === "P2003") {
+        friendlyMessage =
+          "Cannot update product because one of the selected vendors does not exist.";
+      }
+
+      res.status(400).json({ error: friendlyMessage });
     }
   }
 );
@@ -164,12 +189,22 @@ router.delete(
     const { id } = req.params;
     try {
       await prisma.product.delete({ where: { id } });
-      res.json({ message: "Deleted" });
+      res.json({ message: "Product deleted successfully." });
     } catch (err) {
       console.error(`[DELETE /products/${id}] Error deleting product:`, err);
-      res.status(400).json({ error: err.message });
+
+      let friendlyMessage = "Failed to delete product.";
+
+      // Prisma foreign key constraint error
+      if (err.code === "P2003") {
+        friendlyMessage =
+          "Cannot delete this product because it is linked to existing records (e.g., stock, sales, or vendors).";
+      }
+
+      res.status(400).json({ error: friendlyMessage });
     }
   }
 );
+
 
 export default router;

@@ -21,7 +21,8 @@ import ProductDetails from "./ProductDetails.jsx";
 import ProductsTable from "./ProductsTable.jsx";
 
 export default function ProductsList({ onEdit }) {
-  const { products, stockMap, reloadProducts } = useProducts();
+  const { products, stockMap, reloadProducts, deleteProductById } =
+    useProducts();
   const { categories } = useCategories();
   const { locations, loading: locationsLoading } = useLocations();
 
@@ -43,17 +44,19 @@ export default function ProductsList({ onEdit }) {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
+
     try {
-      await reloadProducts();
+      await deleteProductById(id);
       toast({
         title: "Product deleted",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
+      await reloadProducts();
     } catch (err) {
       toast({
-        title: "Error deleting product",
+        title: "Oops! Error deleting product",
         description: err?.message || "Unexpected error",
         status: "error",
         duration: 4000,

@@ -124,7 +124,10 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
       onSaved();
       onClose();
     } catch (err) {
-      toast({ status: "error", description: err.message });
+      toast({
+        status: "error",
+        description: err.message || "Something went wrong",
+      });
     } finally {
       setSaving(false);
     }
