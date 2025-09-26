@@ -210,6 +210,89 @@ router.put(
   }
 );
 
+//  --------------------- RECEIVE PURCHASE
+router.put(
+  "/:id/receive",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER"]),
+  async (req, res) => {
+    const purchaseId = req.params.id;
+    const userId = req.user.userId;
+
+    try {
+      const updatedPurchase = await prisma.$transaction(async (tx) => {
+        // Mark purchase as received
+        const purchase = await tx.purchase.update({
+          where: { id: purchaseId },
+          data: { received: true, receivedBy: userId },
+          include: { items: true }, // ✅ include items for stock updates
+        });
+
+        if (!purchase.items || purchase.items.length === 0) {
+          throw new Error("Purchase has no items to receive");
+        }
+
+        // Update stock levels and create stock movements
+        for (const item of purchase.items) {
+          const stockLevel = await tx.stockLevel.findUnique({
+            where: {
+              productId_locationId: {
+                productId: item.productId,
+                locationId: purchase.locationId,
+              },
+            },
+          });
+
+          if (stockLevel) {
+            await tx.stockLevel.update({
+              where: { id: stockLevel.id },
+              data: { quantity: stockLevel.quantity + item.qty },
+            });
+          } else {
+            await tx.stockLevel.create({
+              data: {
+                productId: item.productId,
+                locationId: purchase.locationId,
+                quantity: item.qty,
+              },
+            });
+          }
+
+          await tx.stockMovement.create({
+            data: {
+              movementUuid: uuidv4(),
+              productId: item.productId,
+              locationId: purchase.locationId,
+              delta: item.qty,
+              reason: "Purchase Received",
+              refId: purchase.purchaseUuid,
+              performedBy: userId,
+            },
+          });
+        }
+
+        // Create ledger entry for PURCHASE
+        await tx.ledgerEntry.create({
+          data: {
+            purchaseId: purchase.id,
+            vendorId: purchase.vendorId,
+            type: "PURCHASE",
+            amount: purchase.total,
+            description: `Purchase from vendor received`,
+          },
+        });
+
+        return purchase;
+      });
+
+      res.json(updatedPurchase);
+    } catch (err) {
+      console.error("[Receive Purchase] Error:", err);
+      res.status(400).json({ error: err.message });
+    }
+  }
+);
+
 // -------------------- DELETE PURCHASE --------------------
 router.delete(
   "/:id",
