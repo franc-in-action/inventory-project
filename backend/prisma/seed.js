@@ -1,4 +1,3 @@
-// backend/src/seed.js
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import Chance from "chance";
@@ -142,7 +141,7 @@ async function main() {
   }
   console.log("✅ Customers seeded");
 
-  // --- 8. Purchases + Ledger + IssuedPayments ---
+  // --- 8. Purchases + Ledger + IssuedPayments + Stock Movements ---
   for (let i = 0; i < 50; i++) {
     const vendor = vendors[i % vendors.length];
     const supplied = await prisma.productVendor.findMany({
@@ -178,6 +177,18 @@ async function main() {
         where: { productId_locationId: { productId, locationId: location.id } },
         update: { quantity: { increment: qty } },
         create: { productId, locationId: location.id, quantity: qty },
+      });
+
+      await prisma.stockMovement.create({
+        data: {
+          movementUuid: `STM-${Date.now()}-${i}`,
+          productId,
+          locationId: location.id,
+          delta: qty,
+          reason: "PURCHASE_RECEIVED",
+          refId: purchase.id,
+          performedBy: receivedByUser?.id || admin.id,
+        },
       });
     }
 
@@ -220,9 +231,9 @@ async function main() {
       });
     }
   }
-  console.log("✅ Purchases seeded");
+  console.log("✅ Purchases and stock movements seeded");
 
-  // --- 9. Sales + Ledger + ReceivedPayments ---
+  // --- 9. Sales + Ledger + ReceivedPayments + Stock Movements ---
   for (let i = 0; i < 50; i++) {
     const customer = customers[i % customers.length];
     const product = chance.pickone(products);
@@ -263,6 +274,20 @@ async function main() {
       data: { quantity: stock.quantity - qtySold },
     });
 
+    const performedBy = chance.pickone(staffUsers);
+
+    await prisma.stockMovement.create({
+      data: {
+        movementUuid: `STM-${Date.now()}-${i}-SALE`,
+        productId: product.id,
+        locationId: location.id,
+        delta: -qtySold,
+        reason: "SALE",
+        refId: sale.id,
+        performedBy: performedBy.id,
+      },
+    });
+
     await prisma.ledgerEntry.create({
       data: {
         saleId: sale.id,
@@ -300,12 +325,11 @@ async function main() {
       });
     }
   }
-  console.log("✅ Sales seeded");
+  console.log("✅ Sales and stock movements seeded");
 
-  // --- 10. Returns + Ledger ---
+  // --- 10. Returns + Ledger + Stock Movements ---
   console.log("🟢 Seeding Returns and Ledger adjustments...");
 
-  // Fetch last Return number from DB
   let lastReturnRecord = await prisma.return.findFirst({
     orderBy: { createdAt: "desc" },
     select: { returnUuid: true },
@@ -317,7 +341,6 @@ async function main() {
     if (match) lastReturnNumber = parseInt(match[0], 10);
   }
 
-  // Returns
   for (let i = 0; i < 20; i++) {
     const customer = chance.pickone(customers);
 
@@ -334,11 +357,10 @@ async function main() {
     );
     const totalReturn = qtyReturn * saleItem.price;
 
-    // Increment lastReturnNumber instead of looping for uniqueness
     lastReturnNumber++;
     const returnUuid = `RET-${String(lastReturnNumber).padStart(4, "0")}`;
 
-    await prisma.return.create({
+    const returnRecord = await prisma.return.create({
       data: {
         returnUuid,
         saleId: sale.id,
@@ -371,6 +393,20 @@ async function main() {
       },
     });
 
+    const performedBy = chance.pickone(staffUsers);
+
+    await prisma.stockMovement.create({
+      data: {
+        movementUuid: `STM-${Date.now()}-${i}-RETURN`,
+        productId: saleItem.productId,
+        locationId: sale.locationId,
+        delta: qtyReturn,
+        reason: "RETURN",
+        refId: returnRecord.id,
+        performedBy: performedBy.id,
+      },
+    });
+
     await prisma.ledgerEntry.create({
       data: {
         saleId: sale.id,
@@ -381,25 +417,7 @@ async function main() {
       },
     });
   }
-  console.log("✅ Returns and Ledger adjustments seeded");
-
-  // --- 11. Ledger Adjustments ---
-  for (let i = 0; i < 15; i++) {
-    const customer = chance.pickone(customers);
-    const adjustmentAmount = chance.floating({ min: -500, max: 500, fixed: 2 });
-    const adjustmentNumber = await generateSequentialId("Adjustment");
-
-    await prisma.ledgerEntry.create({
-      data: {
-        customerId: customer.id,
-        type: "ADJUSTMENT",
-        amount: adjustmentAmount,
-        description: `Adjustment ${adjustmentNumber} for customer ${customer.name}`,
-      },
-    });
-  }
-
-  console.log("✅ Ledger adjustments seeded");
+  console.log("✅ Returns and stock movements seeded");
 
   // --- 11. Ledger Adjustments ---
   for (let i = 0; i < 15; i++) {
