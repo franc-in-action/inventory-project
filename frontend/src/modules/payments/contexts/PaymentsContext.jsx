@@ -11,6 +11,10 @@ import {
   updatePayment as apiUpdatePayment,
   getPaymentById,
   deletePayment as apiDeletePayment,
+  createAdjustment as apiCreateAdjustment,
+  getAdjustments as apiGetAdjustments,
+  getAdjustmentById as apiGetAdjustmentById,
+  deleteAdjustment as apiDeleteAdjustment,
 } from "../paymentsApi.js";
 import { getCustomerById } from "../../customers/customersApi.js";
 
@@ -35,6 +39,22 @@ export function PaymentsProvider({ children }) {
       setLoading(false);
     }
   }, []);
+
+  // --- Load adjustments ---
+  const loadAdjustments = useCallback(async () => {
+    try {
+      const data = await apiGetAdjustments();
+      setAdjustments(data || []);
+    } catch (err) {
+      console.error("[PaymentsContext] Failed to fetch adjustments", err);
+      setAdjustments([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPayments();
+    loadAdjustments();
+  }, [loadPayments, loadAdjustments]);
 
   const createPayment = async (paymentData) => {
     const result = await apiCreatePayment(paymentData);
@@ -70,21 +90,40 @@ export function PaymentsProvider({ children }) {
     }
   };
 
-  useEffect(() => {
-    loadPayments();
-  }, [loadPayments]);
+  // --- Adjustments ---
+  const createAdjustment = async (adjustmentData) => {
+    const result = await apiCreateAdjustment(adjustmentData);
+    setAdjustments((prev) => [...prev, result]);
+    if (adjustmentData.customerId)
+      await getCustomerById(adjustmentData.customerId);
+    return result;
+  };
+
+  const getAdjustment = async (id) => apiGetAdjustmentById(id);
+
+  const deleteAdjustment = async (id) => {
+    const adjustment = adjustments.find((a) => a.id === id);
+    await apiDeleteAdjustment(id);
+    setAdjustments((prev) => prev.filter((a) => a.id !== id));
+    if (adjustment?.customerId) await getCustomerById(adjustment.customerId);
+  };
 
   return (
     <PaymentsContext.Provider
       value={{
         payments,
+        adjustments,
         loading,
         error,
         reloadPayments: loadPayments,
+        reloadAdjustments: loadAdjustments,
         createPayment,
         updatePayment,
         getPayment,
         deletePayment,
+        createAdjustment,
+        getAdjustment,
+        deleteAdjustment,
       }}
     >
       {children}
