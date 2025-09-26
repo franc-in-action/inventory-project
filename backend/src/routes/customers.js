@@ -57,7 +57,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
       where: { id },
       include: {
         sales: { include: { payments: true }, orderBy: { createdAt: "desc" } },
-        payments: true,
+        receivedPayments: true, // FIXED: was `payments: true`
         ledger: true,
       },
     });

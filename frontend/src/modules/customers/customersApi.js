@@ -1,4 +1,3 @@
-// src/utils/customersApi.js
 import { apiFetch } from "../../utils/commonApi.js";
 
 // Create a new customer

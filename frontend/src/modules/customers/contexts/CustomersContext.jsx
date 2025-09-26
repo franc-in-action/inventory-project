@@ -52,7 +52,7 @@ export function CustomersProvider({ children }) {
     await reloadCustomers();
   };
 
-  const fetchCustomerById = async (id) => getCustomerById(id);
+  const fetchCustomerById = async (id) => getCustomerById(id); // now returns receivedPayments
 
   useEffect(() => {
     reloadCustomers();
