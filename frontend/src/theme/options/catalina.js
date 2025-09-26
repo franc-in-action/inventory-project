@@ -1,34 +1,27 @@
-import { extendTheme } from "@chakra-ui/react";
-
 /**
- * macOS Catalina classic palette
- * -----------------------------
- * Light mode: default macOS light gray + blue accents
+ * macOS Catalina palette
+ * ----------------------
+ * Light mode: macOS light gray + blue accents
  * Dark mode: macOS dark gray + vibrant blue accents
  */
+
 const light = {
-  macBlue: "#007AFF", // macOS accent blue
-  macGray: "#E5E5E5", // window background gray
-  macLight: "#F5F5F7", // sidebar / toolbar light gray
-  macDark: "#B0B0B0", // border gray
-  macText: "#1D1D1F", // macOS text color
+  macBlue: "#007AFF",
+  macGray: "#E5E5E5",
+  macLight: "#F5F5F7",
+  macDark: "#B0B0B0",
+  macText: "#1D1D1F",
 };
 
 const dark = {
-  macBlue: "#0A84FF", // macOS dark mode accent blue
-  macGray: "#1C1C1E", // dark window background
-  macLight: "#2C2C2E", // dark toolbar/sidebar
-  macDark: "#3A3A3C", // dark border gray
-  macText: "#F5F5F7", // light text on dark
+  macBlue: "#0A84FF",
+  macGray: "#1C1C1E",
+  macLight: "#2C2C2E",
+  macDark: "#3A3A3C",
+  macText: "#F5F5F7",
 };
 
-const macCatalina = extendTheme({
-  config: {
-    initialColorMode: "light",
-    useSystemColorMode: true,
-  },
-
-  // ✅ Responsive breakpoints like macOS device widths
+export default {
   breakpoints: {
     sm: "480px",
     md: "768px",
@@ -37,10 +30,7 @@ const macCatalina = extendTheme({
     "2xl": "1920px",
   },
 
-  colors: {
-    light,
-    dark,
-  },
+  colors: { light, dark },
 
   fonts: {
     heading: `'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`,
@@ -52,10 +42,7 @@ const macCatalina = extendTheme({
       "html, body": {
         bg: light.macGray,
         color: light.macText,
-        _dark: {
-          bg: dark.macGray,
-          color: dark.macText,
-        },
+        _dark: { bg: dark.macGray, color: dark.macText },
         transition: "background-color 0.2s ease-in-out, color 0.2s ease-in-out",
       },
     },
@@ -68,10 +55,7 @@ const macCatalina = extendTheme({
         border: "1px solid",
         borderColor: light.macDark,
         borderRadius: "8px",
-        _dark: {
-          bg: dark.macGray,
-          borderColor: dark.macDark,
-        },
+        _dark: { bg: dark.macGray, borderColor: dark.macDark },
       },
     },
 
@@ -145,10 +129,7 @@ const macCatalina = extendTheme({
           borderBottom: "1px solid",
           borderColor: light.macDark,
           fontWeight: "semibold",
-          _dark: {
-            bg: dark.macLight,
-            borderColor: dark.macDark,
-          },
+          _dark: { bg: dark.macLight, borderColor: dark.macDark },
         },
         td: {
           borderBottom: "1px solid",
@@ -169,16 +150,8 @@ const macCatalina = extendTheme({
             boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
           },
         },
-        header: {
-          fontWeight: "semibold",
-          px: 4,
-          py: 3,
-        },
-        footer: {
-          bg: "transparent",
-          px: 4,
-          py: 3,
-        },
+        header: { fontWeight: "semibold", px: 4, py: 3 },
+        footer: { bg: "transparent", px: 4, py: 3 },
       },
     },
 
@@ -240,6 +213,4 @@ const macCatalina = extendTheme({
       },
     },
   },
-});
-
-export default macCatalina;
+};

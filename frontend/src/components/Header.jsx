@@ -7,7 +7,7 @@ import {
   IconButton,
   Text,
   ButtonGroup,
-  Select, // ✅ import Select
+  Select,
 } from "@chakra-ui/react";
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
@@ -18,12 +18,8 @@ export default function Header({ onOpenSidebar, onRefresh }) {
   const navigate = useNavigate();
   const user = getUserFromToken();
 
-  const {
-    themeName,
-    changeTheme, // ✅ new function
-    colorMode,
-    toggleColorMode,
-  } = useThemeSwitcher();
+  const { themeKey, allThemes, changeTheme, colorMode, toggleColorMode } =
+    useThemeSwitcher();
 
   return (
     <Box px={{ base: 4, md: 6 }} py={{ base: 3, md: 4 }} boxShadow="sm">
@@ -62,17 +58,19 @@ export default function Header({ onOpenSidebar, onRefresh }) {
             {colorMode === "light" ? "Dark Mode" : "Light Mode"}
           </Button>
 
-          {/* 💻 Theme Selector Dropdown */}
+          {/* 💻 Dynamic Theme Selector Dropdown */}
           <Select
-            value={themeName}
+            value={themeKey}
             onChange={(e) => changeTheme(e.target.value)}
             width="auto"
-            minW="160px"
+            minW="180px"
             title="Select theme"
           >
-            <option value="default">Default</option>
-            <option value="windowsXp">Windows XP</option>
-            <option value="catalina">macOS Catalina</option>
+            {allThemes.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.label}
+              </option>
+            ))}
           </Select>
 
           <Button onClick={() => logout(navigate)}>Logout</Button>

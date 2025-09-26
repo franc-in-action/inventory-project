@@ -5,31 +5,27 @@ import { useColorMode } from "@chakra-ui/react";
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  // ✅ Start with default theme
-  const [themeName, setThemeName] = useState("default");
+  const [themeKey, setThemeKey] = useState(themes[0].key); // start with first theme
   const { colorMode, toggleColorMode } = useColorMode();
 
-  // 🔹 Keep old toggle function (optional)
+  // Cycle through all themes
   const toggleTheme = () => {
-    setThemeName((prev) =>
-      prev === "default"
-        ? "windowsXp"
-        : prev === "windowsXp"
-        ? "catalina"
-        : "default"
-    );
+    const idx = themes.findIndex((t) => t.key === themeKey);
+    const next = themes[(idx + 1) % themes.length];
+    setThemeKey(next.key);
   };
 
-  // 🔹 New: select theme directly from dropdown
-  const changeTheme = (name) => setThemeName(name);
+  // Select a specific theme
+  const changeTheme = (key) => setThemeKey(key);
 
   return (
     <ThemeContext.Provider
       value={{
-        themeName,
-        theme: themes[themeName],
-        toggleTheme, // keep old toggle for buttons if needed
-        changeTheme, // new setter for dropdown
+        themeKey,
+        theme: themes.find((t) => t.key === themeKey)?.theme,
+        allThemes: themes,
+        changeTheme,
+        toggleTheme,
         colorMode,
         toggleColorMode,
       }}

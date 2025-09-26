@@ -1,11 +1,10 @@
-import { extendTheme } from "@chakra-ui/react";
-
 /**
  * Windows XP classic palette
  * --------------------------
  * Light mode: original XP colors
  * Dark mode: “midnight XP” variant
  */
+
 const light = {
   xpBlue: "#0054E3",
   xpGray: "#C0C0C0",
@@ -22,16 +21,8 @@ const dark = {
   xpText: "#E0E0E0",
 };
 
-const windowsXp = extendTheme({
-  config: {
-    initialColorMode: "light",
-    useSystemColorMode: true,
-  },
-
-  colors: {
-    light,
-    dark,
-  },
+export default {
+  colors: { light, dark },
 
   fonts: {
     heading: `'Tahoma', sans-serif`,
@@ -57,10 +48,7 @@ const windowsXp = extendTheme({
         bg: light.xpGray,
         border: "1px solid",
         borderColor: light.xpDark,
-        _dark: {
-          bg: dark.xpGray,
-          borderColor: dark.xpDark,
-        },
+        _dark: { bg: dark.xpGray, borderColor: dark.xpDark },
       },
     },
     Flex: { baseStyle: { bg: "transparent" } },
@@ -93,10 +81,7 @@ const windowsXp = extendTheme({
         bg: light.xpLight,
         color: light.xpText,
         _hover: { bg: "#FFFFFF" },
-        _active: {
-          border: "2px inset",
-          bg: "#D0D0D0",
-        },
+        _active: { border: "2px inset", bg: "#D0D0D0" },
         _dark: {
           borderColor: dark.xpLight,
           bg: dark.xpLight,
@@ -115,37 +100,25 @@ const windowsXp = extendTheme({
           border: "1px solid",
           borderColor: light.xpDark,
           borderBottom: "none",
-          _selected: {
-            bg: "#FFFFFF",
-            borderColor: light.xpDark,
-          },
+          _selected: { bg: "#FFFFFF", borderColor: light.xpDark },
           _dark: {
             bg: dark.xpLight,
             borderColor: dark.xpDark,
-            _selected: {
-              bg: "#3a3a3a",
-              borderColor: dark.xpDark,
-            },
+            _selected: { bg: "#3a3a3a", borderColor: dark.xpDark },
           },
         },
         tablist: {
           borderBottom: "1px solid",
           borderColor: light.xpDark,
           bg: light.xpGray,
-          _dark: {
-            borderColor: dark.xpDark,
-            bg: dark.xpGray,
-          },
+          _dark: { borderColor: dark.xpDark, bg: dark.xpGray },
         },
         tabpanel: {
           bg: "#FFFFFF",
           border: "1px solid",
           borderColor: light.xpDark,
           p: 4,
-          _dark: {
-            bg: "#2c2c2c",
-            borderColor: dark.xpDark,
-          },
+          _dark: { bg: "#2c2c2c", borderColor: dark.xpDark },
         },
       },
     },
@@ -160,28 +133,20 @@ const windowsXp = extendTheme({
           fontWeight: "bold",
           px: 2,
           py: 1,
-          _dark: {
-            bg: dark.xpLight,
-            borderColor: dark.xpDark,
-          },
+          _dark: { bg: dark.xpLight, borderColor: dark.xpDark },
         },
         td: {
           border: "1px solid",
           borderColor: light.xpDark,
           px: 2,
           py: 1,
-          _dark: {
-            borderColor: dark.xpDark,
-          },
+          _dark: { borderColor: dark.xpDark },
         },
       },
     },
 
     Spinner: {
-      baseStyle: {
-        color: light.xpBlue,
-        _dark: { color: dark.xpBlue },
-      },
+      baseStyle: { color: light.xpBlue, _dark: { color: dark.xpBlue } },
     },
 
     Modal: {
@@ -203,15 +168,10 @@ const windowsXp = extendTheme({
           fontWeight: "bold",
           px: 4,
           py: 2,
-          _dark: {
-            bg: dark.xpBlue,
-          },
+          _dark: { bg: dark.xpBlue },
         },
         overlay: { bg: "rgba(0,0,0,0.3)" },
-        footer: {
-          bg: light.xpGray,
-          _dark: { bg: dark.xpGray },
-        },
+        footer: { bg: light.xpGray, _dark: { bg: dark.xpGray } },
       },
     },
 
@@ -222,6 +182,7 @@ const windowsXp = extendTheme({
         _dark: { color: dark.xpText },
       },
     },
+
     Input: {
       baseStyle: {
         border: "2px inset",
@@ -240,10 +201,7 @@ const windowsXp = extendTheme({
         border: "2px inset",
         borderColor: light.xpDark,
         bg: "#FFFFFF",
-        _dark: {
-          borderColor: dark.xpDark,
-          bg: dark.xpLight,
-        },
+        _dark: { borderColor: dark.xpDark, bg: dark.xpLight },
       },
     },
     Textarea: {
@@ -251,10 +209,7 @@ const windowsXp = extendTheme({
         border: "2px inset",
         borderColor: light.xpDark,
         bg: "#FFFFFF",
-        _dark: {
-          borderColor: dark.xpDark,
-          bg: dark.xpLight,
-        },
+        _dark: { borderColor: dark.xpDark, bg: dark.xpLight },
       },
     },
     Checkbox: {
@@ -263,10 +218,7 @@ const windowsXp = extendTheme({
           border: "2px outset",
           borderColor: light.xpDark,
           bg: "#FFFFFF",
-          _dark: {
-            borderColor: dark.xpDark,
-            bg: dark.xpLight,
-          },
+          _dark: { borderColor: dark.xpDark, bg: dark.xpLight },
         },
       },
     },
@@ -276,10 +228,7 @@ const windowsXp = extendTheme({
           border: "2px outset",
           borderColor: light.xpDark,
           bg: "#FFFFFF",
-          _dark: {
-            borderColor: dark.xpDark,
-            bg: dark.xpLight,
-          },
+          _dark: { borderColor: dark.xpDark, bg: dark.xpLight },
         },
       },
     },
@@ -303,10 +252,7 @@ const windowsXp = extendTheme({
         color: light.xpBlue,
         textDecoration: "underline",
         _hover: { color: "#003399" },
-        _dark: {
-          color: dark.xpBlue,
-          _hover: { color: "#5AA0E5" },
-        },
+        _dark: { color: dark.xpBlue, _hover: { color: "#5AA0E5" } },
       },
     },
     Badge: {
@@ -319,6 +265,4 @@ const windowsXp = extendTheme({
       },
     },
   },
-});
-
-export default windowsXp;
+};
