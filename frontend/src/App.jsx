@@ -12,6 +12,7 @@ import { LocationsProvider } from "./modules/locations/contexts/LocationsContext
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
 import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
+import { IssuedPaymentsProvider } from "./modules/issuedpayments/contexts/IssuedPaymentsContext.jsx";
 import { PurchasesProvider } from "./modules/purchases/contexts/PurchasesContext.jsx"; // ✅ new
 import { PaymentsProvider } from "./modules/payments/contexts/PaymentsContext.jsx"; // ✅ new
 import { SalesProvider } from "./modules/sales/contexts/SalesContext.jsx";
@@ -211,7 +212,9 @@ export default function App() {
                     <ProtectedLayout>
                       <VendorsProvider>
                         <PurchasesProvider>
-                          <VendorsPage />
+                          <IssuedPaymentsProvider>
+                            <VendorsPage />
+                          </IssuedPaymentsProvider>
                         </PurchasesProvider>
                       </VendorsProvider>
                     </ProtectedLayout>

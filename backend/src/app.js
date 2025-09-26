@@ -16,6 +16,7 @@ import salesRouter from "./routes/sales.js";
 import purchasesRouter from "./routes/purchases.js";
 import customersRouter from "./routes/customers.js";
 import vendorsRouter from "./routes/vendors.js";
+import issuedPaymentsRouter from "./routes/issuedPayments.js";
 import paymentsRouter from "./routes/payments.js";
 import returnsRouter from "./routes/returns.js"; // NEW
 import adjustmentsRouter from "./routes/adjustments.js"; // NEW
@@ -56,6 +57,7 @@ app.use("/api/sales", salesRouter);
 app.use("/api/purchases", purchasesRouter);
 app.use("/api/customers", customersRouter);
 app.use("/api/vendors", vendorsRouter);
+app.use("/api/issuedpayments", issuedPaymentsRouter);
 app.use("/api/payments", paymentsRouter);
 app.use("/api/returns", returnsRouter); // NEW
 app.use("/api/adjustments", adjustmentsRouter); // NEW
