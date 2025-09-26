@@ -7,19 +7,23 @@ import {
   IconButton,
   Text,
   ButtonGroup,
+  Select, // ✅ import Select
 } from "@chakra-ui/react";
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { getUserFromToken, logout } from "../modules/auth/authApi.js";
-import ColorModeSwitcher from "../components/ColorModeSwitcher.jsx";
-import { useThemeSwitcher } from "../theme/ThemeContext"; // ✅ custom context hook
+import { useThemeSwitcher } from "../theme/ThemeContext";
 
 export default function Header({ onOpenSidebar, onRefresh }) {
   const navigate = useNavigate();
   const user = getUserFromToken();
 
-  // ✅ Access the current theme and toggle function from ThemeContext
-  const { themeName, toggleTheme } = useThemeSwitcher();
+  const {
+    themeName,
+    changeTheme, // ✅ new function
+    colorMode,
+    toggleColorMode,
+  } = useThemeSwitcher();
 
   return (
     <Box px={{ base: 4, md: 6 }} py={{ base: 3, md: 4 }} boxShadow="sm">
@@ -42,24 +46,34 @@ export default function Header({ onOpenSidebar, onRefresh }) {
         )}
         {user?.location && <Text>{user.location}</Text>}
 
-        <ButtonGroup>
+        <ButtonGroup alignItems="center" gap={2}>
           <IconButton
             aria-label="Refresh content"
             icon={<RepeatIcon />}
             onClick={onRefresh}
           />
 
-          {/* Existing Dark/Light mode switcher */}
-          <ColorModeSwitcher />
-
-          {/* ✅ New button to toggle between Default and Windows XP themes */}
+          {/* 🌗 Dark/Light Mode Toggle */}
           <Button
-            onClick={toggleTheme}
-            title={`Current theme: ${themeName}`}
+            onClick={toggleColorMode}
             variant="outline"
+            title={`Switch to ${colorMode === "light" ? "dark" : "light"} mode`}
           >
-            {themeName === "default" ? "Windows XP Theme" : "Default Theme"}
+            {colorMode === "light" ? "Dark Mode" : "Light Mode"}
           </Button>
+
+          {/* 💻 Theme Selector Dropdown */}
+          <Select
+            value={themeName}
+            onChange={(e) => changeTheme(e.target.value)}
+            width="auto"
+            minW="160px"
+            title="Select theme"
+          >
+            <option value="default">Default</option>
+            <option value="windowsXp">Windows XP</option>
+            <option value="catalina">macOS Catalina</option>
+          </Select>
 
           <Button onClick={() => logout(navigate)}>Logout</Button>
         </ButtonGroup>

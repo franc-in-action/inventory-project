@@ -1,31 +1,46 @@
 import { extendTheme } from "@chakra-ui/react";
-import windowsXp from "./windowsXp"; // ✅ Import the Windows XP theme you created
+import windowsXp from "./windowsXp";
+import catalina from "./catalina"; // ✅ import the new theme
 
-// -----------------
-// Base (default) theme
-// -----------------
+// -------------
+// Shared config
+// -------------
 const config = {
   initialColorMode: "light",
-  useSystemColorMode: true,
+  useSystemColorMode: false,
 };
 
+// -------------
+// Default theme
+// -------------
 const baseTheme = extendTheme({
   config,
-  // 👇 If you want a minimal brand color you can leave or remove this
   colors: {
     brand: {
-      500: "#1E88E5", // optional primary blue
+      50: "#e3f2fd",
+      100: "#bbdefb",
+      200: "#90caf9",
+      300: "#64b5f6",
+      400: "#42a5f5",
+      500: "#1E88E5",
+      600: "#1976d2",
+      700: "#1565c0",
+      800: "#0d47a1",
+      900: "#0b3c91",
     },
   },
 });
 
-// -----------------
-// Export both themes for switching
-// -----------------
+// -------------
+// Windows XP + Catalina themes
+// -------------
+const windowsXpTheme = extendTheme({ ...windowsXp, config });
+const catalinaTheme = extendTheme({ ...catalina, config }); // ✅
+
 export const themes = {
   default: baseTheme,
-  windowsXp: windowsXp,
+  windowsXp: windowsXpTheme,
+  catalina: catalinaTheme, // ✅ add to exported list
 };
 
-// You can still export the default if you want a single default import
 export default baseTheme;

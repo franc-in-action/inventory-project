@@ -9,7 +9,7 @@ function Root() {
 
   return (
     <>
-      <ColorModeScript initialColorMode={theme.config?.initialColorMode} />
+      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <ChakraProvider theme={theme}>
         <App />
       </ChakraProvider>
@@ -19,8 +19,11 @@ function Root() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <Root />
-    </ThemeProvider>
+    {/* ChakraProvider must wrap ThemeProvider so useColorMode works */}
+    <ChakraProvider>
+      <ThemeProvider>
+        <Root />
+      </ThemeProvider>
+    </ChakraProvider>
   </React.StrictMode>
 );

@@ -1,16 +1,12 @@
-// frontend/src/theme/windowsXp.js
 import { extendTheme } from "@chakra-ui/react";
 
 /**
  * Windows XP classic palette
  * --------------------------
- * Classic Blue: #0054E3
- * Silver/Gray window: #C0C0C0
- * Light highlight: #E0E0E0
- * Dark border: #808080
- * Text dark: #000000
+ * Light mode: original XP colors
+ * Dark mode: “midnight XP” variant
  */
-const colors = {
+const light = {
   xpBlue: "#0054E3",
   xpGray: "#C0C0C0",
   xpLight: "#E0E0E0",
@@ -18,17 +14,39 @@ const colors = {
   xpText: "#000000",
 };
 
+const dark = {
+  xpBlue: "#3A6EA5",
+  xpGray: "#1e1e1e",
+  xpLight: "#2c2c2c",
+  xpDark: "#555555",
+  xpText: "#E0E0E0",
+};
+
 const windowsXp = extendTheme({
-  colors,
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: true,
+  },
+
+  colors: {
+    light,
+    dark,
+  },
+
   fonts: {
     heading: `'Tahoma', sans-serif`,
     body: `'Tahoma', sans-serif`,
   },
+
   styles: {
     global: {
       "html, body": {
-        bg: colors.xpGray,
-        color: colors.xpText,
+        bg: light.xpGray,
+        color: light.xpText,
+        _dark: {
+          bg: dark.xpGray,
+          color: dark.xpText,
+        },
       },
     },
   },
@@ -36,9 +54,13 @@ const windowsXp = extendTheme({
   components: {
     Box: {
       baseStyle: {
-        bg: colors.xpGray,
+        bg: light.xpGray,
         border: "1px solid",
-        borderColor: colors.xpDark,
+        borderColor: light.xpDark,
+        _dark: {
+          bg: dark.xpGray,
+          borderColor: dark.xpDark,
+        },
       },
     },
     Flex: { baseStyle: { bg: "transparent" } },
@@ -48,12 +70,17 @@ const windowsXp = extendTheme({
 
     Card: {
       baseStyle: {
-        bg: colors.xpLight,
+        bg: light.xpLight,
         border: "2px solid",
-        borderColor: colors.xpDark,
+        borderColor: light.xpDark,
         borderRadius: "4px",
         boxShadow: "inset 1px 1px #fff, inset -1px -1px #404040",
         p: 4,
+        _dark: {
+          bg: dark.xpLight,
+          borderColor: dark.xpDark,
+          boxShadow: "inset 1px 1px #2a2a2a, inset -1px -1px #000",
+        },
       },
     },
 
@@ -62,153 +89,184 @@ const windowsXp = extendTheme({
         fontWeight: "bold",
         borderRadius: "2px",
         border: "2px outset",
-        borderColor: colors.xpLight,
-        bg: colors.xpLight,
-        color: colors.xpText,
+        borderColor: light.xpLight,
+        bg: light.xpLight,
+        color: light.xpText,
         _hover: { bg: "#FFFFFF" },
         _active: {
           border: "2px inset",
           bg: "#D0D0D0",
         },
-      },
-      variants: {
-        solid: {},
-        outline: {
-          border: "2px groove",
+        _dark: {
+          borderColor: dark.xpLight,
+          bg: dark.xpLight,
+          color: dark.xpText,
+          _hover: { bg: "#3a3a3a" },
+          _active: { bg: "#2a2a2a" },
         },
       },
     },
     IconButton: { baseStyle: { variant: "solid" } },
-    ButtonGroup: {},
 
     Tabs: {
       baseStyle: {
         tab: {
-          bg: colors.xpLight,
+          bg: light.xpLight,
           border: "1px solid",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           borderBottom: "none",
           _selected: {
             bg: "#FFFFFF",
-            borderColor: colors.xpDark,
+            borderColor: light.xpDark,
+          },
+          _dark: {
+            bg: dark.xpLight,
+            borderColor: dark.xpDark,
+            _selected: {
+              bg: "#3a3a3a",
+              borderColor: dark.xpDark,
+            },
           },
         },
         tablist: {
           borderBottom: "1px solid",
-          borderColor: colors.xpDark,
-          bg: colors.xpGray,
+          borderColor: light.xpDark,
+          bg: light.xpGray,
+          _dark: {
+            borderColor: dark.xpDark,
+            bg: dark.xpGray,
+          },
         },
         tabpanel: {
           bg: "#FFFFFF",
           border: "1px solid",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           p: 4,
+          _dark: {
+            bg: "#2c2c2c",
+            borderColor: dark.xpDark,
+          },
         },
       },
     },
-    TabList: {},
-    TabPanels: {},
-    Tab: {},
-    TabPanel: {},
 
     Table: {
       baseStyle: {
-        table: {
-          borderCollapse: "collapse",
-        },
+        table: { borderCollapse: "collapse" },
         th: {
-          bg: colors.xpLight,
+          bg: light.xpLight,
           border: "1px solid",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           fontWeight: "bold",
           px: 2,
           py: 1,
+          _dark: {
+            bg: dark.xpLight,
+            borderColor: dark.xpDark,
+          },
         },
         td: {
           border: "1px solid",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           px: 2,
           py: 1,
+          _dark: {
+            borderColor: dark.xpDark,
+          },
         },
       },
     },
-    Thead: {},
-    Tbody: {},
-    Tr: {},
-    Th: {},
-    Td: {},
-    Tfoot: {},
 
     Spinner: {
       baseStyle: {
-        color: colors.xpBlue,
+        color: light.xpBlue,
+        _dark: { color: dark.xpBlue },
       },
     },
-    useToast: {},
 
     Modal: {
       baseStyle: {
         dialog: {
-          bg: colors.xpLight,
+          bg: light.xpLight,
           border: "2px solid",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           boxShadow: "2px 2px #404040",
+          _dark: {
+            bg: dark.xpLight,
+            borderColor: dark.xpDark,
+            boxShadow: "2px 2px #000",
+          },
         },
         header: {
-          bg: colors.xpBlue,
+          bg: light.xpBlue,
           color: "white",
           fontWeight: "bold",
           px: 4,
           py: 2,
+          _dark: {
+            bg: dark.xpBlue,
+          },
         },
-        overlay: {
-          bg: "rgba(0,0,0,0.3)",
-        },
+        overlay: { bg: "rgba(0,0,0,0.3)" },
         footer: {
-          bg: colors.xpGray,
+          bg: light.xpGray,
+          _dark: { bg: dark.xpGray },
         },
       },
     },
-    ModalOverlay: {},
-    ModalContent: {},
-    ModalHeader: {},
-    ModalBody: {},
-    ModalFooter: {},
-    ModalCloseButton: {},
 
-    FormControl: {},
-    FormLabel: { baseStyle: { fontWeight: "bold" } },
+    FormLabel: {
+      baseStyle: {
+        fontWeight: "bold",
+        color: light.xpText,
+        _dark: { color: dark.xpText },
+      },
+    },
     Input: {
       baseStyle: {
         border: "2px inset",
-        borderColor: colors.xpDark,
+        borderColor: light.xpDark,
         bg: "#FFFFFF",
-        _focus: {
-          borderColor: colors.xpBlue,
-          boxShadow: "none",
+        _focus: { borderColor: light.xpBlue, boxShadow: "none" },
+        _dark: {
+          borderColor: dark.xpDark,
+          bg: dark.xpLight,
+          _focus: { borderColor: dark.xpBlue },
         },
       },
     },
     Select: {
       baseStyle: {
         border: "2px inset",
-        borderColor: colors.xpDark,
+        borderColor: light.xpDark,
         bg: "#FFFFFF",
+        _dark: {
+          borderColor: dark.xpDark,
+          bg: dark.xpLight,
+        },
       },
     },
     Textarea: {
       baseStyle: {
         border: "2px inset",
-        borderColor: colors.xpDark,
+        borderColor: light.xpDark,
         bg: "#FFFFFF",
+        _dark: {
+          borderColor: dark.xpDark,
+          bg: dark.xpLight,
+        },
       },
     },
     Checkbox: {
       baseStyle: {
         control: {
           border: "2px outset",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           bg: "#FFFFFF",
+          _dark: {
+            borderColor: dark.xpDark,
+            bg: dark.xpLight,
+          },
         },
       },
     },
@@ -216,37 +274,48 @@ const windowsXp = extendTheme({
       baseStyle: {
         control: {
           border: "2px outset",
-          borderColor: colors.xpDark,
+          borderColor: light.xpDark,
           bg: "#FFFFFF",
+          _dark: {
+            borderColor: dark.xpDark,
+            bg: dark.xpLight,
+          },
         },
       },
     },
 
     Text: {
       baseStyle: {
-        color: colors.xpText,
+        color: light.xpText,
         fontSize: "14px",
+        _dark: { color: dark.xpText },
       },
     },
     Heading: {
       baseStyle: {
         fontWeight: "bold",
-        color: colors.xpText,
+        color: light.xpText,
+        _dark: { color: dark.xpText },
       },
     },
     Link: {
       baseStyle: {
-        color: colors.xpBlue,
+        color: light.xpBlue,
         textDecoration: "underline",
         _hover: { color: "#003399" },
+        _dark: {
+          color: dark.xpBlue,
+          _hover: { color: "#5AA0E5" },
+        },
       },
     },
     Badge: {
       baseStyle: {
-        bg: colors.xpBlue,
+        bg: light.xpBlue,
         color: "white",
         borderRadius: "2px",
         px: 2,
+        _dark: { bg: dark.xpBlue },
       },
     },
   },
