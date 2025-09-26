@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -21,13 +21,18 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
+
 import { useVendors } from "./contexts/VendorsContext.jsx";
+import { useIssuedPayments } from "../issuedpayments/contexts/IssuedPaymentsContext.jsx";
 
 export default function VendorDetails({ vendorId, isOpen, onClose }) {
   const { getVendorById } = useVendors();
+  const { issuedPayments, loading: paymentsLoading } = useIssuedPayments();
+
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // fetch vendor info
   useEffect(() => {
     if (!isOpen || !vendorId) return;
     setLoading(true);
@@ -43,6 +48,12 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
     })();
   }, [vendorId, isOpen, getVendorById]);
 
+  // filter issued payments for this vendor
+  const vendorPayments = useMemo(
+    () => issuedPayments.filter((p) => p.vendorId === vendorId),
+    [issuedPayments, vendorId]
+  );
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
@@ -57,8 +68,10 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
               <TabList mb="1em">
                 <Tab>Overview</Tab>
                 <Tab>Products</Tab>
+                <Tab>Payments</Tab>
               </TabList>
               <TabPanels>
+                {/* --- Overview --- */}
                 <TabPanel>
                   <VStack align="start" spacing={3}>
                     <Text>
@@ -81,6 +94,7 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   </VStack>
                 </TabPanel>
 
+                {/* --- Products --- */}
                 <TabPanel>
                   {vendor.productVendors?.length === 0 ? (
                     <Text>No products linked</Text>
@@ -108,6 +122,43 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                                 style: "currency",
                                 currency: "USD",
                               })}
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  )}
+                </TabPanel>
+
+                {/* --- Payments --- */}
+                <TabPanel>
+                  {paymentsLoading ? (
+                    <Spinner />
+                  ) : vendorPayments.length === 0 ? (
+                    <Text>No issued payments for this vendor</Text>
+                  ) : (
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Payment #</Th>
+                          <Th isNumeric>Amount</Th>
+                          <Th>Method</Th>
+                          <Th>Date</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {vendorPayments.map((payment) => (
+                          <Tr key={payment.id}>
+                            <Td>{payment.paymentNumber || payment.id}</Td>
+                            <Td isNumeric>
+                              {payment.amount.toLocaleString(undefined, {
+                                style: "currency",
+                                currency: "USD",
+                              })}
+                            </Td>
+                            <Td>{payment.method}</Td>
+                            <Td>
+                              {new Date(payment.createdAt).toLocaleString()}
                             </Td>
                           </Tr>
                         ))}

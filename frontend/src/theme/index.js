@@ -47,6 +47,7 @@ const theme = extendTheme({
     ButtonGroup,
     Table,
     Card,
+    Modal,
   },
 });
 
