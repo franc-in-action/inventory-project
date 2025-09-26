@@ -1,57 +1,31 @@
 import { extendTheme } from "@chakra-ui/react";
+import windowsXp from "./windowsXp"; // ✅ Import the Windows XP theme you created
 
-import Flex from "./components/flex";
-import Box from "./components/box";
-import Tabs from "./components/tabs";
-import Button from "./components/button";
-import Input from "./components/input";
-import Heading from "./components/heading";
-import Text from "./components/text";
-import ButtonGroup from "./components/buttongroup";
-import Table from "./components/table";
-import Card from "./components/card";
-import Modal from "./components/modal";
-import ModalContent from "./components/modalContent";
-
-// Define a custom color palette
-const colors = {
-  brand: {
-    50: "#e3f2fd",
-    100: "#bbdefb",
-    200: "#90caf9",
-    300: "#64b5f6",
-    400: "#42a5f5",
-    500: "#1E88E5", // primary brand color
-    600: "#1976d2",
-    700: "#1565c0",
-    800: "#0d47a1",
-    900: "#0b3c91",
-  },
-};
-
-// Theme config for color mode
+// -----------------
+// Base (default) theme
+// -----------------
 const config = {
-  initialColorMode: "light", // default mode
-  useSystemColorMode: true, // respect system preference
+  initialColorMode: "light",
+  useSystemColorMode: true,
 };
 
-const theme = extendTheme({
+const baseTheme = extendTheme({
   config,
-  colors,
-  components: {
-    Flex,
-    Box,
-    Tabs,
-    Button,
-    Input,
-    Heading,
-    Text,
-    ButtonGroup,
-    Table,
-    Card,
-    Modal,
-    ModalContent, // ✅ this is the one that affects <ModalContent />
+  // 👇 If you want a minimal brand color you can leave or remove this
+  colors: {
+    brand: {
+      500: "#1E88E5", // optional primary blue
+    },
   },
 });
 
-export default theme;
+// -----------------
+// Export both themes for switching
+// -----------------
+export const themes = {
+  default: baseTheme,
+  windowsXp: windowsXp,
+};
+
+// You can still export the default if you want a single default import
+export default baseTheme;

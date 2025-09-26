@@ -29,7 +29,7 @@ import {
 
 export default function Sidebar({ isOpen, onClose }) {
   const user = getUserFromToken();
-  const [openMenu, setOpenMenu] = useState(null); // store currently open menu
+  const [openMenu, setOpenMenu] = useState(null);
 
   const toggleMenu = (menu) => {
     setOpenMenu((prev) => (prev === menu ? null : menu));
@@ -107,8 +107,6 @@ export default function Sidebar({ isOpen, onClose }) {
   const SidebarContent = (
     <Box
       as="nav"
-      bg="gray.800"
-      color="white"
       w={{ base: "full", md: 60 }}
       pos="fixed"
       h="full"
@@ -117,19 +115,13 @@ export default function Sidebar({ isOpen, onClose }) {
       overflowY="auto"
     >
       {user && (
-        <Box mb={6} p={"4"} textAlign="left">
-          {user.location && (
-            <Text fontSize="sm" color="gray.400">
-              {user.location}
-            </Text>
-          )}
+        <Box mb={6} p={4}>
+          {user.location && <Text fontSize="sm">{user.location}</Text>}
           <Text fontWeight="bold">{user.name}</Text>
-          <Text fontSize="sm" color="gray.400">
-            {user.role}
-          </Text>
+          <Text fontSize="sm">{user.role}</Text>
         </Box>
       )}
-      <Divider borderColor="gray.700" mb={4} />
+      <Divider mb={4} />
       <VStack spacing={2} align="stretch">
         {links.map((link) => (
           <Box key={link.label}>
@@ -143,8 +135,6 @@ export default function Sidebar({ isOpen, onClose }) {
                   padding: "10px 12px",
                   borderRadius: "8px",
                   fontWeight: isActive ? "bold" : "normal",
-                  backgroundColor: isActive ? "#2D3748" : "transparent",
-                  color: isActive ? "#63B3ED" : "#A0AEC0",
                 })}
                 onClick={onClose}
               >
@@ -154,13 +144,10 @@ export default function Sidebar({ isOpen, onClose }) {
             ) : (
               <Box>
                 <Button
-                  variant="ghost"
-                  color="gray.400"
                   justifyContent="space-between"
                   w="full"
                   onClick={() => toggleMenu(link.label)}
                   leftIcon={<Icon as={link.icon} w={5} h={5} />}
-                  _hover={{ bg: "gray.700" }}
                 >
                   <Text flex="1" textAlign="left">
                     {link.label}
@@ -179,7 +166,6 @@ export default function Sidebar({ isOpen, onClose }) {
                           padding: "8px 12px",
                           borderRadius: "6px",
                           fontWeight: isActive ? "bold" : "normal",
-                          color: isActive ? "#63B3ED" : "#A0AEC0",
                         })}
                         onClick={onClose}
                       >

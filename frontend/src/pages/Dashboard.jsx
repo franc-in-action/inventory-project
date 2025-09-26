@@ -43,12 +43,7 @@ export default function Dashboard() {
   const { payments } = usePayments();
   const { locations } = useLocations();
   const { sales, loading: salesLoading } = useSales();
-  const {
-    purchases,
-    loading: purchasesLoading,
-    total,
-    qtyPurchased,
-  } = usePurchases();
+  const { purchases, loading: purchasesLoading, total } = usePurchases();
 
   const totalStock = Object.values(stockMap).reduce((sum, qty) => sum + qty, 0);
 
@@ -72,6 +67,7 @@ export default function Dashboard() {
       p={8}
     >
       <Heading mb={4}>Dashboard</Heading>
+
       {user && (
         <Text mb={6}>
           Welcome, {user.name || "User"} ({user.role})
@@ -97,10 +93,9 @@ export default function Dashboard() {
             maxW="250px"
             h="140px"
             p={4}
-            _hover={{ shadow: "md" }}
           >
             <Icon as={item.icon} w={8} h={8} mb={2} />
-            <Text fontSize="xl" fontWeight="bold">
+            <Text>
               {(salesLoading && item.label === "Total Sales") ||
               (purchasesLoading && item.label === "Total Purchases")
                 ? "..."
@@ -124,11 +119,10 @@ export default function Dashboard() {
             minW="200px"
             maxW="250px"
             h="180px"
-            _hover={{ shadow: "md", cursor: "pointer" }}
             p={4}
           >
             <Icon as={link.icon} w={10} h={10} mb={3} />
-            <Text fontWeight="bold">{link.label}</Text>
+            <Text>{link.label}</Text>
           </Card>
         ))}
       </Flex>

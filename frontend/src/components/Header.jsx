@@ -8,26 +8,27 @@ import {
   Text,
   ButtonGroup,
 } from "@chakra-ui/react";
-import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons"; // Add RepeatIcon
+import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { getUserFromToken, logout } from "../modules/auth/authApi.js";
 import ColorModeSwitcher from "../components/ColorModeSwitcher.jsx";
+import { useThemeSwitcher } from "../theme/ThemeContext"; // ✅ custom context hook
 
 export default function Header({ onOpenSidebar, onRefresh }) {
   const navigate = useNavigate();
   const user = getUserFromToken();
 
+  // ✅ Access the current theme and toggle function from ThemeContext
+  const { themeName, toggleTheme } = useThemeSwitcher();
+
   return (
     <Box px={{ base: 4, md: 6 }} py={{ base: 3, md: 4 }} boxShadow="sm">
       <Flex align="center" justify="space-between" wrap="wrap" gap={2}>
-        {/* Mobile Hamburger */}
         <IconButton
           display={{ base: "flex", md: "none" }}
           icon={<HamburgerIcon />}
           onClick={onOpenSidebar}
           aria-label="Open navigation"
-          variant="outline"
-          mr={2}
         />
 
         <Heading>Inventory App</Heading>
@@ -35,35 +36,32 @@ export default function Header({ onOpenSidebar, onRefresh }) {
         <Spacer />
 
         {user && (
-          <Text fontSize="sm" color="gray.400">
+          <Text>
             {user.name} ({user.role})
           </Text>
         )}
-        {user?.location && (
-          <Text fontSize="sm" color="gray.400">
-            {user.location}
-          </Text>
-        )}
+        {user?.location && <Text>{user.location}</Text>}
 
         <ButtonGroup>
-          {/* Refresh Button */}
           <IconButton
             aria-label="Refresh content"
             icon={<RepeatIcon />}
-            // size={{ base: "sm", md: "md" }}
-            colorScheme="blue"
             onClick={onRefresh}
           />
 
+          {/* Existing Dark/Light mode switcher */}
           <ColorModeSwitcher />
 
+          {/* ✅ New button to toggle between Default and Windows XP themes */}
           <Button
-            // size={{ base: "sm", md: "md" }}
-            colorScheme="red"
-            onClick={() => logout(navigate)}
+            onClick={toggleTheme}
+            title={`Current theme: ${themeName}`}
+            variant="outline"
           >
-            Logout
+            {themeName === "default" ? "Windows XP Theme" : "Default Theme"}
           </Button>
+
+          <Button onClick={() => logout(navigate)}>Logout</Button>
         </ButtonGroup>
       </Flex>
     </Box>
