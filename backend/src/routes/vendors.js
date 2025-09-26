@@ -3,6 +3,7 @@
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
+import { computeVendorBalances } from "../utils/vendorsHelpers.js";
 
 const router = express.Router();
 
@@ -29,16 +30,30 @@ router.post(
 // -------------------- READ ALL --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    const includeBalance = req.query.includeBalance === "true";
+
     const vendors = await prisma.vendor.findMany();
-    res.json(vendors);
+
+    if (!includeBalance) return res.json(vendors);
+
+    const balances = await computeVendorBalances(vendors.map((v) => v.id));
+
+    const vendorsWithBalance = vendors.map((v) => ({
+      ...v,
+      balance: balances[v.id] || 0,
+    }));
+
+    res.json(vendorsWithBalance);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// READ ONE
+// -------------------- READ ONE --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = req.params.id; // <-- keep as string
+  const id = req.params.id;
+  const includeBalance = req.query.includeBalance === "true";
+
   try {
     const vendor = await prisma.vendor.findUnique({
       where: { id },
@@ -46,19 +61,23 @@ router.get("/:id", authMiddleware, async (req, res) => {
     });
 
     if (!vendor) return res.status(404).json({ error: "Vendor not found" });
-    res.json(vendor);
+
+    if (!includeBalance) return res.json(vendor);
+
+    const balances = await computeVendorBalances(id);
+    res.json({ ...vendor, balance: balances[id] || 0 });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// UPDATE
+// -------------------- UPDATE --------------------
 router.put(
   "/:id",
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const id = req.params.id; // <-- keep as string
+    const id = req.params.id;
     const { name, email, phone } = req.body;
 
     try {
@@ -73,13 +92,13 @@ router.put(
   }
 );
 
-// DELETE
+// -------------------- DELETE --------------------
 router.delete(
   "/:id",
   authMiddleware,
   requireRole(["ADMIN"]),
   async (req, res) => {
-    const id = req.params.id; // <-- keep as string
+    const id = req.params.id;
     try {
       await prisma.vendor.delete({ where: { id } });
       res.json({ message: "Vendor deleted" });
@@ -89,7 +108,7 @@ router.delete(
   }
 );
 
-// Get Vendor products
+// -------------------- GET VENDOR PRODUCTS --------------------
 router.get("/:id/products", authMiddleware, async (req, res) => {
   const id = req.params.id;
   try {

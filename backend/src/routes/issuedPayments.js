@@ -1,48 +1,48 @@
-// backend/src/routes/receivedPayments.js
+// backend/src/routes/issuedPayments.js
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// CREATE PAYMENT RECEIVED
+// CREATE PAYMENT ISSUED
 router.post(
   "/",
   authMiddleware,
-  requireRole(["ADMIN", "MANAGER", "STAFF"]),
+  requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const { customerId, saleId, amount, method } = req.body;
-    if (!customerId && !saleId)
-      return res.status(400).json({ error: "customerId or saleId required" });
+    const { vendorId, purchaseId, amount, method } = req.body;
+    if (!vendorId && !purchaseId)
+      return res.status(400).json({ error: "vendorId or purchaseId required" });
     if (!amount || amount <= 0)
       return res.status(400).json({ error: "Positive amount required" });
 
     try {
       const result = await prisma.$transaction(async (tx) => {
-        if (customerId) {
-          const customer = await tx.customer.findUnique({
-            where: { id: customerId },
+        if (vendorId) {
+          const vendor = await tx.vendor.findUnique({
+            where: { id: vendorId },
           });
-          if (!customer) throw new Error("Customer not found");
+          if (!vendor) throw new Error("Vendor not found");
         }
 
-        const payment = await tx.payment.create({
-          data: { customerId, saleId, amount, method },
+        const issuedPayment = await tx.issuedPayment.create({
+          data: { vendorId, purchaseId, amount, method },
         });
 
         const ledgerEntry = await tx.ledgerEntry.create({
           data: {
-            customerId,
-            saleId,
-            paymentId: payment.id,
-            type: "PAYMENT_RECEIVED",
+            vendorId,
+            purchaseId,
+            paymentId: issuedPayment.id,
+            type: "PAYMENT_ISSUED",
             amount,
             method,
-            description: `Payment of ${amount} received`,
+            description: `Payment of ${amount} issued to vendor`,
           },
         });
 
-        return { payment, ledgerEntry };
+        return { issuedPayment, ledgerEntry };
       });
 
       res.status(201).json(result);
@@ -52,38 +52,34 @@ router.post(
   }
 );
 
-// UPDATE PAYMENT RECEIVED
+// UPDATE
 router.put(
   "/:id",
   authMiddleware,
-  requireRole(["ADMIN", "MANAGER", "STAFF"]),
+  requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
     const id = req.params.id;
-    const { customerId, saleId, amount, method } = req.body;
-    if (!customerId && !saleId)
-      return res.status(400).json({ error: "customerId or saleId required" });
+    const { vendorId, purchaseId, amount, method } = req.body;
+    if (!vendorId && !purchaseId)
+      return res.status(400).json({ error: "vendorId or purchaseId required" });
     if (!amount || amount <= 0)
       return res.status(400).json({ error: "Positive amount required" });
 
     try {
       const result = await prisma.$transaction(async (tx) => {
-        const payment = await tx.payment.update({
+        const issuedPayment = await tx.issuedPayment.update({
           where: { id },
-          data: { customerId, saleId, amount, method },
+          data: { vendorId, purchaseId, amount, method },
         });
-
         const ledgerEntry = await tx.ledgerEntry.findFirst({
-          where: { paymentId: id, type: "PAYMENT_RECEIVED" },
+          where: { paymentId: id, type: "PAYMENT_ISSUED" },
         });
-
-        if (ledgerEntry) {
+        if (ledgerEntry)
           await tx.ledgerEntry.update({
             where: { id: ledgerEntry.id },
             data: { amount, method },
           });
-        }
-
-        return { payment, ledgerEntry };
+        return { issuedPayment, ledgerEntry };
       });
 
       res.json(result);
@@ -96,8 +92,8 @@ router.put(
 // GET ALL
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const payments = await prisma.payment.findMany({
-      include: { customer: true, sale: true },
+    const payments = await prisma.issuedPayment.findMany({
+      include: { vendor: true, purchase: true },
     });
     res.json(payments);
   } catch (err) {
@@ -109,9 +105,9 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get("/:id", authMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
-    const payment = await prisma.payment.findUnique({
+    const payment = await prisma.issuedPayment.findUnique({
       where: { id },
-      include: { customer: true, sale: true },
+      include: { vendor: true, purchase: true },
     });
     if (!payment) return res.status(404).json({ error: "Payment not found" });
     res.json(payment);
@@ -129,13 +125,13 @@ router.delete(
     const id = req.params.id;
     try {
       const result = await prisma.$transaction(async (tx) => {
-        const payment = await tx.payment.delete({ where: { id } });
+        const issuedPayment = await tx.issuedPayment.delete({ where: { id } });
         await tx.ledgerEntry.deleteMany({
-          where: { paymentId: id, type: "PAYMENT_RECEIVED" },
+          where: { paymentId: id, type: "PAYMENT_ISSUED" },
         });
-        return payment;
+        return issuedPayment;
       });
-      res.json({ message: "Payment deleted", deleted: result });
+      res.json({ message: "Issued payment deleted", deleted: result });
     } catch (err) {
       res.status(400).json({ error: err.message });
     }

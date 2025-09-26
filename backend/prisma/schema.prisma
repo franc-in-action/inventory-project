@@ -68,7 +68,6 @@ model Product {
   stockMovements StockMovement[]
   saleItems      SaleItem[]
   purchaseItems  PurchaseItem[]
-
   productVendors ProductVendor[]
 }
 
@@ -120,9 +119,23 @@ model Customer {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  sales    Sale[]
-  payments Payment[]
-  ledger   LedgerEntry[]
+  sales            Sale[]
+  receivedPayments ReceivedPayment[]
+  ledger           LedgerEntry[]
+}
+
+model Vendor {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?  @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  purchases      Purchase[]
+  issuedPayments IssuedPayment[]
+  productVendors ProductVendor[]
+  LedgerEntry    LedgerEntry[]
 }
 
 model Sale {
@@ -133,12 +146,12 @@ model Sale {
   total      Float
   createdAt  DateTime @default(now())
 
-  location Location   @relation(fields: [locationId], references: [id])
-  customer Customer   @relation(fields: [customerId], references: [id])
+  location Location          @relation(fields: [locationId], references: [id])
+  customer Customer          @relation(fields: [customerId], references: [id])
   items    SaleItem[]
-  payments Payment[]
+  payments ReceivedPayment[]
 
-  ledger LedgerEntry[] @relation("SaleLedger") // back-relation
+  ledger LedgerEntry[] @relation("SaleLedger")
 }
 
 model SaleItem {
@@ -152,41 +165,17 @@ model SaleItem {
   product Product @relation(fields: [productId], references: [id])
 }
 
-model Payment {
-  id         Int      @id @default(autoincrement())
-  saleId     String?
-  customerId String?
+model ReceivedPayment {
+  id         String   @id @default(uuid())
+  saleId     String? // optional for standalone payments
+  customerId String
   amount     Float
   method     String
   createdAt  DateTime @default(now())
 
   sale     Sale?         @relation(fields: [saleId], references: [id], onDelete: Restrict)
-  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  ledger   LedgerEntry[] @relation("PaymentLedger")
-}
-
-model Vendor {
-  id        String   @id @default(uuid())
-  name      String
-  email     String?  @unique
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  purchases      Purchase[]
-  productVendors ProductVendor[]
-}
-
-model ProductVendor {
-  productId    String
-  vendorId     String
-  vendorPrice  Float?
-  leadTimeDays Int?
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
-  vendor  Vendor  @relation(fields: [vendorId], references: [id])
-
-  @@id([productId, vendorId])
+  customer Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  ledger   LedgerEntry[] @relation("ReceivedPaymentLedger")
 }
 
 model Purchase {
@@ -205,7 +194,8 @@ model Purchase {
   receivedBy     String?
   receivedByUser User?   @relation("PurchaseReceivedBy", fields: [receivedBy], references: [id])
 
-  ledger LedgerEntry[] @relation("PurchaseLedger") // back-relation
+  ledger        LedgerEntry[]   @relation("PurchaseLedger")
+  IssuedPayment IssuedPayment[]
 }
 
 model PurchaseItem {
@@ -219,42 +209,64 @@ model PurchaseItem {
   product  Product  @relation(fields: [productId], references: [id])
 }
 
-model ServerChange {
-  id         BigInt   @id @default(autoincrement())
-  changeTime DateTime @default(now())
-  entityType String
-  entityId   String?
-  payload    Json
+model IssuedPayment {
+  id         String   @id @default(uuid())
+  purchaseId String? // optional if standalone payment
+  vendorId   String
+  amount     Float
+  method     String
+  createdAt  DateTime @default(now())
+
+  purchase Purchase?     @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+  vendor   Vendor        @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  ledger   LedgerEntry[] @relation("IssuedPaymentLedger")
+}
+
+model ProductVendor {
+  productId    String
+  vendorId     String
+  vendorPrice  Float?
+  leadTimeDays Int?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  vendor  Vendor  @relation(fields: [vendorId], references: [id])
+
+  @@id([productId, vendorId])
+}
+
+model LedgerEntry {
+  id                String     @id @default(uuid())
+  customerId        String?
+  vendorId          String?
+  saleId            String?
+  purchaseId        String?
+  receivedPaymentId String?
+  issuedPaymentId   String?
+  type              LedgerType
+  amount            Float
+  method            String?
+  description       String?
+  createdAt         DateTime   @default(now())
+
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  vendor          Vendor?          @relation(fields: [vendorId], references: [id])
+  sale            Sale?            @relation(fields: [saleId], references: [id], name: "SaleLedger")
+  purchase        Purchase?        @relation(fields: [purchaseId], references: [id], name: "PurchaseLedger")
+  receivedPayment ReceivedPayment? @relation(fields: [receivedPaymentId], references: [id], name: "ReceivedPaymentLedger")
+  issuedPayment   IssuedPayment?   @relation(fields: [issuedPaymentId], references: [id], name: "IssuedPaymentLedger")
+}
+
+enum LedgerType {
+  SALE
+  PURCHASE
+  PAYMENT_RECEIVED
+  PAYMENT_ISSUED
+  RETURN
+  ADJUSTMENT
 }
 
 enum Role {
   ADMIN
   MANAGER
   STAFF
-}
-
-model LedgerEntry {
-  id          String     @id @default(uuid())
-  customerId  String?
-  saleId      String?
-  purchaseId  String?
-  paymentId   Int? // <-- foreign key to Payment
-  type        LedgerType
-  amount      Float
-  method      String?
-  description String?
-  createdAt   DateTime   @default(now())
-
-  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  sale     Sale?     @relation(fields: [saleId], references: [id], onDelete: Restrict, name: "SaleLedger")
-  purchase Purchase? @relation(fields: [purchaseId], references: [id], onDelete: Restrict, name: "PurchaseLedger")
-  payment  Payment?  @relation(fields: [paymentId], references: [id], name: "PaymentLedger")
-}
-
-enum LedgerType {
-  PAYMENT_RECEIVED
-  SALE
-  PURCHASE
-  RETURN
-  ADJUSTMENT
 }

@@ -1,4 +1,3 @@
-// src/contexts/PaymentsContext.js
 import {
   createContext,
   useContext,
@@ -39,7 +38,6 @@ export function PaymentsProvider({ children }) {
     const newPayment = await apiCreatePayment(paymentData);
     setPayments((prev) => [...prev, newPayment]);
 
-    // Reload related customer to update balance
     if (paymentData.customerId) {
       await getCustomerById(paymentData.customerId);
     }
@@ -51,7 +49,6 @@ export function PaymentsProvider({ children }) {
     const updated = await apiUpdatePayment(id, paymentData);
     setPayments((prev) => prev.map((p) => (p.id === id ? updated : p)));
 
-    // Reload related customer to update balance
     if (paymentData.customerId) {
       await getCustomerById(paymentData.customerId);
     }
@@ -66,7 +63,6 @@ export function PaymentsProvider({ children }) {
     await fetch(`/payments/${id}`, { method: "DELETE" });
     setPayments((prev) => prev.filter((p) => p.id !== id));
 
-    // Reload related customer to update balance
     if (payment?.customerId) {
       await getCustomerById(payment.customerId);
     }

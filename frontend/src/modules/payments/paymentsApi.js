@@ -1,4 +1,3 @@
-// src/utils/paymentsApi.js
 import { apiFetch } from "../../utils/commonApi.js";
 
 export async function createPayment(paymentData) {

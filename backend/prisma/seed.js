@@ -62,7 +62,7 @@ async function main() {
     )
   );
 
-  // --- 4. Products (assign randomly to one of the 10 categories) ---
+  // --- 4. Products ---
   const products = await Promise.all(
     Array.from({ length: 100 }, (_, i) => {
       const randomCategory = chance.pickone(categories);
@@ -108,7 +108,21 @@ async function main() {
     }
   }
 
-  // --- 7. Purchases ---
+  // --- 7. Customers ---
+  const customers = await Promise.all(
+    Array.from({ length: 15 }, () =>
+      prisma.customer.create({
+        data: {
+          name: chance.name(),
+          email: chance.email(),
+          phone: chance.string({ length: 10, pool: "0123456789" }),
+          credit_limit: 5000,
+        },
+      })
+    )
+  );
+
+  // --- 8. Purchases + Ledger + IssuedPayments ---
   for (let i = 1; i <= 50; i++) {
     const vendor = vendors[i % vendors.length];
     const supplied = await prisma.productVendor.findMany({
@@ -152,32 +166,47 @@ async function main() {
       }
     }
 
+    // Ledger for purchase
     await prisma.ledgerEntry.create({
       data: {
         purchaseId: purchase.id,
+        vendorId: vendor.id,
         type: "PURCHASE",
         amount: purchase.total,
         description: `Purchase from ${vendor.name}`,
       },
     });
+
+    // Optional issued payment
+    if (chance.bool()) {
+      const amountPaid = parseFloat(
+        (
+          purchase.total * chance.floating({ min: 0.3, max: 1, fixed: 2 })
+        ).toFixed(2)
+      );
+      const issuedPayment = await prisma.issuedPayment.create({
+        data: {
+          purchaseId: purchase.id,
+          vendorId: vendor.id,
+          amount: amountPaid,
+          method: chance.pickone(["CASH", "BANK_TRANSFER"]),
+        },
+      });
+      await prisma.ledgerEntry.create({
+        data: {
+          vendorId: vendor.id,
+          purchaseId: purchase.id,
+          issuedPaymentId: issuedPayment.id,
+          type: "PAYMENT_ISSUED",
+          amount: amountPaid,
+          method: issuedPayment.method,
+          description: `Payment for ${purchase.purchaseUuid}`,
+        },
+      });
+    }
   }
 
-  // --- 8. Customers ---
-  const customers = await Promise.all(
-    Array.from({ length: 15 }, () =>
-      prisma.customer.create({
-        data: {
-          name: chance.name(),
-          email: chance.email(),
-          phone: chance.string({ length: 10, pool: "0123456789" }),
-          credit_limit: 5000,
-        },
-      })
-    )
-  );
-
-  // --- 9. Sales & Payments ---
-  const sales = [];
+  // --- 9. Sales + Ledger + ReceivedPayments ---
   let saleCounter = 1;
   for (let i = 0; i < 50; i++) {
     const customer = customers[i % customers.length];
@@ -218,18 +247,7 @@ async function main() {
       data: { quantity: stock.quantity - qtySold },
     });
 
-    const paymentFraction = chance.floating({ min: 0.3, max: 1, fixed: 2 });
-    const amountPaid = parseFloat((total * paymentFraction).toFixed(2));
-
-    const payment = await prisma.payment.create({
-      data: {
-        saleId: sale.id,
-        customerId: customer.id,
-        amount: amountPaid,
-        method: chance.pickone(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
-      },
-    });
-
+    // Ledger for sale
     await prisma.ledgerEntry.create({
       data: {
         saleId: sale.id,
@@ -240,23 +258,35 @@ async function main() {
       },
     });
 
-    await prisma.ledgerEntry.create({
-      data: {
-        paymentId: payment.id,
-        customerId: customer.id,
-        type: "PAYMENT_RECEIVED",
-        amount: payment.amount,
-        method: payment.method,
-        description: `Payment for ${sale.saleUuid}`,
-      },
-    });
+    // Optional received payment
+    if (chance.bool()) {
+      const amountPaid = parseFloat(
+        (total * chance.floating({ min: 0.3, max: 1, fixed: 2 })).toFixed(2)
+      );
+      const receivedPayment = await prisma.receivedPayment.create({
+        data: {
+          saleId: sale.id,
+          customerId: customer.id,
+          amount: amountPaid,
+          method: chance.pickone(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
+        },
+      });
+      await prisma.ledgerEntry.create({
+        data: {
+          customerId: customer.id,
+          saleId: sale.id,
+          receivedPaymentId: receivedPayment.id,
+          type: "PAYMENT_RECEIVED",
+          amount: amountPaid,
+          method: receivedPayment.method,
+          description: `Payment for ${sale.saleUuid}`,
+        },
+      });
+    }
 
-    sales.push(sale);
     saleCounter++;
   }
 
-  // --- 10. Returns & 11. Adjustments ---
-  // (Keep same logic as before)
   console.log("✅ Seed completed successfully!");
 }
 
