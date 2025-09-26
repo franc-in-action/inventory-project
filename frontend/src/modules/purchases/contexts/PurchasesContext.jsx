@@ -1,9 +1,9 @@
 import {
   createContext,
   useState,
-  useEffect,
   useContext,
   useCallback,
+  useEffect,
 } from "react";
 import {
   fetchPurchases,
@@ -19,16 +19,16 @@ export function PurchasesProvider({ children }) {
   const [total, setTotal] = useState(0);
   const [qtyPurchased, setQtyPurchased] = useState(0);
 
-  // Load purchases with optional filters
+  // Load purchases and update state
   const loadPurchases = useCallback(async (params = {}) => {
     setLoading(true);
     try {
       const data = await fetchPurchases(params);
-      setPurchases(data.items || []);
-      setTotal(data.total || 0);
-      setQtyPurchased(data.qtyPurchased || 0);
+      setPurchases(data.items);
+      setTotal(data.total);
+      setQtyPurchased(data.qtyPurchased);
     } catch (err) {
-      console.error("[PurchasesContext] Failed to fetch purchases", err);
+      console.error("[PurchasesContext] Failed to fetch purchases:", err);
       setPurchases([]);
       setTotal(0);
       setQtyPurchased(0);
@@ -37,15 +37,17 @@ export function PurchasesProvider({ children }) {
     }
   }, []);
 
+  // Create a new purchase and refresh list
   const addPurchase = useCallback(
     async (purchase) => {
       const created = await createPurchase(purchase);
       await loadPurchases();
-      return created;
+      return created.purchase;
     },
     [loadPurchases]
   );
 
+  // Mark a purchase as received and refresh list
   const markReceived = useCallback(
     async (purchaseId) => {
       const updated = await receivePurchase(purchaseId);
@@ -54,6 +56,11 @@ export function PurchasesProvider({ children }) {
     },
     [loadPurchases]
   );
+
+  // Load purchases on mount
+  useEffect(() => {
+    loadPurchases();
+  }, [loadPurchases]);
 
   return (
     <PurchasesContext.Provider

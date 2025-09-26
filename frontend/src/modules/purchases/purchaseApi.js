@@ -2,15 +2,20 @@ import { apiFetch } from "../../utils/commonApi.js";
 
 export async function fetchPurchases(params = {}) {
   if (window.api) {
-    // ... unchanged Electron code ...
+    // ... electron code unchanged ...
   }
 
   const query = new URLSearchParams(params).toString();
-  const result = await apiFetch(`/purchases?${query}`);
+  const purchases = await apiFetch(`/purchases?${query}`);
+
+  // The API returns an array, so just wrap it in our expected format
   return {
-    items: result.purchases || [],
-    total: result.total || 0,
-    qtyPurchased: result.qtyPurchased || 0,
+    items: purchases, // ✅ use the array directly
+    total: purchases.length,
+    qtyPurchased: purchases.reduce(
+      (sum, p) => sum + p.items.reduce((inner, i) => inner + i.qty, 0),
+      0
+    ),
   };
 }
 

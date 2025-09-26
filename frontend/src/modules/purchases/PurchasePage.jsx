@@ -29,8 +29,8 @@ import { useLocations } from "../locations/contexts/LocationsContext.jsx";
 
 export default function PurchasesPage() {
   const toast = useToast();
-  const { vendors, vendorsMap } = useVendors();
-  const { purchases, loading, loadPurchases, markReceived } = usePurchases();
+  const { vendorsMap } = useVendors();
+  const { purchases, loading, markReceived } = usePurchases();
   const { locations, loading: locationsLoading } = useLocations();
 
   const [showForm, setShowForm] = useState(false);
@@ -39,7 +39,7 @@ export default function PurchasesPage() {
 
   const handleReceive = async (purchaseId) => {
     try {
-      await markReceived(purchaseId);
+      await markReceived(purchaseId); // still uses internal UUID
       toast({ title: "Purchase received", status: "success" });
     } catch {
       toast({ title: "Error receiving purchase", status: "error" });
@@ -56,7 +56,8 @@ export default function PurchasesPage() {
     <Table variant="striped" size="sm">
       <Thead>
         <Tr>
-          <Th>UUID</Th>
+          {/* ✅ Column header updated */}
+          <Th>Purchase #</Th>
           <Th>Vendor</Th>
           <Th>Location</Th>
           <Th>Total</Th>
@@ -75,6 +76,7 @@ export default function PurchasesPage() {
         ) : (
           purchaseList.map((p) => (
             <Tr key={p.id}>
+              {/* ✅ Show human-readable purchase number */}
               <Td>
                 <Button variant="link" onClick={() => setSelectedPurchase(p)}>
                   {p.purchaseUuid}
@@ -118,7 +120,7 @@ export default function PurchasesPage() {
             colorScheme="blue"
             onClick={() => setShowForm(true)}
           >
-            Purchase
+            New Purchase
           </Button>
         </ButtonGroup>
       </Flex>

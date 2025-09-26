@@ -19,6 +19,7 @@ import {
   ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { usePurchases } from "./contexts/PurchasesContext.jsx";
 
@@ -33,15 +34,16 @@ export default function PurchaseForm({
   const { vendors, fetchProductsForVendor } = useVendors();
   const { addPurchase } = usePurchases();
 
+  // ---- State ----
   const [vendorId, setVendorId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [availableProducts, setAvailableProducts] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const isReadOnly = purchase?.received ?? false;
 
-  // Initialize form when modal opens or purchase changes
+  // ---- Initialize form fields when modal opens or purchase changes ----
   useEffect(() => {
     if (!isOpen) return;
 
@@ -50,49 +52,57 @@ export default function PurchaseForm({
       setLocationId(purchase.locationId || "");
       setItems(purchase.items?.map((i) => ({ ...i })) || []);
     } else {
-      setVendorId("");
-      setLocationId("");
-      setItems([{ productId: "", qty: 1, price: 0 }]);
+      resetForm();
     }
   }, [purchase, isOpen]);
 
-  // Load vendor-specific products whenever vendor changes
+  // ---- Load vendor-specific products whenever vendor changes ----
   useEffect(() => {
     if (!vendorId) {
-      setFilteredProducts([]);
+      setAvailableProducts([]);
       return;
     }
 
     fetchProductsForVendor(Number(vendorId))
-      .then(setFilteredProducts)
-      .catch(() => setFilteredProducts([]));
+      .then(setAvailableProducts)
+      .catch(() => setAvailableProducts([]));
   }, [vendorId, fetchProductsForVendor]);
 
-  const handleItemChange = (index, field, value) => {
-    setItems((prev) => {
-      const copy = [...prev];
-      copy[index][field] = value;
+  // ---- Helpers ----
+  const resetForm = () => {
+    setVendorId("");
+    setLocationId("");
+    setItems([{ productId: "", qty: 1, price: 0 }]);
+  };
 
+  const updateItem = (index, field, value) => {
+    setItems((prev) => {
+      const updated = [...prev];
+      updated[index][field] = value;
+
+      // Auto-fill price when selecting a product
       if (field === "productId") {
-        const product = filteredProducts.find((p) => p.id === Number(value));
-        if (product) copy[index].price = product.purchasePrice || 0;
+        const selected = availableProducts.find((p) => p.id === Number(value));
+        if (selected) updated[index].price = selected.purchasePrice || 0;
       }
 
-      return copy;
+      return updated;
     });
   };
 
-  const addItemRow = () =>
+  const addItem = () =>
     setItems((prev) => [...prev, { productId: "", qty: 1, price: 0 }]);
-  const removeItemRow = (index) =>
+
+  const removeItem = (index) =>
     setItems((prev) => prev.filter((_, i) => i !== index));
 
+  // ---- Submit handler ----
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReadOnly) return;
 
     if (!vendorId || !locationId || items.length === 0) {
-      toast({ status: "error", description: "Fill all required fields" });
+      toast({ status: "error", description: "Fill all required fields." });
       return;
     }
 
@@ -103,7 +113,9 @@ export default function PurchaseForm({
         locationId: Number(locationId),
         items,
       };
-      if (purchase) payload.purchaseUuid = purchase.purchaseUuid;
+
+      // keep same purchase number if editing
+      if (purchase) payload.purchaseNumber = purchase.purchaseNumber;
 
       await addPurchase(payload);
 
@@ -115,30 +127,33 @@ export default function PurchaseForm({
       onSaved();
       onClose();
     } catch (err) {
-      toast({ status: "error", description: err.message });
+      toast({ status: "error", description: err.message || "Error saving" });
     } finally {
       setSaving(false);
     }
   };
 
+  // ---- Render ----
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
           {purchase
-            ? `Edit Purchase - ${purchase.purchaseUuid}`
+            ? `Edit Purchase – ${purchase.purchaseNumber}`
             : "Create Purchase"}
         </ModalHeader>
+
         <ModalCloseButton />
+
         <ModalBody>
           {isReadOnly && (
             <Text color="red.500" fontWeight="bold" mb={2}>
-              This purchase has been received and can no longer be edited.
+              This purchase has already been received and cannot be edited.
             </Text>
           )}
 
-          <VStack spacing={4}>
+          <VStack spacing={4} align="stretch">
             {/* Vendor */}
             <Select
               placeholder="Select Vendor"
@@ -170,7 +185,8 @@ export default function PurchaseForm({
             </Select>
 
             {/* Items */}
-            <Text>Items</Text>
+            <Text fontWeight="medium">Items</Text>
+
             <VStack spacing={2} align="stretch">
               {items.map((item, idx) => (
                 <HStack key={idx}>
@@ -178,14 +194,14 @@ export default function PurchaseForm({
                     placeholder="Select Product"
                     value={item.productId}
                     onChange={(e) =>
-                      handleItemChange(idx, "productId", e.target.value)
+                      updateItem(idx, "productId", e.target.value)
                     }
                     isDisabled={isReadOnly}
                     isRequired
                   >
-                    {filteredProducts.map((p) => (
+                    {availableProducts.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name} - Price: ${p.purchasePrice ?? 0}
+                        {p.name} — Price: ${p.purchasePrice ?? 0}
                       </option>
                     ))}
                   </Select>
@@ -193,9 +209,7 @@ export default function PurchaseForm({
                   <NumberInput
                     min={1}
                     value={item.qty}
-                    onChange={(val) =>
-                      handleItemChange(idx, "qty", Number(val))
-                    }
+                    onChange={(val) => updateItem(idx, "qty", Number(val))}
                     isDisabled={isReadOnly}
                   >
                     <NumberInputField placeholder="Qty" />
@@ -204,9 +218,7 @@ export default function PurchaseForm({
                   <NumberInput
                     min={0}
                     value={item.price}
-                    onChange={(val) =>
-                      handleItemChange(idx, "price", Number(val))
-                    }
+                    onChange={(val) => updateItem(idx, "price", Number(val))}
                     isDisabled={isReadOnly}
                   >
                     <NumberInputField placeholder="Price" />
@@ -214,15 +226,16 @@ export default function PurchaseForm({
 
                   <IconButton
                     icon={<DeleteIcon />}
-                    onClick={() => removeItemRow(idx)}
+                    onClick={() => removeItem(idx)}
                     isDisabled={isReadOnly}
+                    aria-label="Remove item"
                   />
                 </HStack>
               ))}
 
               <Button
                 leftIcon={<AddIcon />}
-                onClick={addItemRow}
+                onClick={addItem}
                 isDisabled={isReadOnly}
               >
                 Add Item
@@ -241,7 +254,7 @@ export default function PurchaseForm({
               isDisabled={isReadOnly}
             >
               {purchase
-                ? `Update Purchase - ${purchase.purchaseUuid}`
+                ? `Update Purchase – ${purchase.purchaseNumber}`
                 : "Create Purchase"}
             </Button>
           </ButtonGroup>

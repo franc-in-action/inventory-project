@@ -3,6 +3,7 @@ import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
 import { v4 as uuidv4 } from "uuid";
+import { generateSequentialId } from "../utils/idGenerator.js";
 
 const router = express.Router();
 
@@ -12,14 +13,7 @@ router.post(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const {
-      purchaseUuid,
-      locationId,
-      vendorId,
-      items,
-      received,
-      issuedPayment,
-    } = req.body;
+    const { locationId, vendorId, items, received, issuedPayment } = req.body;
     const userId = req.user.userId;
 
     if (!items || items.length === 0)
@@ -28,11 +22,13 @@ router.post(
 
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Create purchase
+        // Generate purchase number
+        const purchaseNumber = await generateSequentialId("Purchase");
+
         const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
         const newPurchase = await tx.purchase.create({
           data: {
-            purchaseUuid: purchaseUuid || uuidv4(),
+            purchaseUuid: purchaseNumber, // <-- use generated sequential ID
             locationId,
             vendorId,
             total,
@@ -48,7 +44,7 @@ router.post(
           },
         });
 
-        // Update stock and create stock movements if received
+        // Update stock if received
         if (received) {
           for (const item of items) {
             const stockLevel = await tx.stockLevel.findUnique({
@@ -112,7 +108,7 @@ router.post(
             data: {
               purchaseId: newPurchase.id,
               vendorId,
-              paymentId: paymentRecord.id,
+              issuedPaymentId: paymentRecord.id,
               type: "PAYMENT_ISSUED",
               amount: issuedPayment.amount,
               method: issuedPayment.method,

@@ -40,7 +40,7 @@ export default function PurchaseDetails({
   const handleReceive = async () => {
     if (!purchase) return;
     try {
-      await markReceived(purchase.id);
+      await markReceived(purchase.id); // backend still uses UUID
     } catch (err) {
       console.error("Failed to mark received", err);
     }
@@ -50,7 +50,8 @@ export default function PurchaseDetails({
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Purchase Details - {purchase?.purchaseUuid}</ModalHeader>
+        {/* ✅ Display the human-friendly purchase number */}
+        <ModalHeader>Purchase #{purchase?.purchaseUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch">
