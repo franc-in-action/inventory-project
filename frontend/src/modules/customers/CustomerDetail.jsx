@@ -203,31 +203,42 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {payments.map((p) => (
-                          <Tr key={p.id}>
-                            <Td>
-                              <Link onClick={() => setSelectedPayment(p.id)}>
-                                {p.id}
-                              </Link>
-                            </Td>
-                            <Td>
-                              {new Date(p.createdAt).toLocaleDateString()}
-                            </Td>
-                            <Td>
-                              {p.saleId ? (
+                        {payments.map((entry) => {
+                          // Only include entries that are linked to a ReceivedPayment
+                          if (!entry.receivedPaymentId) return null;
+
+                          return (
+                            <Tr key={entry.receivedPaymentId}>
+                              <Td>
                                 <Link
-                                  onClick={() => setSelectedSaleId(p.saleId)}
+                                  onClick={() =>
+                                    setSelectedPayment(entry.receivedPaymentId)
+                                  }
                                 >
-                                  {saleMap[p.saleId]}
+                                  {entry.receivedPaymentId}
                                 </Link>
-                              ) : (
-                                "N/A"
-                              )}
-                            </Td>
-                            <Td>{p.amount.toFixed(2)}</Td>
-                            <Td>{p.method || "N/A"}</Td>
-                          </Tr>
-                        ))}
+                              </Td>
+                              <Td>
+                                {new Date(entry.createdAt).toLocaleDateString()}
+                              </Td>
+                              <Td>
+                                {entry.saleId ? (
+                                  <Link
+                                    onClick={() =>
+                                      setSelectedSaleId(entry.saleId)
+                                    }
+                                  >
+                                    {saleMap[entry.saleId]}
+                                  </Link>
+                                ) : (
+                                  "N/A"
+                                )}
+                              </Td>
+                              <Td>{entry.amount.toFixed(2)}</Td>
+                              <Td>{entry.method || "N/A"}</Td>
+                            </Tr>
+                          );
+                        })}
                       </Tbody>
                     </Table>
                   )}
