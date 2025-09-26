@@ -125,35 +125,28 @@ router.put(
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
     const { id } = req.params;
-    const {
-      sku,
-      name,
-      description,
-      price,
-      categoryId,
-      locationId,
-      vendorIds = [],
-    } = req.body;
+    const { sku, name, description, price, categoryId, locationId, vendorIds } =
+      req.body;
+
     try {
-      // Replace vendors by deleting old relations and creating new ones
-      // await prisma.productVendor.deleteMany({ where: { productId: id } });
+      const data = { sku, name, description, price, categoryId, locationId };
+
+      // Only update vendors if vendorIds is provided
+      if (vendorIds) {
+        data.productVendors = {
+          deleteMany: {}, // remove existing links
+          create: vendorIds.map((vendorId) => ({ vendorId })),
+        };
+      }
+
       const product = await prisma.product.update({
         where: { id },
-        data: {
-          sku,
-          name,
-          description,
-          price,
-          categoryId,
-          locationId,
-          productVendors: {
-            create: vendorIds.map((vId) => ({ vendorId: vId })),
-          },
-        },
+        data,
         include: {
           productVendors: { include: { vendor: true } },
         },
       });
+
       res.json(product);
     } catch (err) {
       console.error(`[PUT /products/${id}] Error updating product:`, err);

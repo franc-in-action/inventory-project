@@ -41,6 +41,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
     locationId: "",
     vendorIds: [],
   });
+  const [originalVendorIds, setOriginalVendorIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -53,6 +54,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   // Load product for editing
   useEffect(() => {
     if (!isOpen) return;
+
     if (!productId) {
       setProduct({
         name: "",
@@ -64,6 +66,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         locationId: "",
         vendorIds: [],
       });
+      setOriginalVendorIds([]);
       return;
     }
 
@@ -72,13 +75,12 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
       try {
         const data = await getProductById(productId);
         if (data) {
-          setProduct({
-            ...data,
-            vendorIds:
-              data.vendorIds ||
-              data.productVendors?.map((pv) => pv.vendor.id) ||
-              [],
-          });
+          const vendorIds =
+            data.vendorIds ||
+            data.productVendors?.map((pv) => pv.vendor.id) ||
+            [];
+          setProduct({ ...data, vendorIds });
+          setOriginalVendorIds(vendorIds); // Save original vendors
         }
       } catch {
         toast({ status: "error", description: "Failed to load product." });
@@ -96,11 +98,19 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+
     const payload = {
       ...product,
       price: Number(product.price),
-      vendorIds: product.vendorIds || [],
     };
+
+    // Only include vendorIds if they changed
+    if (
+      JSON.stringify(product.vendorIds) !== JSON.stringify(originalVendorIds)
+    ) {
+      payload.vendorIds = product.vendorIds || [];
+    }
+
     try {
       if (productId) {
         await updateProductById(productId, payload);
@@ -169,7 +179,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
               <FormControl isRequired>
                 <FormLabel>Category</FormLabel>
                 <ComboBox
-                  items={categories} // now dynamic
+                  items={categories}
                   selectedItemId={product.categoryId}
                   placeholder="Select or add category"
                   onSelect={(item) =>
