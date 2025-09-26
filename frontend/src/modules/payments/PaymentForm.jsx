@@ -133,7 +133,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
     );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>
@@ -147,9 +147,9 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
           {loading || customersLoading ? (
             <Spinner />
           ) : customersError ? (
-            <Text color="red.500">Failed to load customers</Text>
+            <Text>Failed to load customers</Text>
           ) : (
-            <VStack spacing={4} align="stretch">
+            <VStack>
               <FormControl>
                 <FormLabel>Customer</FormLabel>
                 <select
@@ -169,9 +169,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                   ))}
                 </select>
                 {payment.customerId && (
-                  <Text fontSize="sm" mt={1} color="red.600">
-                    Outstanding Balance: {customerOutstanding}
-                  </Text>
+                  <Text>Outstanding Balance: {customerOutstanding}</Text>
                 )}
               </FormControl>
 
@@ -179,7 +177,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
                 <FormLabel>Sale</FormLabel>
                 <Box position="relative" ref={dropdownRef}>
                   <Input
-                    size="sm"
+                    // size="sm"
                     readOnly
                     placeholder="Select sale"
                     value={

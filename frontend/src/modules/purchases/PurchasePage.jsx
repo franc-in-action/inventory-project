@@ -18,6 +18,7 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  Link,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { useState } from "react";
@@ -53,10 +54,9 @@ export default function PurchasesPage() {
   const receivedPurchases = purchases.filter((p) => p.received);
 
   const renderPurchaseTable = (purchaseList, showReceiveButton = false) => (
-    <Table variant="striped" size="sm">
+    <Table>
       <Thead>
         <Tr>
-          {/* ✅ Column header updated */}
           <Th>Purchase #</Th>
           <Th>Vendor</Th>
           <Th>Location</Th>
@@ -78,9 +78,9 @@ export default function PurchasesPage() {
             <Tr key={p.id}>
               {/* ✅ Show human-readable purchase number */}
               <Td>
-                <Button variant="link" onClick={() => setSelectedPurchase(p)}>
+                <Link variant="link" onClick={() => setSelectedPurchase(p)}>
                   {p.purchaseUuid}
-                </Button>
+                </Link>
               </Td>
               <Td>{vendorsMap[p.vendorId] || p.vendorId}</Td>
               <Td>{getLocationName(p.locationId)}</Td>
@@ -111,8 +111,8 @@ export default function PurchasesPage() {
 
   return (
     <Box>
-      <Flex align="center" mb={4}>
-        <Heading size="md">Purchases</Heading>
+      <Flex>
+        <Heading>Purchases</Heading>
         <Spacer />
         <ButtonGroup>
           <Button
@@ -125,7 +125,7 @@ export default function PurchasesPage() {
         </ButtonGroup>
       </Flex>
 
-      <Tabs variant="enclosed">
+      <Tabs>
         <TabList>
           <Tab
             color={pendingPurchases.length > 0 ? "red.500" : "gray.500"}

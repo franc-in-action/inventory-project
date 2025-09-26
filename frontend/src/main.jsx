@@ -1,12 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import App from "./App.jsx";
-import { ThemeProvider, useThemeSwitcher } from "./theme/ThemeContext";
+import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
+import { ThemeProvider, useThemeSwitcher } from "./theme/ThemeContext.jsx";
 
 function Root() {
   const { theme } = useThemeSwitcher();
-
   return (
     <>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
@@ -19,11 +18,8 @@ function Root() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {/* ChakraProvider must wrap ThemeProvider so useColorMode works */}
-    <ChakraProvider>
-      <ThemeProvider>
-        <Root />
-      </ThemeProvider>
-    </ChakraProvider>
+    <ThemeProvider>
+      <Root />
+    </ThemeProvider>
   </React.StrictMode>
 );

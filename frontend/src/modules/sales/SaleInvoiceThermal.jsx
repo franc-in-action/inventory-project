@@ -70,7 +70,9 @@ export default function SaleInvoiceThermal({ saleId, isOpen, onClose }) {
         <ModalFooter>
           <ButtonGroup>
             <Button onClick={onClose}>Close</Button>
-            <Button onClick={handlePrint}>Print</Button>
+            <Button colorScheme="blue" onClick={handlePrint}>
+              Print
+            </Button>
           </ButtonGroup>
         </ModalFooter>
       </ModalContent>

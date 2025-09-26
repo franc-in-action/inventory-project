@@ -21,6 +21,7 @@ import {
   Switch,
   FormControl,
   FormLabel,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
@@ -183,10 +184,10 @@ export default function InvoiceForm({ isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
-        <ModalHeader>Generate Invoice</ModalHeader>
+        <ModalHeader>New Invoice #: {saleUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4}>
+          <VStack spacing={1} align="stretch" p={2}>
             <Box>
               <Text fontWeight="bold">
                 Invoice #: {saleUuid || "Generating..."}
@@ -226,7 +227,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
 
             <Box>
               <Text>Products</Text>
-              <VStack>
+              <VStack spacing={1} align="stretch" p={2}>
                 {enrichedCart.map((item, idx) => {
                   const stockExceeded = item.qty > item.stockQty;
                   const product = products.find((p) => p.id === item.productId);
@@ -317,10 +318,14 @@ export default function InvoiceForm({ isOpen, onClose }) {
         </ModalBody>
 
         <ModalFooter>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" isLoading={loading}>
-            Generate Invoice
-          </Button>
+          <ButtonGroup>
+            <Button colorScheme="gray" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" type="submit" isLoading={loading}>
+              Generate Invoice
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>

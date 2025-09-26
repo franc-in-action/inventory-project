@@ -51,20 +51,12 @@ export default function StockPage() {
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
+      <Flex>
         <Box p="2">
           <Heading size="md">Stock Management</Heading>
         </Box>
         <Spacer />
         <ButtonGroup>
-          {/* <Button
-            variant="primary"
-            leftIcon={<AddIcon />}
-            onClick={() => setModalOpen(true)}
-          >
-            Add Stock
-          </Button> */}
-          {/* Button to go to Stock Adjustments page */}
           <Button
             variant="outline"
             leftIcon={<ViewIcon />}

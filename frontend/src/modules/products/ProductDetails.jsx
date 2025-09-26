@@ -119,7 +119,7 @@ export default function ProductDetails({
               <TabPanel>
                 <Flex>
                   <Box>
-                    <VStack align="start">
+                    <VStack>
                       <Text>
                         <b>SKU:</b> {product.sku}
                       </Text>

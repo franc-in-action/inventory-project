@@ -43,7 +43,7 @@ export default function StockDetail({
   }, [productId, locationId, isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Stock Details</ModalHeader>

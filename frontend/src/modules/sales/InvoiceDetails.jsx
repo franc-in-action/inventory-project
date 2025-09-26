@@ -40,10 +40,10 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Invoice Details</ModalHeader>
+        <ModalHeader>Invoice #: {sale.saleUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack

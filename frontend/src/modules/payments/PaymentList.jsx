@@ -83,21 +83,14 @@ export default function PaymentList({ onEdit, filter = "" }) {
           {filteredPayments.map((p) => (
             <Tr key={p.id}>
               <Td>
-                <Link
-                  color="teal.600"
-                  fontWeight="bold"
-                  onClick={() => handleOpenPayment(p.id)}
-                >
+                <Link onClick={() => handleOpenPayment(p.id)}>
                   {p.paymentNumber}
                 </Link>
               </Td>
               <Td>{p.customer?.name || "N/A"}</Td>
               <Td>
                 {p.sale ? (
-                  <Link
-                    color="blue.600"
-                    onClick={() => handleOpenInvoice(p.sale.id)}
-                  >
+                  <Link onClick={() => handleOpenInvoice(p.sale.id)}>
                     {p.sale.saleUuid}
                   </Link>
                 ) : (
@@ -116,6 +109,7 @@ export default function PaymentList({ onEdit, filter = "" }) {
                   />
                   <IconButton
                     icon={<DeleteIcon />}
+                    variant={"danger"}
                     aria-label="Delete"
                     onClick={() => handleDelete(p.id)}
                   />

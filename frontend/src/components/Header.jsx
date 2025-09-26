@@ -73,7 +73,9 @@ export default function Header({ onOpenSidebar, onRefresh }) {
             ))}
           </Select>
 
-          <Button onClick={() => logout(navigate)}>Logout</Button>
+          <Button colorScheme="red" onClick={() => logout(navigate)}>
+            Logout
+          </Button>
         </ButtonGroup>
       </Flex>
     </Box>

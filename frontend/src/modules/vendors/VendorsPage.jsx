@@ -47,14 +47,14 @@ export default function VendorsPage() {
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
+      <Flex>
         <Box p="2">
           <Heading size="md">Vendors</Heading>
         </Box>
         <Spacer />
-        <ButtonGroup gap="2">
+        <ButtonGroup>
           <Button
-            variant="primary"
+            colorScheme="blue"
             leftIcon={<AddIcon />}
             onClick={openCreateModal}
           >

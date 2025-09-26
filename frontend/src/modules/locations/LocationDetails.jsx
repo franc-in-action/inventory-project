@@ -35,7 +35,7 @@ export default function LocationDetails({ locationId, isOpen, onClose }) {
           {locationsLoading ? (
             <Spinner />
           ) : location ? (
-            <VStack spacing={2} align="start">
+            <VStack>
               <Text>
                 <strong>Name:</strong> {location.name}
               </Text>

@@ -14,6 +14,7 @@ import {
   FormLabel,
   useToast,
   Spinner,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import { useVendors } from "./contexts/VendorsContext.jsx";
 
@@ -110,10 +111,12 @@ export default function VendorForm({ vendorId, isOpen, onClose }) {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" isLoading={saving}>
-            {vendorId ? "Update" : "Create"}
-          </Button>
+          <ButtonGroup>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button colorScheme="blue" type="submit" isLoading={saving}>
+              {vendorId ? "Update" : "Create"}
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>

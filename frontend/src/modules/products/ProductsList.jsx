@@ -4,6 +4,7 @@ import {
   VStack,
   HStack,
   Text,
+  Link,
   Input,
   Select,
   Button,
@@ -82,7 +83,7 @@ export default function ProductsList({ onEdit }) {
 
   return (
     <Box>
-      <HStack mb={4} spacing={2}>
+      <HStack>
         <Input
           placeholder="Search name or SKU..."
           value={search}
@@ -140,12 +141,8 @@ export default function ProductsList({ onEdit }) {
               borderRadius="md"
               w="100%"
             >
-              <Text>
-                {p.sku} –{" "}
-                <Button variant="link" onClick={() => handleOpenDetails(p.id)}>
-                  {p.name}
-                </Button>
-              </Text>
+              {p.sku} –{" "}
+              <Link onClick={() => handleOpenDetails(p.id)}>{p.name}</Link>
               <Text>Description: {p.description || "—"}</Text>
               <Text>Category: {p.category?.name || "—"}</Text>
               <Text>
@@ -155,23 +152,15 @@ export default function ProductsList({ onEdit }) {
               <Text>Quantity: {stockMap[p.id] ?? 0}</Text>
               <Text>Price: ${p.price}</Text>
               <HStack mt={2}>
-                <Button size="sm" onClick={() => onEdit(p.id)}>
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDelete(p.id)}
-                >
-                  Delete
-                </Button>
+                <Button onClick={() => onEdit(p.id)}>Edit</Button>
+                <Button onClick={() => handleDelete(p.id)}>Delete</Button>
               </HStack>
             </Flex>
           ))}
         </VStack>
       )}
 
-      <HStack mt={4} spacing={4}>
+      <HStack>
         <Button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}

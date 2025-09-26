@@ -58,14 +58,14 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Vendor Details</ModalHeader>
+        <ModalHeader>{vendor.name} Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           {loading ? (
             <Spinner />
           ) : vendor ? (
-            <Tabs isFitted variant="enclosed">
-              <TabList mb="1em">
+            <Tabs>
+              <TabList>
                 <Tab>Overview</Tab>
                 <Tab>Products</Tab>
                 <Tab>Payments</Tab>
@@ -99,12 +99,7 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   {vendor.productVendors?.length === 0 ? (
                     <Text>No products linked</Text>
                   ) : (
-                    <Table
-                      variant="simple"
-                      size="sm"
-                      overflow="auto"
-                      height="200px"
-                    >
+                    <Table>
                       <Thead>
                         <Tr>
                           <Th>Name</Th>
@@ -137,7 +132,7 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                   ) : vendorPayments.length === 0 ? (
                     <Text>No issued payments for this vendor</Text>
                   ) : (
-                    <Table variant="simple" size="sm">
+                    <Table>
                       <Thead>
                         <Tr>
                           <Th>Payment #</Th>

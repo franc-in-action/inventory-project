@@ -47,17 +47,11 @@ export default function CustomersPage() {
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
-        <Box p="2">
-          <Heading size="md">Customers</Heading>
-        </Box>
+      <Flex>
+        <Heading size="md">Customers</Heading>
         <Spacer />
-        <ButtonGroup gap="2">
-          <Button
-            variant="primary"
-            leftIcon={<AddIcon />}
-            onClick={openCreateModal}
-          >
+        <ButtonGroup>
+          <Button leftIcon={<AddIcon />} onClick={openCreateModal}>
             Customer
           </Button>
         </ButtonGroup>
@@ -71,7 +65,7 @@ export default function CustomersPage() {
       />
 
       {loading ? (
-        <p>Loading customers...</p>
+        <Box>Loading customers...</Box>
       ) : (
         <CustomerList
           customers={filteredCustomers}

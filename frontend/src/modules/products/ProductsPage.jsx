@@ -36,8 +36,8 @@ export default function Products() {
 
   return (
     <Box>
-      <Flex align="center" gap="2">
-        <Heading size="md">Products</Heading>
+      <Flex>
+        <Heading>Products</Heading>
         <Spacer />
         <ButtonGroup>
           <Button leftIcon={<AddIcon />} onClick={handleAdd}>

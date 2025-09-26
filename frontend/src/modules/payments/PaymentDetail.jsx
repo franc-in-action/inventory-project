@@ -43,7 +43,7 @@ export default function PaymentDetail({ paymentId, isOpen, onClose }) {
           {loading ? (
             <Spinner />
           ) : payment ? (
-            <VStack spacing={2} align="start">
+            <VStack>
               <Text>
                 <strong>Payment #:</strong> {payment.paymentNumber || "N/A"}
               </Text>

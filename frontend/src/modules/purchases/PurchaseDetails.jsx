@@ -47,14 +47,14 @@ export default function PurchaseDetails({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         {/* ✅ Display the human-friendly purchase number */}
         <ModalHeader>Purchase #{purchase?.purchaseUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={4} align="stretch">
+          <VStack>
             <Text>
               <strong>Vendor:</strong>{" "}
               {vendorsMap[purchase?.vendorId] || "Unknown Vendor"}
@@ -69,8 +69,8 @@ export default function PurchaseDetails({
               {purchase?.received ? "✅ Received" : "⏳ Pending"}
             </Text>
 
-            <Text fontWeight="bold">Items</Text>
-            <Table variant="simple">
+            <Text>Items</Text>
+            <Table>
               <Thead>
                 <Tr>
                   <Th>Product</Th>
@@ -110,7 +110,6 @@ export default function PurchaseDetails({
           <ButtonGroup>
             <Button onClick={onClose}>Close</Button>
             <Button
-              colorScheme="blue"
               onClick={() => onEdit(purchase)}
               isDisabled={purchase?.received}
               title={
@@ -122,9 +121,7 @@ export default function PurchaseDetails({
               Edit
             </Button>
             {!purchase?.received && (
-              <Button colorScheme="green" onClick={handleReceive}>
-                Receive
-              </Button>
+              <Button onClick={handleReceive}>Receive</Button>
             )}
           </ButtonGroup>
         </ModalFooter>

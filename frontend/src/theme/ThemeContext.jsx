@@ -1,12 +1,24 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { themes } from "./index";
 import { useColorMode } from "@chakra-ui/react";
 
 const ThemeContext = createContext();
 
+const LOCAL_STORAGE_KEY = "selectedThemeKey";
+
 export const ThemeProvider = ({ children }) => {
-  const [themeKey, setThemeKey] = useState(themes[0].key); // start with first theme
   const { colorMode, toggleColorMode } = useColorMode();
+
+  // Load the saved theme from localStorage or fallback to first theme
+  const [themeKey, setThemeKey] = useState(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return saved || themes[0].key;
+  });
+
+  // Save themeKey to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, themeKey);
+  }, [themeKey]);
 
   // Cycle through all themes
   const toggleTheme = () => {

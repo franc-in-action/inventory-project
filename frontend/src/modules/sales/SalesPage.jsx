@@ -64,14 +64,14 @@ export default function SalesPage() {
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2" mb={4}>
-        <Box p="2">
+      <Flex>
+        <Box>
           <Heading size="md">Invoices</Heading>
         </Box>
         <Spacer />
-        <ButtonGroup gap="2">
+        <ButtonGroup>
           <Button
-            variant="primary"
+            colorScheme="blue"
             leftIcon={<AddIcon />}
             onClick={() => setInvoiceFormOpen(true)}
           >
@@ -81,7 +81,6 @@ export default function SalesPage() {
       </Flex>
 
       <Input
-        mb={4}
         placeholder="Search by customer or Invoice No..."
         value={search}
         onChange={(e) => {
@@ -103,8 +102,9 @@ export default function SalesPage() {
               onSelectSale={handleSelectSale}
               onPrint={handlePrint}
             />
-            <HStack mt={2}>
+            <HStack>
               <Button
+                colorScheme="gray"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 isDisabled={page === 1}
               >
@@ -114,6 +114,7 @@ export default function SalesPage() {
                 Page {page} of {totalPages(paidSales)}
               </Text>
               <Button
+                colorScheme="gray"
                 onClick={() =>
                   setPage((p) => Math.min(totalPages(paidSales), p + 1))
                 }
@@ -130,8 +131,9 @@ export default function SalesPage() {
               onSelectSale={handleSelectSale}
               onPrint={handlePrint}
             />
-            <HStack mt={2}>
+            <HStack>
               <Button
+                colorScheme="gray"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 isDisabled={page === 1}
               >
@@ -141,6 +143,7 @@ export default function SalesPage() {
                 Page {page} of {totalPages(unpaidSales)}
               </Text>
               <Button
+                colorScheme="gray"
                 onClick={() =>
                   setPage((p) => Math.min(totalPages(unpaidSales), p + 1))
                 }

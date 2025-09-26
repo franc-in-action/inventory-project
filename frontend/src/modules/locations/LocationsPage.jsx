@@ -50,12 +50,12 @@ export default function LocationsPage() {
 
   return (
     <Box>
-      <Flex minWidth="max-content" alignItems="center" gap="2">
-        <Box p="2">
-          <Heading size="md">Branches / Locations</Heading>
+      <Flex>
+        <Box>
+          <Heading>Branches / Locations</Heading>
         </Box>
         <Spacer />
-        <ButtonGroup gap="2">
+        <ButtonGroup>
           <Button
             variant={"primary"}
             leftIcon={<AddIcon />}

@@ -148,12 +148,12 @@ export default function PurchaseForm({
 
         <ModalBody>
           {isReadOnly && (
-            <Text color="red.500" fontWeight="bold" mb={2}>
+            <Text>
               This purchase has already been received and cannot be edited.
             </Text>
           )}
 
-          <VStack spacing={4} align="stretch">
+          <VStack>
             {/* Vendor */}
             <Select
               placeholder="Select Vendor"
@@ -187,7 +187,7 @@ export default function PurchaseForm({
             {/* Items */}
             <Text fontWeight="medium">Items</Text>
 
-            <VStack spacing={2} align="stretch">
+            <VStack align="stretch">
               {items.map((item, idx) => (
                 <HStack key={idx}>
                   <Select

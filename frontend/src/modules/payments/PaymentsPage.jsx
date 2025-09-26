@@ -56,7 +56,7 @@ export default function PaymentsPage() {
 
   return (
     <Box>
-      <Flex alignItems="center" gap="2" mb={4}>
+      <Flex>
         <Heading size="md">Payments</Heading>
         <Spacer />
         <ButtonGroup>

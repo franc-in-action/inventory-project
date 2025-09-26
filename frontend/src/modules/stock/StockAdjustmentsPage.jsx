@@ -42,8 +42,8 @@ export default function StockAdjustmentsPage() {
   );
 
   return (
-    <Box p={4}>
-      <Flex mb={4} alignItems="center">
+    <Box>
+      <Flex>
         <Heading size="md">Stock Adjustments</Heading>
         <Spacer />
         <Input
@@ -57,7 +57,7 @@ export default function StockAdjustmentsPage() {
       {loading ? (
         <Spinner />
       ) : (
-        <Table variant="simple">
+        <Table>
           <Thead>
             <Tr>
               <Th>Product</Th>

@@ -8,6 +8,7 @@ import {
   Th,
   Td,
   Button,
+  Link,
   HStack,
 } from "@chakra-ui/react";
 
@@ -39,9 +40,9 @@ export default function ProductsTable({
             <Tr key={p.id}>
               <Td>{p.sku}</Td>
               <Td>
-                <Button variant="link" onClick={() => onOpenDetails(p)}>
+                <Link variant="link" onClick={() => onOpenDetails(p)}>
                   {p.name}
-                </Button>
+                </Link>
               </Td>
               <Td>{p.description || "—"}</Td>
               <Td>{p.category?.name || "—"}</Td>
@@ -51,16 +52,8 @@ export default function ProductsTable({
               <Td>{new Date(p.updatedAt).toLocaleDateString()}</Td>
               <Td>
                 <HStack spacing={2}>
-                  <Button size="sm" onClick={() => onEdit(p.id)}>
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme="red"
-                    onClick={() => onDelete(p.id)}
-                  >
-                    Delete
-                  </Button>
+                  <Button onClick={() => onEdit(p.id)}>Edit</Button>
+                  <Button onClick={() => onDelete(p.id)}>Delete</Button>
                 </HStack>
               </Td>
             </Tr>
