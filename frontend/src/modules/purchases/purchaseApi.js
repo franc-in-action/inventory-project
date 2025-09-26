@@ -37,6 +37,22 @@ export async function createPurchase(purchase) {
   });
 }
 
+// Update an existing purchase
+export async function updatePurchase(purchaseId, payload) {
+  if (window.api) {
+    // Optional: handle Electron case if needed
+    return window.api.run(
+      `UPDATE purchases SET vendorId=?, locationId=? WHERE id=?`,
+      [payload.vendorId, payload.locationId, purchaseId]
+    );
+  }
+
+  return apiFetch(`/purchases/${purchaseId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function receivePurchase(purchaseId) {
   if (window.api)
     return window.api.run(`UPDATE purchases SET received = 1 WHERE id = ?`, [

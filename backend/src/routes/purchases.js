@@ -189,12 +189,18 @@ router.put(
 
     try {
       const result = await prisma.$transaction(async (tx) => {
+        // Only include fields if they are defined
+        const data = {};
+        if (locationId) data.location = { connect: { id: locationId } };
+        if (vendorId) data.vendor = { connect: { id: vendorId } };
+        if (typeof received === "boolean") data.received = received;
+
         const purchase = await tx.purchase.update({
           where: { id },
-          data: { locationId, vendorId, received },
+          data,
         });
 
-        // Update items
+        // Update or create items
         if (items) {
           for (const item of items) {
             await tx.purchaseItem.upsert({

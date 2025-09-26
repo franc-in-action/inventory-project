@@ -9,6 +9,7 @@ import {
   fetchPurchases,
   createPurchase,
   receivePurchase,
+  updatePurchase as apiUpdatePurchase,
 } from "../purchaseApi.js";
 
 const PurchasesContext = createContext();
@@ -47,6 +48,16 @@ export function PurchasesProvider({ children }) {
     [loadPurchases]
   );
 
+  // Update an existing purchase using the API function
+  const updatePurchase = useCallback(
+    async (purchaseId, payload) => {
+      const updated = await apiUpdatePurchase(purchaseId, payload);
+      await loadPurchases();
+      return updated;
+    },
+    [loadPurchases]
+  );
+
   // Mark a purchase as received and refresh list
   const markReceived = useCallback(
     async (purchaseId) => {
@@ -71,6 +82,7 @@ export function PurchasesProvider({ children }) {
         loading,
         loadPurchases,
         addPurchase,
+        updatePurchase,
         markReceived,
       }}
     >

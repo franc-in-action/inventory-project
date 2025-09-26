@@ -32,7 +32,7 @@ export default function PurchaseForm({
 }) {
   const toast = useToast();
   const { vendors, fetchProductsForVendor } = useVendors();
-  const { addPurchase } = usePurchases();
+  const { addPurchase, updatePurchase } = usePurchases();
 
   // ---- State ----
   const [vendorId, setVendorId] = useState("");
@@ -82,7 +82,7 @@ export default function PurchaseForm({
 
       // Auto-fill price when selecting a product
       if (field === "productId") {
-        const selected = availableProducts.find((p) => p.id === Number(value));
+        const selected = availableProducts.find((p) => p.id === value);
         if (selected) updated[index].price = selected.purchasePrice || 0;
       }
 
@@ -102,32 +102,46 @@ export default function PurchaseForm({
     if (isReadOnly) return;
 
     if (!vendorId || !locationId || items.length === 0) {
-      toast({ status: "error", description: "Fill all required fields." });
+      toast({
+        status: "error",
+        description:
+          "Please fill all required fields and add at least one item.",
+      });
       return;
     }
 
     setSaving(true);
     try {
       const payload = {
-        vendorId: Number(vendorId),
-        locationId: Number(locationId),
+        vendorId, // keep as string
+        locationId, // also keep as string
         items,
       };
 
-      // keep same purchase number if editing
-      if (purchase) payload.purchaseNumber = purchase.purchaseNumber;
+      if (purchase) {
+        // Editing existing purchase
+        await updatePurchase(purchase.id, payload);
+        toast({
+          status: "success",
+          description: "Purchase updated successfully.",
+        });
+      } else {
+        // Creating new purchase
+        await addPurchase(payload);
+        toast({
+          status: "success",
+          description: "Purchase created successfully.",
+        });
+      }
 
-      await addPurchase(payload);
-
-      toast({
-        status: "success",
-        description: purchase ? "Purchase updated" : "Purchase created",
-      });
-
-      onSaved();
-      onClose();
+      onSaved?.(); // optional callback
+      onClose(); // close modal after saving
     } catch (err) {
-      toast({ status: "error", description: err.message || "Error saving" });
+      console.error("[PurchaseForm] Save error:", err);
+      toast({
+        status: "error",
+        description: err.message || "Failed to save purchase.",
+      });
     } finally {
       setSaving(false);
     }
