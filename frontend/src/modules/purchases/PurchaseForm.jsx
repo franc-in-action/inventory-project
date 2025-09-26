@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -34,7 +34,6 @@ export default function PurchaseForm({
   const { vendors, fetchProductsForVendor } = useVendors();
   const { addPurchase, updatePurchase } = usePurchases();
 
-  // ---- State ----
   const [vendorId, setVendorId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [items, setItems] = useState([{ productId: "", qty: 1, price: 0 }]);
@@ -43,20 +42,29 @@ export default function PurchaseForm({
 
   const isReadOnly = purchase?.received ?? false;
 
-  // ---- Initialize form fields when modal opens or purchase changes ----
+  // Initialize form fields
   useEffect(() => {
     if (!isOpen) return;
 
     if (purchase) {
       setVendorId(purchase.vendorId || "");
       setLocationId(purchase.locationId || "");
-      setItems(purchase.items?.map((i) => ({ ...i })) || []);
+      setItems(
+        purchase.items?.length
+          ? purchase.items.map((i) => ({
+              id: i.id, // ✅ include the existing item ID
+              productId: i.productId,
+              qty: i.qty,
+              price: i.price,
+            }))
+          : [{ productId: "", qty: 1, price: 0 }]
+      );
     } else {
       resetForm();
     }
   }, [purchase, isOpen]);
 
-  // ---- Load vendor-specific products whenever vendor changes ----
+  // Load vendor-specific products
   useEffect(() => {
     if (!vendorId) {
       setAvailableProducts([]);
@@ -68,7 +76,21 @@ export default function PurchaseForm({
       .catch(() => setAvailableProducts([]));
   }, [vendorId, fetchProductsForVendor]);
 
-  // ---- Helpers ----
+  // Auto-fill prices when products are loaded
+  useEffect(() => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (!item.price && item.productId) {
+          const selected = availableProducts.find(
+            (p) => p.id === item.productId
+          );
+          if (selected) return { ...item, price: selected.purchasePrice || 0 };
+        }
+        return item;
+      })
+    );
+  }, [availableProducts]);
+
   const resetForm = () => {
     setVendorId("");
     setLocationId("");
@@ -80,8 +102,8 @@ export default function PurchaseForm({
       const updated = [...prev];
       updated[index][field] = value;
 
-      // Auto-fill price when selecting a product
-      if (field === "productId") {
+      // Only fill price if it’s empty
+      if (field === "productId" && !updated[index].price) {
         const selected = availableProducts.find((p) => p.id === value);
         if (selected) updated[index].price = selected.purchasePrice || 0;
       }
@@ -96,37 +118,42 @@ export default function PurchaseForm({
   const removeItem = (index) =>
     setItems((prev) => prev.filter((_, i) => i !== index));
 
-  // ---- Submit handler ----
+  // Validation: no zeros or negative values
+  const isFormValid = useMemo(() => {
+    if (!vendorId || !locationId || items.length === 0) return false;
+
+    for (const item of items) {
+      if (!item.productId) return false;
+      if (Number(item.qty) <= 0) return false;
+      if (Number(item.price) <= 0) return false;
+    }
+
+    return true;
+  }, [vendorId, locationId, items]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isReadOnly) return;
+    if (isReadOnly || !isFormValid) return;
 
-    if (!vendorId || !locationId || items.length === 0) {
-      toast({
-        status: "error",
-        description:
-          "Please fill all required fields and add at least one item.",
-      });
-      return;
-    }
+    const payload = {
+      vendorId,
+      locationId,
+      items: items.map((i) => ({
+        productId: i.productId,
+        qty: Number(i.qty),
+        price: Number(i.price),
+      })),
+    };
 
     setSaving(true);
     try {
-      const payload = {
-        vendorId, // keep as string
-        locationId, // also keep as string
-        items,
-      };
-
       if (purchase) {
-        // Editing existing purchase
         await updatePurchase(purchase.id, payload);
         toast({
           status: "success",
           description: "Purchase updated successfully.",
         });
       } else {
-        // Creating new purchase
         await addPurchase(payload);
         toast({
           status: "success",
@@ -134,8 +161,8 @@ export default function PurchaseForm({
         });
       }
 
-      onSaved?.(); // optional callback
-      onClose(); // close modal after saving
+      onSaved?.();
+      onClose();
     } catch (err) {
       console.error("[PurchaseForm] Save error:", err);
       toast({
@@ -147,7 +174,6 @@ export default function PurchaseForm({
     }
   };
 
-  // ---- Render ----
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -168,7 +194,6 @@ export default function PurchaseForm({
           )}
 
           <VStack>
-            {/* Vendor */}
             <Select
               placeholder="Select Vendor"
               value={vendorId}
@@ -183,7 +208,6 @@ export default function PurchaseForm({
               ))}
             </Select>
 
-            {/* Location */}
             <Select
               placeholder="Select Location"
               value={locationId}
@@ -198,9 +222,7 @@ export default function PurchaseForm({
               ))}
             </Select>
 
-            {/* Items */}
             <Text fontWeight="medium">Items</Text>
-
             <VStack align="stretch">
               {items.map((item, idx) => (
                 <HStack key={idx}>
@@ -265,7 +287,7 @@ export default function PurchaseForm({
               type="submit"
               colorScheme="blue"
               isLoading={saving}
-              isDisabled={isReadOnly}
+              isDisabled={isReadOnly || !isFormValid}
             >
               {purchase
                 ? `Update Purchase – ${purchase.purchaseNumber}`

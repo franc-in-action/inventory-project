@@ -189,7 +189,7 @@ router.put(
 
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Only include fields if they are defined
+        // Update purchase info
         const data = {};
         if (locationId) data.location = { connect: { id: locationId } };
         if (vendorId) data.vendor = { connect: { id: vendorId } };
@@ -198,20 +198,52 @@ router.put(
         const purchase = await tx.purchase.update({
           where: { id },
           data,
+          include: { items: true },
         });
 
-        // Update or create items
         if (items) {
+          // Map of current items by id
+          const existingItemsMap = {};
+          purchase.items.forEach((i) => {
+            existingItemsMap[i.id] = i;
+          });
+
+          const newItemIds = [];
+
           for (const item of items) {
-            await tx.purchaseItem.upsert({
-              where: { id: item.id || 0 },
-              create: {
-                purchaseId: id,
-                productId: item.productId,
-                qty: item.qty,
-                price: item.price,
-              },
-              update: { qty: item.qty, price: item.price },
+            if (item.id && existingItemsMap[item.id]) {
+              // Update existing item
+              await tx.purchaseItem.update({
+                where: { id: item.id },
+                data: {
+                  qty: item.qty,
+                  price: item.price,
+                  productId: item.productId,
+                },
+              });
+              newItemIds.push(item.id);
+            } else {
+              // Create new item
+              const newItem = await tx.purchaseItem.create({
+                data: {
+                  purchaseId: id,
+                  productId: item.productId,
+                  qty: item.qty,
+                  price: item.price,
+                },
+              });
+              newItemIds.push(newItem.id);
+            }
+          }
+
+          // Delete removed items
+          const toDelete = purchase.items
+            .filter((i) => !newItemIds.includes(i.id))
+            .map((i) => i.id);
+
+          if (toDelete.length > 0) {
+            await tx.purchaseItem.deleteMany({
+              where: { id: { in: toDelete } },
             });
           }
         }
