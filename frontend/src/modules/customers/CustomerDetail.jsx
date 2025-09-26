@@ -30,7 +30,7 @@ import PaymentDetail from "../payments/PaymentDetail.jsx";
 
 export default function CustomerDetail({ customerId, isOpen, onClose }) {
   const { fetchCustomerById } = useCustomers();
-  const { sales, getSaleById } = useSales();
+  const { sales } = useSales();
 
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
         <ModalContent>
           <ModalHeader>Customer Details</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
+          <ModalBody display="flex" justifyContent="center" alignItems="center">
             <Spinner />
           </ModalBody>
         </ModalContent>
@@ -161,10 +161,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                         {salesWithBalances.map((s) => (
                           <Tr key={s.id}>
                             <Td>
-                              <Link
-                                color="blue.500"
-                                onClick={() => setSelectedSaleId(s.id)}
-                              >
+                              <Link onClick={() => setSelectedSaleId(s.id)}>
                                 {s.saleUuid}
                               </Link>
                             </Td>
@@ -209,10 +206,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                         {payments.map((p) => (
                           <Tr key={p.id}>
                             <Td>
-                              <Link
-                                color="blue.500"
-                                onClick={() => setSelectedPayment(p.id)}
-                              >
+                              <Link onClick={() => setSelectedPayment(p.id)}>
                                 {p.id}
                               </Link>
                             </Td>
@@ -222,7 +216,6 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                             <Td>
                               {p.saleId ? (
                                 <Link
-                                  color="blue.500"
                                   onClick={() => setSelectedSaleId(p.saleId)}
                                 >
                                   {saleMap[p.saleId]}
@@ -261,10 +254,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                           .map((e) => (
                             <Tr key={e.id}>
                               <Td>
-                                <Link
-                                  color="blue.500"
-                                  onClick={() => setSelectedPayment(e.id)}
-                                >
+                                <Link onClick={() => setSelectedPayment(e.id)}>
                                   {e.id}
                                 </Link>
                               </Td>
@@ -289,7 +279,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
       {/* Invoice Details Modal */}
       {selectedSaleId && (
         <InvoiceDetails
-          saleId={selectedSaleId} // pass ID, not full object
+          saleId={selectedSaleId}
           isOpen={Boolean(selectedSaleId)}
           onClose={() => setSelectedSaleId(null)}
         />
