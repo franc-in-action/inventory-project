@@ -44,6 +44,24 @@ export async function fetchNextSaleNumber() {
   return result.saleUuid;
 }
 
+// --- New Returns API ---
+export async function createReturn(returnData) {
+  return apiFetch("/returns", {
+    method: "POST",
+    body: JSON.stringify(returnData),
+  });
+}
+
+export async function fetchReturns(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const result = await apiFetch(`/returns?${query}`);
+  return result.items || result.returns || [];
+}
+
+export async function getReturnById(returnId) {
+  return apiFetch(`/returns/${returnId}`);
+}
+
 /**
  * Format a sale receipt in POS-style text
  * @param {Object} sale

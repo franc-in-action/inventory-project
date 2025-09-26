@@ -8,6 +8,8 @@ import {
 import {
   fetchSales as apiFetchSales,
   createSale as apiCreateSale,
+  createReturn as apiCreateReturn,
+  fetchReturns as apiFetchReturns,
 } from "../salesApi.js";
 
 const SalesContext = createContext();
@@ -26,6 +28,17 @@ export function SalesProvider({ children }) {
       setSales([]);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  // --- Load returns ---
+  const loadReturns = useCallback(async () => {
+    try {
+      const result = await apiFetchReturns();
+      setReturns(result || []);
+    } catch (err) {
+      console.error("[SalesContext] Failed to fetch returns", err);
+      setReturns([]);
     }
   }, []);
 
@@ -54,16 +67,32 @@ export function SalesProvider({ children }) {
     setSales((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
+  // --- Returns helpers ---
+  const addReturn = useCallback(async (returnData) => {
+    const newReturn = await apiCreateReturn(returnData);
+    setReturns((prev) => [newReturn, ...prev]);
+    return newReturn;
+  }, []);
+
+  const getReturnById = useCallback(
+    (id) => returns.find((r) => r.id === id) || null,
+    [returns]
+  );
+
   return (
     <SalesContext.Provider
       value={{
         sales,
+        returns,
         loading,
         reloadSales: loadSales,
+        reloadReturns: loadReturns,
         getSaleById,
         addSale,
         updateSale,
         deleteSale,
+        getReturnById,
+        addReturn,
       }}
     >
       {children}

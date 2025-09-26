@@ -67,7 +67,7 @@ export default function PaymentList({ onEdit, filter = "" }) {
 
   return (
     <>
-      <Table variant="striped" size="sm">
+      <Table>
         <Thead>
           <Tr>
             <Th>Payment #</Th>

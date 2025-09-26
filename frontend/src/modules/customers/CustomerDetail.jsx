@@ -22,6 +22,7 @@ import {
   Td,
   Tfoot,
   Link,
+  Box,
 } from "@chakra-ui/react";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 import { useSales } from "../sales/contexts/SalesContext.jsx";
@@ -103,6 +104,27 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
   const totalPaid = salesWithBalances.reduce((sum, s) => sum + s.paid, 0);
   const totalBalance = totalSales - totalPaid;
 
+  const totalDebit = ledger.reduce((sum, e) => {
+    if (
+      e.type === "SALE" ||
+      e.type === "PAYMENT_ISSUED" ||
+      (e.type === "ADJUSTMENT" && e.amount >= 0)
+    )
+      return sum + Math.abs(e.amount);
+    return sum;
+  }, 0);
+
+  const totalCredit = ledger.reduce((sum, e) => {
+    if (
+      e.type === "PURCHASE" ||
+      e.type === "PAYMENT_RECEIVED" ||
+      e.type === "RETURN" ||
+      (e.type === "ADJUSTMENT" && e.amount < 0)
+    )
+      return sum + Math.abs(e.amount);
+    return sum;
+  }, 0);
+
   return (
     <>
       <Modal size="xl" isOpen={isOpen} onClose={onClose}>
@@ -134,11 +156,11 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
               </Text>
             </VStack>
 
-            <Tabs variant="enclosed">
+            <Tabs>
               <TabList>
                 <Tab>Sales</Tab>
                 <Tab>Payments</Tab>
-                <Tab>Ledger Adjustments</Tab>
+                <Tab>Statement</Tab>
               </TabList>
 
               <TabPanels>
@@ -195,9 +217,9 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                     <Table size="sm">
                       <Thead>
                         <Tr>
-                          <Th>Payment #</Th>
+                          <Th>Pay #</Th>
                           <Th>Date</Th>
-                          <Th>Invoice #</Th>
+                          <Th>Inv #</Th>
                           <Th>Amount</Th>
                           <Th>Method</Th>
                         </Tr>
@@ -215,7 +237,8 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                                     setSelectedPayment(entry.receivedPaymentId)
                                   }
                                 >
-                                  {entry.receivedPaymentId}
+                                  {entry.receivedPayment?.paymentNumber ||
+                                    entry.receivedPaymentId.slice(0, 7)}
                                 </Link>
                               </Td>
                               <Td>
@@ -244,41 +267,166 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                   )}
                 </TabPanel>
 
-                {/* Ledger Adjustments Tab */}
+                {/* Ledger Adjustments / Full Statement Tab */}
                 <TabPanel>
-                  {ledger.filter((e) => !e.saleId).length === 0 ? (
-                    <Text>No unallocated payments or adjustments</Text>
+                  {ledger.length === 0 ? (
+                    <Text>No ledger entries for this customer</Text>
                   ) : (
-                    <Table size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Entry #</Th>
-                          <Th>Date</Th>
-                          <Th>Type</Th>
-                          <Th>Amount</Th>
-                          <Th>Notes</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {ledger
-                          .filter((e) => !e.saleId)
-                          .map((e) => (
-                            <Tr key={e.id}>
-                              <Td>
-                                <Link onClick={() => setSelectedPayment(e.id)}>
-                                  {e.id}
-                                </Link>
-                              </Td>
-                              <Td>
-                                {new Date(e.createdAt).toLocaleDateString()}
-                              </Td>
-                              <Td>{e.type}</Td>
-                              <Td>{e.amount.toFixed(2)}</Td>
-                              <Td>{e.notes || "—"}</Td>
-                            </Tr>
-                          ))}
-                      </Tbody>
-                    </Table>
+                    <Box overflowX="auto" w="100%" mt={4}>
+                      <Table
+                        size="sm"
+                        variant="simple"
+                        overflowX="auto"
+                        display="block"
+                      >
+                        <Thead>
+                          <Tr>
+                            <Th>Entry #</Th>
+                            <Th>Date</Th>
+                            <Th>Type</Th>
+                            <Th>Invoice / Purchase #</Th>
+                            <Th isNumeric>Debit</Th>
+                            <Th isNumeric>Credit</Th>
+                            <Th>Notes</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {ledger.map((entry) => {
+                            let debit = 0;
+                            let credit = 0;
+
+                            switch (entry.type) {
+                              case "SALE":
+                                debit = entry.amount;
+                                break;
+                              case "PURCHASE":
+                              case "PAYMENT_RECEIVED":
+                              case "RETURN":
+                                credit = entry.amount;
+                                break;
+                              case "PAYMENT_ISSUED":
+                                debit = entry.amount;
+                                break;
+                              case "ADJUSTMENT":
+                                if (entry.amount >= 0) debit = entry.amount;
+                                else credit = -entry.amount;
+                                break;
+                              default:
+                                break;
+                            }
+
+                            const balance = debit - credit;
+
+                            return (
+                              <Tr key={entry.id}>
+                                <Td>
+                                  {["PAYMENT_RECEIVED"].includes(entry.type) &&
+                                  entry.receivedPaymentId ? (
+                                    <Link
+                                      onClick={() =>
+                                        setSelectedPayment(
+                                          entry.receivedPaymentId
+                                        )
+                                      }
+                                    >
+                                      {entry.receivedPayment?.paymentNumber ||
+                                        entry.receivedPaymentId.slice(0, 7)}
+                                    </Link>
+                                  ) : ["PAYMENT_ISSUED"].includes(entry.type) &&
+                                    entry.issuedPaymentId ? (
+                                    <Link
+                                      onClick={() =>
+                                        setSelectedPayment(
+                                          entry.issuedPaymentId
+                                        )
+                                      }
+                                    >
+                                      {entry.issuedPayment?.paymentNumber ||
+                                        entry.issuedPaymentId.slice(0, 7)}
+                                    </Link>
+                                  ) : ["SALE"].includes(entry.type) &&
+                                    entry.saleId ? (
+                                    <Link
+                                      onClick={() =>
+                                        setSelectedSaleId(entry.saleId)
+                                      }
+                                    >
+                                      {entry.sale?.saleUuid ||
+                                        entry.saleId.slice(0, 7)}
+                                    </Link>
+                                  ) : ["PURCHASE"].includes(entry.type) &&
+                                    entry.purchaseId ? (
+                                    <Link>
+                                      {entry.purchase?.purchaseUuid ||
+                                        entry.purchaseId.slice(0, 7)}
+                                    </Link>
+                                  ) : ["RETURN", "ADJUSTMENT"].includes(
+                                      entry.type
+                                    ) ? (
+                                    entry.id.slice(0, 7)
+                                  ) : (
+                                    entry.id.slice(0, 7)
+                                  )}
+                                </Td>
+                                <Td>
+                                  {new Date(
+                                    entry.createdAt
+                                  ).toLocaleDateString()}
+                                </Td>
+                                <Td>{entry.type}</Td>
+                                <Td>
+                                  {entry.saleId
+                                    ? saleMap[entry.saleId]
+                                    : entry.purchaseId || "—"}
+                                </Td>
+                                <Td
+                                  isNumeric
+                                  color={balance < 0 ? "red.500" : "inherit"}
+                                >
+                                  {debit.toFixed(2)}
+                                </Td>
+                                <Td
+                                  isNumeric
+                                  color={balance < 0 ? "red.500" : "inherit"}
+                                >
+                                  {credit.toFixed(2)}
+                                </Td>
+                                <Td>{entry.description || "—"}</Td>
+                              </Tr>
+                            );
+                          })}
+                        </Tbody>
+                        <Tfoot>
+                          <Tr fontWeight="bold">
+                            <Td>Total</Td>
+                            <Td></Td>
+                            <Td></Td>
+                            <Td></Td>
+                            <Td
+                              isNumeric
+                              color={
+                                totalDebit - totalCredit < 0
+                                  ? "red.500"
+                                  : "inherit"
+                              }
+                            >
+                              {totalDebit.toFixed(2)}
+                            </Td>
+                            <Td
+                              isNumeric
+                              color={
+                                totalDebit - totalCredit < 0
+                                  ? "red.500"
+                                  : "inherit"
+                              }
+                            >
+                              {totalCredit.toFixed(2)}
+                            </Td>
+                            <Td></Td>
+                          </Tr>
+                        </Tfoot>
+                      </Table>
+                    </Box>
                   )}
                 </TabPanel>
               </TabPanels>
