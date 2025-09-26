@@ -16,6 +16,7 @@ import {
   Th,
   Td,
   ButtonGroup,
+  useToast,
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
@@ -31,6 +32,7 @@ export default function PurchaseDetails({
   const { products } = useProducts();
   const { vendorsMap } = useVendors();
   const { markReceived } = usePurchases();
+  const toast = useToast(); // ✅ Add toast
 
   const totalAmount = (purchase?.items || []).reduce(
     (sum, i) => sum + i.qty * i.price,
@@ -41,8 +43,23 @@ export default function PurchaseDetails({
     if (!purchase) return;
     try {
       await markReceived(purchase.id); // backend still uses UUID
+      toast({
+        title: "Purchase received",
+        description: `Purchase #${purchase.purchaseUuid} has been marked as received.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onClose();
     } catch (err) {
       console.error("Failed to mark received", err);
+      toast({
+        title: "Error",
+        description: `Failed to receive Purchase #${purchase.purchaseUuid}`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -50,7 +67,6 @@ export default function PurchaseDetails({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        {/* ✅ Display the human-friendly purchase number */}
         <ModalHeader>Purchase #{purchase?.purchaseUuid}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -121,7 +137,9 @@ export default function PurchaseDetails({
               Edit
             </Button>
             {!purchase?.received && (
-              <Button onClick={handleReceive}>Receive</Button>
+              <Button colorScheme="green" onClick={handleReceive}>
+                Receive
+              </Button>
             )}
           </ButtonGroup>
         </ModalFooter>
