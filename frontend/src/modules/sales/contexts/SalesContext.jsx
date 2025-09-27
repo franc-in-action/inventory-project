@@ -20,6 +20,8 @@ export function SalesProvider({ children }) {
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [previewSaleData, setPreviewSaleData] = useState(null);
+
   const loadSales = useCallback(async () => {
     setLoading(true);
     try {
@@ -47,6 +49,21 @@ export function SalesProvider({ children }) {
     loadSales();
     loadReturns();
   }, [loadSales, loadReturns]);
+
+  const previewSale = useCallback((saleData) => {
+    // Build enriched sale object, like a real sale
+    const virtualSale = {
+      id: "preview", // dummy ID
+      saleUuid: saleData.saleUuid,
+      customer: saleData.customer || null,
+      items: saleData.items || [],
+      payments: [saleData.payment || { amount: 0, method: "cash" }],
+      total: saleData.total || 0,
+      status: "preview",
+    };
+    setPreviewSaleData(virtualSale);
+    return virtualSale;
+  }, []);
 
   const addSale = useCallback(async (saleData, receiptOptions = {}) => {
     const newSale = await apiCreateSale(saleData);
@@ -92,6 +109,8 @@ export function SalesProvider({ children }) {
         addReturn,
         getSaleById,
         getReturnById,
+        previewSale,
+        previewSaleData, // expose preview sale
       }}
     >
       {children}

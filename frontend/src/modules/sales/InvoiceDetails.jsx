@@ -23,10 +23,11 @@ import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
 
 export default function InvoiceDetails({ saleId, isOpen, onClose }) {
-  const { getSaleById } = useSales();
+  const { getSaleById, previewSaleData } = useSales();
   const { productsMap } = useProducts();
 
-  const sale = getSaleById(saleId);
+  // Determine the sale to display: preview first, then saved sale
+  const sale = previewSaleData || (saleId ? getSaleById(saleId) : null);
   if (!sale) return null;
 
   const wrapText = (text, length = 12) => {
@@ -99,7 +100,11 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
               </Tbody>
             </Table>
             <Divider />
-            <Text>Payment: {sale.payments?.[0]?.method || "—"}</Text>
+            <Text>
+              Payment:{" "}
+              {sale.payment?.method || sale.payments?.[0]?.method || "—"}
+            </Text>
+            <Text>Total: {sale.total?.toFixed(2)}</Text>
           </VStack>
         </ModalBody>
         <ModalFooter>

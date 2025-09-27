@@ -20,7 +20,6 @@ import {
   FormControl,
   FormLabel,
   ButtonGroup,
-  Input,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
@@ -35,7 +34,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
   const { products, stockMap } = useProducts();
   const { customers, reloadCustomers, fetchCustomerById, createCustomer } =
     useCustomers();
-  const { addSale } = useSales();
+  const { addSale, previewSale, previewSaleData } = useSales();
 
   const [saleUuid, setSaleUuid] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -44,7 +43,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
   const [payment, setPayment] = useState({ amount: 0, method: "cash" });
   const [isCashSale, setIsCashSale] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [previewSaleId, setPreviewSaleId] = useState(null);
 
   const [newProduct, setNewProduct] = useState({
     productId: "",
@@ -52,7 +50,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
     price: 0,
   });
 
-  // Fetch next invoice number & customers when modal opens
+  // Fetch next invoice number & customers
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
@@ -73,7 +71,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
       .catch(() => setCustomerData(null));
   }, [selectedCustomer, fetchCustomerById]);
 
-  // Update cart items with latest product info
+  // Enriched cart with stock and price info
   const enrichedCart = useMemo(
     () =>
       cart.map((item) => {
@@ -115,6 +113,19 @@ export default function InvoiceForm({ isOpen, onClose }) {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Preview Sale
+  const handlePreview = () => {
+    const saleData = {
+      saleUuid,
+      customer: selectedCustomer,
+      items: enrichedCart,
+      payment,
+      total: totalAmount,
+    };
+    previewSale(saleData); // store preview in context
+  };
+
+  // Submit Sale
   const handleSubmit = async (status = "complete") => {
     if (!selectedCustomer || enrichedCart.length === 0) {
       return alert("Select customer and add at least one product");
@@ -133,7 +144,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
 
     setLoading(true);
     try {
-      const { sale } = await addSale({
+      await addSale({
         saleUuid,
         locationId,
         customerId: selectedCustomer.id,
@@ -147,18 +158,14 @@ export default function InvoiceForm({ isOpen, onClose }) {
         status,
       });
 
-      if (status === "preview") {
-        setPreviewSaleId(sale.id);
-      } else {
-        // Reset form
-        setCart([]);
-        setSelectedCustomer(null);
-        setCustomerData(null);
-        setPayment({ amount: 0, method: "cash" });
-        setIsCashSale(false);
-        setSaleUuid("");
-        onClose();
-      }
+      // Reset form
+      setCart([]);
+      setSelectedCustomer(null);
+      setCustomerData(null);
+      setPayment({ amount: 0, method: "cash" });
+      setIsCashSale(false);
+      setSaleUuid("");
+      onClose();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -181,19 +188,25 @@ export default function InvoiceForm({ isOpen, onClose }) {
                 <Select
                   placeholder="Select Product"
                   value={newProduct.productId}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const selectedProduct = products.find(
+                      (p) => p.id === selectedId
+                    );
                     setNewProduct((prev) => ({
                       ...prev,
-                      productId: e.target.value,
-                    }))
-                  }
+                      productId: selectedId,
+                      price: selectedProduct?.price || 0,
+                    }));
+                  }}
                 >
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} (SKU: {p.sku})
+                      {p.name} (Stock: {stockMap[p.id] || 0})
                     </option>
                   ))}
                 </Select>
+
                 <NumberInput
                   min={1}
                   value={newProduct.qty}
@@ -260,10 +273,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
 
               {/* Right: Preview & Complete */}
               <VStack spacing={2} flex={1}>
-                <Button
-                  colorScheme="yellow"
-                  onClick={() => handleSubmit("preview")}
-                >
+                <Button colorScheme="yellow" onClick={handlePreview}>
                   Preview Sale
                 </Button>
                 <Button
@@ -333,7 +343,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
             </HStack>
           </ModalBody>
 
-          {/* Footer Buttons */}
           <ModalFooter>
             <ButtonGroup>
               <Button colorScheme="red" onClick={() => setCart([])}>
@@ -351,11 +360,11 @@ export default function InvoiceForm({ isOpen, onClose }) {
       </Modal>
 
       {/* Preview Sale Modal */}
-      {previewSaleId && (
+      {previewSaleData && (
         <InvoiceDetails
-          saleId={previewSaleId}
-          isOpen={!!previewSaleId}
-          onClose={() => setPreviewSaleId(null)}
+          saleId={previewSaleData.id}
+          isOpen={!!previewSaleData}
+          onClose={() => previewSale(null)}
         />
       )}
     </>
