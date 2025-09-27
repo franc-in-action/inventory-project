@@ -20,7 +20,9 @@ export function SalesProvider({ children }) {
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Preview sale state
   const [previewSaleData, setPreviewSaleData] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const loadSales = useCallback(async () => {
     setLoading(true);
@@ -50,8 +52,8 @@ export function SalesProvider({ children }) {
     loadReturns();
   }, [loadSales, loadReturns]);
 
+  // Open preview sale safely
   const previewSale = useCallback((saleData) => {
-    // Build enriched sale object, like a real sale
     const virtualSale = {
       id: "preview", // dummy ID
       saleUuid: saleData.saleUuid,
@@ -62,7 +64,33 @@ export function SalesProvider({ children }) {
       status: "preview",
     };
     setPreviewSaleData(virtualSale);
+    setIsPreviewOpen(true);
     return virtualSale;
+  }, []);
+
+  const getSaleForEdit = useCallback(
+    (id) => {
+      const sale = sales.find((s) => s.id === id);
+      if (!sale) return null;
+
+      return {
+        id: sale.id,
+        saleUuid: sale.saleUuid,
+        customer: sale.customer || null,
+        items: sale.items || [],
+        payment: sale.payments?.[0] || { amount: 0, method: "cash" },
+        total: sale.total || 0,
+        status: sale.status,
+      };
+    },
+    [sales]
+  );
+
+  // Close preview safely
+  const closePreviewSale = useCallback(() => {
+    setIsPreviewOpen(false);
+    // delay clearing data to prevent render errors
+    setTimeout(() => setPreviewSaleData(null), 0);
   }, []);
 
   const addSale = useCallback(async (saleData, receiptOptions = {}) => {
@@ -110,7 +138,10 @@ export function SalesProvider({ children }) {
         getSaleById,
         getReturnById,
         previewSale,
-        previewSaleData, // expose preview sale
+        previewSaleData,
+        isPreviewOpen,
+        closePreviewSale,
+        getSaleForEdit,
       }}
     >
       {children}

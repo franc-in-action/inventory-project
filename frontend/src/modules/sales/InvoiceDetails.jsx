@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -21,10 +21,13 @@ import {
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
+import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function InvoiceDetails({ saleId, isOpen, onClose }) {
-  const { getSaleById, previewSaleData } = useSales();
+  const { getSaleById, previewSaleData, closePreviewSale } = useSales();
   const { productsMap } = useProducts();
+
+  const [editing, setEditing] = useState(false);
 
   // Determine the sale to display: preview first, then saved sale
   const sale = previewSaleData || (saleId ? getSaleById(saleId) : null);
@@ -40,79 +43,98 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
     return result;
   };
 
+  const handleEdit = () => {
+    closePreviewSale(); // close preview modal
+    setEditing(true); // open InvoiceForm prefilled
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Invoice #: {sale.saleUuid}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack
-            spacing={1}
-            align="stretch"
-            fontFamily="monospace"
-            fontSize="sm"
-            p={2}
-          >
-            <Text>Invoice #: {sale.saleUuid}</Text>
-            <Text>Customer: {sale.customer?.name || "Walk-in"}</Text>
-            <Divider />
-            <Table size="sm" variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Item</Th>
-                  <Th isNumeric>Qty</Th>
-                  <Th isNumeric>Price</Th>
-                  <Th isNumeric>Total</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {(sale.items || []).map((item, idx) => {
-                  const name =
-                    productsMap[item.productId] ||
-                    item.product?.name ||
-                    item.productId;
-                  const wrapped = wrapText(name, 12);
-                  const lineTotal = (item.qty * item.price).toFixed(2);
-                  return (
-                    <React.Fragment key={`item-${idx}`}>
-                      {wrapped.map((line, i) => (
-                        <Tr key={`line-${i}`}>
-                          <Td>{line}</Td>
-                          {i === 0 ? (
-                            <>
-                              <Td isNumeric>{item.qty}</Td>
-                              <Td isNumeric>{item.price.toFixed(2)}</Td>
-                              <Td isNumeric>{lineTotal}</Td>
-                            </>
-                          ) : (
-                            <>
-                              <Td />
-                              <Td />
-                              <Td />
-                            </>
-                          )}
-                        </Tr>
-                      ))}
-                    </React.Fragment>
-                  );
-                })}
-              </Tbody>
-            </Table>
-            <Divider />
-            <Text>
-              Payment:{" "}
-              {sale.payment?.method || sale.payments?.[0]?.method || "—"}
-            </Text>
-            <Text>Total: {sale.total?.toFixed(2)}</Text>
-          </VStack>
-        </ModalBody>
-        <ModalFooter>
-          <ButtonGroup>
-            <Button onClick={onClose}>Close</Button>
-          </ButtonGroup>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <>
+      <Modal isOpen={isOpen && !editing} onClose={onClose} size="6xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Invoice #: {sale.saleUuid}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack
+              spacing={1}
+              align="stretch"
+              fontFamily="monospace"
+              fontSize="sm"
+              p={2}
+            >
+              <Text>Invoice #: {sale.saleUuid}</Text>
+              <Text>Customer: {sale.customer?.name || "Walk-in"}</Text>
+              <Divider />
+              <Table size="sm" variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Item</Th>
+                    <Th isNumeric>Qty</Th>
+                    <Th isNumeric>Price</Th>
+                    <Th isNumeric>Total</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {(sale.items || []).map((item, idx) => {
+                    const name =
+                      productsMap[item.productId] ||
+                      item.product?.name ||
+                      item.productId;
+                    const wrapped = wrapText(name, 12);
+                    const lineTotal = (item.qty * item.price).toFixed(2);
+                    return (
+                      <React.Fragment key={`item-${idx}`}>
+                        {wrapped.map((line, i) => (
+                          <Tr key={`line-${i}`}>
+                            <Td>{line}</Td>
+                            {i === 0 ? (
+                              <>
+                                <Td isNumeric>{item.qty}</Td>
+                                <Td isNumeric>{item.price.toFixed(2)}</Td>
+                                <Td isNumeric>{lineTotal}</Td>
+                              </>
+                            ) : (
+                              <>
+                                <Td />
+                                <Td />
+                                <Td />
+                              </>
+                            )}
+                          </Tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+                </Tbody>
+              </Table>
+              <Divider />
+              <Text>
+                Payment:{" "}
+                {sale.payment?.method || sale.payments?.[0]?.method || "—"}
+              </Text>
+              <Text>Total: {sale.total?.toFixed(2)}</Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <ButtonGroup>
+              <Button onClick={onClose}>Close</Button>
+              <Button colorScheme="blue" onClick={handleEdit}>
+                Edit
+              </Button>
+            </ButtonGroup>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* InvoiceForm for editing the sale */}
+      {editing && (
+        <InvoiceForm
+          isOpen={editing}
+          onClose={() => setEditing(false)}
+          saleData={sale} // pass sale to prefill form
+        />
+      )}
+    </>
   );
 }

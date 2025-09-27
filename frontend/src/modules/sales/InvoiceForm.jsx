@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Box,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
+  ModalCloseButton,
   ModalBody,
   ModalFooter,
   Button,
@@ -30,12 +30,20 @@ import { useSales } from "./contexts/SalesContext.jsx";
 import { fetchNextSaleNumber } from "./salesApi.js";
 import InvoiceDetails from "./InvoiceDetails.jsx";
 
-export default function InvoiceForm({ isOpen, onClose }) {
+export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
   const { products, stockMap } = useProducts();
   const { customers, reloadCustomers, fetchCustomerById, createCustomer } =
     useCustomers();
-  const { addSale, previewSale, previewSaleData } = useSales();
+  const {
+    addSale,
+    previewSale,
+    previewSaleData,
+    isPreviewOpen,
+    closePreviewSale,
+    getSaleForEdit,
+  } = useSales();
 
+  const [editingSale, setEditingSale] = useState(null);
   const [saleUuid, setSaleUuid] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerData, setCustomerData] = useState(null);
@@ -43,25 +51,45 @@ export default function InvoiceForm({ isOpen, onClose }) {
   const [payment, setPayment] = useState({ amount: 0, method: "cash" });
   const [isCashSale, setIsCashSale] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [newProduct, setNewProduct] = useState({
     productId: "",
     qty: 1,
     price: 0,
   });
 
-  // Fetch next invoice number & customers
+  // Prefill form if editing
   useEffect(() => {
     if (!isOpen) return;
-    (async () => {
-      try {
-        setSaleUuid(await fetchNextSaleNumber());
-      } catch {
-        setSaleUuid("N/A");
-      }
-      reloadCustomers();
-    })();
-  }, [isOpen, reloadCustomers]);
+
+    if (saleData) {
+      const data =
+        saleData.id === "preview"
+          ? saleData
+          : getSaleForEdit(saleData.id) || saleData;
+
+      setEditingSale(data);
+      setSaleUuid(data.saleUuid || "");
+      setSelectedCustomer(data.customer || null);
+      setCart(data.items || []);
+      setPayment(data.payment || { amount: 0, method: "cash" });
+      setIsCashSale(data.payment?.method === "cash");
+    } else {
+      setEditingSale(null);
+      (async () => {
+        try {
+          setSaleUuid(await fetchNextSaleNumber());
+        } catch {
+          setSaleUuid("N/A");
+        }
+        reloadCustomers();
+      })();
+      setCart([]);
+      setSelectedCustomer(null);
+      setCustomerData(null);
+      setPayment({ amount: 0, method: "cash" });
+      setIsCashSale(false);
+    }
+  }, [isOpen, saleData, getSaleForEdit, reloadCustomers]);
 
   // Load selected customer data
   useEffect(() => {
@@ -71,7 +99,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
       .catch(() => setCustomerData(null));
   }, [selectedCustomer, fetchCustomerById]);
 
-  // Enriched cart with stock and price info
+  // Enriched cart
   const enrichedCart = useMemo(
     () =>
       cart.map((item) => {
@@ -109,32 +137,27 @@ export default function InvoiceForm({ isOpen, onClose }) {
     });
   };
 
-  const removeCartRow = (index) => {
+  const removeCartRow = (index) =>
     setCart((prev) => prev.filter((_, i) => i !== index));
-  };
 
-  // Preview Sale
   const handlePreview = () => {
-    const saleData = {
+    const sale = {
       saleUuid,
       customer: selectedCustomer,
       items: enrichedCart,
       payment,
       total: totalAmount,
     };
-    previewSale(saleData); // store preview in context
+    previewSale(sale);
   };
 
-  // Submit Sale
   const handleSubmit = async (status = "complete") => {
-    if (!selectedCustomer || enrichedCart.length === 0) {
+    if (!selectedCustomer || enrichedCart.length === 0)
       return alert("Select customer and add at least one product");
-    }
 
     const locationId = enrichedCart[0].locationId;
-    if (enrichedCart.some((i) => i.locationId !== locationId)) {
+    if (enrichedCart.some((i) => i.locationId !== locationId))
       return alert("All products must belong to the same location");
-    }
 
     const insufficient = enrichedCart.find((i) => i.qty > i.stockQty);
     if (insufficient) {
@@ -145,6 +168,7 @@ export default function InvoiceForm({ isOpen, onClose }) {
     setLoading(true);
     try {
       await addSale({
+        id: editingSale?.id,
         saleUuid,
         locationId,
         customerId: selectedCustomer.id,
@@ -158,7 +182,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
         status,
       });
 
-      // Reset form
       setCart([]);
       setSelectedCustomer(null);
       setCustomerData(null);
@@ -178,11 +201,19 @@ export default function InvoiceForm({ isOpen, onClose }) {
       <Modal size="6xl" isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>New Invoice #: {saleUuid}</ModalHeader>
+          <ModalHeader>
+            {editingSale ? "Editing Sale: " : "New Invoice #: "} {saleUuid}
+          </ModalHeader>
+          <ModalCloseButton />
           <ModalBody>
-            {/* Top Row */}
+            {editingSale && (
+              <Text color="orange.500" fontWeight="bold" mb={2}>
+                You are editing an existing sale
+              </Text>
+            )}
+
+            {/* Top Row: Add Product, Customer, Preview/Complete */}
             <HStack spacing={4} mb={4} align="flex-start">
-              {/* Left: Add Product */}
               <VStack align="stretch" spacing={2} flex={2}>
                 <Text fontWeight="bold">Add Product</Text>
                 <Select
@@ -206,7 +237,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
                     </option>
                   ))}
                 </Select>
-
                 <NumberInput
                   min={1}
                   value={newProduct.qty}
@@ -234,7 +264,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
                 </Button>
               </VStack>
 
-              {/* Center: Customer & Cash Sale */}
               <VStack align="stretch" spacing={2} flex={1}>
                 <Text fontWeight="bold">Customer Options</Text>
                 <Button
@@ -271,7 +300,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
                 </FormControl>
               </VStack>
 
-              {/* Right: Preview & Complete */}
               <VStack spacing={2} flex={1}>
                 <Button colorScheme="yellow" onClick={handlePreview}>
                   Preview Sale
@@ -280,16 +308,15 @@ export default function InvoiceForm({ isOpen, onClose }) {
                   colorScheme="green"
                   onClick={() => handleSubmit("complete")}
                 >
-                  Complete Sale
+                  {editingSale ? "Update Sale" : "Complete Sale"}
                 </Button>
               </VStack>
             </HStack>
 
             <Divider mb={4} />
 
-            {/* Bottom Row */}
+            {/* Bottom Row: Cart & Summary */}
             <HStack spacing={4}>
-              {/* Left: Cart */}
               <VStack align="stretch" spacing={2} flex={3}>
                 <Text fontWeight="bold">Cart Items</Text>
                 {enrichedCart.length === 0 && <Text>No items in cart</Text>}
@@ -324,7 +351,6 @@ export default function InvoiceForm({ isOpen, onClose }) {
                 ))}
               </VStack>
 
-              {/* Right: Order Summary */}
               <VStack
                 align="stretch"
                 spacing={2}
@@ -352,19 +378,18 @@ export default function InvoiceForm({ isOpen, onClose }) {
                 Save as Draft
               </Button>
               <Button colorScheme="blue" onClick={() => handleSubmit("edit")}>
-                Edit
+                {editingSale ? "Update Sale" : "Edit"}
               </Button>
             </ButtonGroup>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Preview Sale Modal */}
       {previewSaleData && (
         <InvoiceDetails
           saleId={previewSaleData.id}
-          isOpen={!!previewSaleData}
-          onClose={() => previewSale(null)}
+          isOpen={isPreviewOpen}
+          onClose={closePreviewSale}
         />
       )}
     </>
