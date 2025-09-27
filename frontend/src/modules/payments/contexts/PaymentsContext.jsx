@@ -74,7 +74,7 @@ export function PaymentsProvider({ children }) {
     setPayments((prev) => prev.filter((p) => p.id !== id));
     if (payment?.customerId) await getCustomerById(payment.customerId);
   };
-  const getPayment = async (id) => apiGetPaymentById(id);
+  const getPayment = async (id) => getPaymentById(id);
 
   // ADJUSTMENTS
   const createAdjustment = async (data) => {

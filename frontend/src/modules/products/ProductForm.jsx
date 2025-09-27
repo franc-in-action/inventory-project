@@ -16,6 +16,7 @@ import {
   FormControl,
   FormLabel,
   useToast,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import ComboBox from "../../components/ComboBox.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
@@ -240,10 +241,12 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         </ModalBody>
 
         <ModalFooter>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" isLoading={saving}>
-            {productId ? "Update" : "Create"}
-          </Button>
+          <ButtonGroup>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit" isLoading={saving}>
+              {productId ? "Update" : "Create"}
+            </Button>
+          </ButtonGroup>
         </ModalFooter>
       </ModalContent>
     </Modal>
