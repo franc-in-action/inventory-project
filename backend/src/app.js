@@ -25,6 +25,8 @@ import locationsRouter from "./routes/locations.js";
 import logsRouter from "./routes/logs.js";
 import adminRouter from "./routes/admin.js";
 
+import reportsRouter from "./routes/reports.js";
+
 const app = express();
 
 // Enable CORS for frontend dev server
@@ -65,6 +67,8 @@ app.use("/api/sync", syncRouter);
 app.use("/api/locations", locationsRouter);
 app.use("/api/logs", logsRouter);
 app.use("/api/admin", adminRouter);
+
+app.use("/api/reports", reportsRouter);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
