@@ -13,6 +13,7 @@ import {
   FaWarehouse,
   FaBalanceScale,
   FaUndoAlt,
+  FaChartBar,
 } from "react-icons/fa";
 
 import { getUserFromToken } from "../modules/auth/authApi.js";
@@ -37,6 +38,7 @@ const dashboardLinks = [
   { label: "Payments", href: "/payments", icon: FaMoneyBillWave },
   { label: "Adjustments", href: "/adjustments", icon: FaBalanceScale },
   { label: "Admin Tools", href: "/admin-tools", icon: FaTools },
+  { label: "Reports", href: "/reports", icon: FaChartBar },
 ];
 
 // Reusable card component

@@ -25,6 +25,7 @@ import {
   FaTruck,
   FaMoneyBillWave,
   FaWarehouse,
+  FaChartBar,
 } from "react-icons/fa";
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -62,6 +63,11 @@ export default function Sidebar({ isOpen, onClose }) {
         },
         { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
         { to: "/vendors", label: "Vendors", roles: PERMISSIONS.VENDORS },
+        {
+          to: "/reports",
+          label: "Stock Valuation",
+          roles: PERMISSIONS.REPORTS,
+        },
       ],
     },
     {
@@ -90,7 +96,19 @@ export default function Sidebar({ isOpen, onClose }) {
         {
           to: "/returns",
           label: "Returns",
-          roles: PERMISSIONS.RETURNS, // adjust role if needed
+          roles: PERMISSIONS.RETURNS,
+        },
+      ],
+    },
+    {
+      label: "Reports",
+      icon: FaChartBar,
+      roles: [PERMISSIONS.REPORTS],
+      submenu: [
+        {
+          to: "/reports",
+          label: "Stock Valuation",
+          roles: PERMISSIONS.REPORTS,
         },
       ],
     },

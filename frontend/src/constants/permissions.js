@@ -12,4 +12,5 @@ export const PERMISSIONS = {
   ADJUSTMENTS: ["Admin", "Manager"],
   STOCK: ["Admin", "Manager", "Staff"], // added
   STOCK_ADJUSTMENTS: ["Admin", "Manager", "Staff"], // added
+  REPORTS: ["Admin", "Manager"],
 };
