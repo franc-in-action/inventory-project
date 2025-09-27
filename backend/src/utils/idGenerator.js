@@ -49,19 +49,15 @@ export async function generateSequentialId(model, digits) {
     : 4;
   const numDigits = digits || defaultDigits;
 
-  // Get the last record's ID
-  const lastRecord = await prismaModel.findFirst({
-    orderBy: { createdAt: "desc" },
-    select: { [idField]: true },
+  // Use a transaction to increment the sequence atomically
+  const nextNumber = await prisma.$transaction(async (tx) => {
+    const seq = await tx.sequence.upsert({
+      where: { id: model },
+      update: { lastValue: { increment: 1 } },
+      create: { id: model, lastValue: 1 },
+    });
+    return seq.lastValue;
   });
 
-  let lastNumber = 0;
-  if (lastRecord) {
-    const value = lastRecord[idField];
-    const match = value?.match(/\d+$/);
-    if (match) lastNumber = parseInt(match[0], 10);
-  }
-
-  const nextNumber = String(lastNumber + 1).padStart(numDigits, "0");
-  return `${prefix}-${nextNumber}`;
+  return `${prefix}-${String(nextNumber).padStart(numDigits, "0")}`;
 }

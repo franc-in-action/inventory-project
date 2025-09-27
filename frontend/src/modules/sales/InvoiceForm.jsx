@@ -7,6 +7,12 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
   Button,
   VStack,
   HStack,
@@ -20,6 +26,7 @@ import {
   FormControl,
   FormLabel,
   ButtonGroup,
+  Box,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
@@ -226,13 +233,14 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
           <ModalCloseButton />
           <ModalBody>
             {editingSale && (
-              <Text color="orange.500" fontWeight="bold" mb={2}>
+              <Text fontWeight="bold" mb={2}>
                 You are editing an existing sale
               </Text>
             )}
 
-            {/* Top Row: Add Product, Customer, Preview/Complete */}
+            {/* Top Row */}
             <HStack spacing={4} mb={4} align="flex-start">
+              {/* Add Product */}
               <VStack align="stretch" spacing={2} flex={2}>
                 <Text fontWeight="bold">Add Product</Text>
                 <Select
@@ -274,21 +282,15 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
                 >
                   <NumberInputField placeholder="Price" />
                 </NumberInput>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="green"
-                  onClick={handleAddProduct}
-                >
+                <Button leftIcon={<AddIcon />} onClick={handleAddProduct}>
                   Add to Cart
                 </Button>
               </VStack>
 
+              {/* Customer */}
               <VStack align="stretch" spacing={2} flex={1}>
                 <Text fontWeight="bold">Customer Options</Text>
-                <Button
-                  onClick={() => alert("Implement New Customer Modal")}
-                  colorScheme="blue"
-                >
+                <Button onClick={() => alert("Implement New Customer Modal")}>
                   New Customer
                 </Button>
                 <ComboBox
@@ -319,14 +321,10 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
                 </FormControl>
               </VStack>
 
+              {/* Actions */}
               <VStack spacing={2} flex={1}>
-                <Button colorScheme="yellow" onClick={handlePreview}>
-                  Preview Sale
-                </Button>
-                <Button
-                  colorScheme="green"
-                  onClick={() => handleSubmit("complete")}
-                >
+                <Button onClick={handlePreview}>Preview Sale</Button>
+                <Button onClick={() => handleSubmit("complete")}>
                   {editingSale ? "Update Sale" : "Complete Sale"}
                 </Button>
               </VStack>
@@ -334,69 +332,96 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
 
             <Divider mb={4} />
 
-            {/* Bottom Row: Cart & Summary */}
+            {/* Bottom Row */}
             <HStack spacing={4}>
+              {/* Cart */}
               <VStack align="stretch" spacing={2} flex={3}>
                 <Text fontWeight="bold">Cart Items</Text>
-                {enrichedCart.length === 0 && <Text>No items in cart</Text>}
-                {enrichedCart.map((item, idx) => (
-                  <HStack key={idx} spacing={2}>
-                    <Text flex={2}>
-                      {products.find((p) => p.id === item.productId)?.name ||
-                        item.productId}
-                    </Text>
-                    <NumberInput
-                      min={1}
-                      value={item.qty}
-                      onChange={(v) => handleCartChange(idx, "qty", Number(v))}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                    <NumberInput
-                      min={0}
-                      value={item.price}
-                      onChange={(v) =>
-                        handleCartChange(idx, "price", Number(v))
-                      }
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                    <Text flex={1}>{(item.qty * item.price).toFixed(2)}</Text>
-                    <IconButton
-                      icon={<DeleteIcon />}
-                      onClick={() => removeCartRow(idx)}
-                    />
-                  </HStack>
-                ))}
+                {enrichedCart.length === 0 ? (
+                  <Text>No items in cart</Text>
+                ) : (
+                  <Table size="sm" variant="simple">
+                    <Thead>
+                      <Tr>
+                        <Th>Product</Th>
+                        <Th isNumeric>Qty</Th>
+                        <Th isNumeric>Price</Th>
+                        <Th isNumeric>Total</Th>
+                        <Th>Actions</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {enrichedCart.map((item, idx) => {
+                        const product = products.find(
+                          (p) => p.id === item.productId
+                        );
+                        return (
+                          <Tr key={idx}>
+                            <Td>{product?.name || item.productId}</Td>
+                            <Td isNumeric>
+                              <NumberInput
+                                size="sm"
+                                min={1}
+                                value={item.qty}
+                                onChange={(v) =>
+                                  handleCartChange(idx, "qty", Number(v))
+                                }
+                              >
+                                <NumberInputField />
+                              </NumberInput>
+                            </Td>
+                            <Td isNumeric>
+                              <NumberInput
+                                size="sm"
+                                min={0}
+                                value={item.price}
+                                onChange={(v) =>
+                                  handleCartChange(idx, "price", Number(v))
+                                }
+                              >
+                                <NumberInputField />
+                              </NumberInput>
+                            </Td>
+                            <Td isNumeric>
+                              {(item.qty * item.price).toFixed(2)}
+                            </Td>
+                            <Td>
+                              <IconButton
+                                size="sm"
+                                icon={<DeleteIcon />}
+                                onClick={() => removeCartRow(idx)}
+                                aria-label="Remove item"
+                              />
+                            </Td>
+                          </Tr>
+                        );
+                      })}
+                    </Tbody>
+                  </Table>
+                )}
               </VStack>
 
-              <VStack
-                align="stretch"
-                spacing={2}
-                flex={1}
-                p={2}
-                border="1px solid #eee"
-                borderRadius="md"
-              >
-                <Text fontWeight="bold">Order Summary</Text>
-                <Text>Total: {totalAmount.toFixed(2)}</Text>
-                <Text>Tax (10%): {(totalAmount * 0.1).toFixed(2)}</Text>
-                <Text fontWeight="bold">
-                  Grand Total: {(totalAmount * 1.1).toFixed(2)}
-                </Text>
-              </VStack>
+              {/* Summary */}
+              <Box flex={1}>
+                <VStack align="stretch" spacing={2}>
+                  <Text fontWeight="bold">Order Summary</Text>
+                  <Text>Total: {totalAmount.toFixed(2)}</Text>
+                  <Text>Tax (10%): {(totalAmount * 0.1).toFixed(2)}</Text>
+                  <Text fontWeight="bold">
+                    Grand Total: {(totalAmount * 1.1).toFixed(2)}
+                  </Text>
+                </VStack>
+              </Box>
             </HStack>
           </ModalBody>
 
           <ModalFooter>
             <ButtonGroup>
-              <Button colorScheme="red" onClick={() => setCart([])}>
-                Delete
-              </Button>
-              <Button colorScheme="gray" onClick={() => handleSubmit("draft")}>
+              <Button onClick={() => setCart([])}>Delete</Button>
+              <Button onClick={() => handleSubmit("draft")}>
                 Save as Draft
               </Button>
-              <Button colorScheme="blue" onClick={() => handleSubmit("edit")}>
+              <Button onClick={() => handleSubmit("edit")}>
                 {editingSale ? "Update Sale" : "Edit"}
               </Button>
             </ButtonGroup>

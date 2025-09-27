@@ -166,12 +166,15 @@ export function SalesProvider({ children }) {
 
       if (!sale) return null;
 
+      // 🔒 Return a deep clone so InvoiceForm edits are local only
       return {
         id: sale.id,
         saleUuid: sale.saleUuid,
-        customer: sale.customer || null,
-        items: sale.items || [],
-        payment: sale.payments?.[0] || { amount: 0, method: "cash" },
+        customer: sale.customer ? { ...sale.customer } : null,
+        items: sale.items ? sale.items.map((i) => ({ ...i })) : [],
+        payment: sale.payments?.[0]
+          ? { ...sale.payments[0] }
+          : { amount: 0, method: null },
         total: sale.total || 0,
         status: sale.status,
       };

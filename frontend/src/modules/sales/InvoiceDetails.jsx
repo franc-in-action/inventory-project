@@ -31,7 +31,6 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
 
   const [editing, setEditing] = useState(false);
 
-  // Determine the sale to display: preview first, then saved sale
   const sale = previewSaleData || (saleId ? getSaleById(saleId) : null);
   if (!sale) return null;
 
@@ -46,20 +45,19 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
   };
 
   const handleEdit = () => {
-    closePreviewSale(); // close preview modal
-    setEditing(true); // open InvoiceForm prefilled
+    closePreviewSale();
+    setEditing(true);
   };
 
   const handleFinalize = async () => {
     try {
-      await finalizeDraft(sale.id); // call context action
+      await finalizeDraft(sale.id);
       onClose();
     } catch (err) {
       console.error("Failed to finalize draft:", err);
     }
   };
 
-  // Color-coded status badge
   const getStatusBadge = (status) => {
     switch (status) {
       case "COMPLETE":
@@ -84,7 +82,9 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
             alignItems="center"
           >
             {getStatusBadge(sale.status)}
-            <span>Invoice #: {sale.saleUuid}</span>
+            <span style={{ marginLeft: "0.5rem" }}>
+              Invoice #: {sale.saleUuid}
+            </span>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -98,6 +98,8 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
               <Text>Invoice #: {sale.saleUuid}</Text>
               <Text>Status: {sale.status}</Text>
               <Text>Customer: {sale.customer?.name || "Walk-in"}</Text>
+              <Text>Created By: {sale.createdByUser?.name || "—"}</Text>
+              <Text>Finalized By: {sale.finalizedByUser?.name || "—"}</Text>
               <Divider />
               <Table size="sm" variant="simple">
                 <Thead>
@@ -175,12 +177,11 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
         </ModalContent>
       </Modal>
 
-      {/* InvoiceForm for editing the sale */}
       {editing && (
         <InvoiceForm
           isOpen={editing}
           onClose={() => setEditing(false)}
-          saleData={sale} // pass sale to prefill form
+          saleData={sale}
         />
       )}
     </>

@@ -23,6 +23,12 @@ model User {
 
   stockMovements    StockMovement[] @relation("StockMovementPerformedBy")
   receivedPurchases Purchase[]      @relation("PurchaseReceivedBy")
+
+  Sale Sale[]
+
+  // NEW relations for Sale
+  createdSales   Sale[] @relation("SaleCreatedBy")
+  finalizedSales Sale[] @relation("SaleFinalizedBy")
 }
 
 model Location {
@@ -150,12 +156,22 @@ model Sale {
   notes      String? // NEW
   createdAt  DateTime   @default(now())
 
-  location Location          @relation(fields: [locationId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+
+  // NEW: explicitly named relations
+  createdBy     String?
+  createdByUser User?   @relation("SaleCreatedBy", fields: [createdBy], references: [id])
+
+  finalizedBy     String?
+  finalizedByUser User?   @relation("SaleFinalizedBy", fields: [finalizedBy], references: [id])
+
   customer Customer          @relation(fields: [customerId], references: [id])
   items    SaleItem[]
   payments ReceivedPayment[]
   ledger   LedgerEntry[]     @relation("SaleLedger")
   Return   Return[]
+  User     User?             @relation(fields: [userId], references: [id])
+  userId   String?
 }
 
 enum SaleStatus {
@@ -294,6 +310,12 @@ model LedgerEntry {
   receivedPayment ReceivedPayment? @relation(fields: [receivedPaymentId], references: [id], name: "ReceivedPaymentLedger")
   issuedPayment   IssuedPayment?   @relation(fields: [issuedPaymentId], references: [id], name: "IssuedPaymentLedger")
 }
+
+model Sequence {
+  id        String @id           // model name, e.g., "Purchase", "Sale"
+  lastValue Int    @default(0)   // last used number
+}
+
 
 enum LedgerType {
   SALE

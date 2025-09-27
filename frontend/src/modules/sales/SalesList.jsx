@@ -24,7 +24,6 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
 
   if (!sales || sales.length === 0) return <Text>No sales found.</Text>;
 
-  // Color-coded status badge
   const renderStatus = (status) => {
     switch (status) {
       case "COMPLETE":
@@ -50,6 +49,8 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
           <Th>Unpaid ($)</Th>
           <Th>Payment Method</Th>
           <Th>Status</Th>
+          <Th>Created By</Th>
+          <Th>Finalized By</Th>
           <Th>Actions</Th>
         </Tr>
       </Thead>
@@ -76,6 +77,8 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
               <Td>{unpaid}</Td>
               <Td>{s.payments?.[0]?.method || "—"}</Td>
               <Td>{renderStatus(s.status)}</Td>
+              <Td>{s.createdByUser?.name || "—"}</Td>
+              <Td>{s.finalizedByUser?.name || "—"}</Td>
               <Td>
                 <HStack>
                   <IconButton
