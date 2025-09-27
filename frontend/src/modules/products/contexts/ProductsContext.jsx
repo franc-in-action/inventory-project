@@ -13,6 +13,7 @@ import {
   deleteProduct as apiDeleteProduct,
 } from "../productsApi.js";
 import { fetchTotalStockForProducts } from "../../stock/stockApi.js";
+import ProductDetails from "../ProductDetails.jsx";
 
 const ProductsContext = createContext();
 
@@ -20,6 +21,23 @@ export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [stockMap, setStockMap] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // --- NEW STATE for modal ---
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedLocationId, setSelectedLocationId] = useState(null);
+
+  const openProductDetails = (productId, locationId) => {
+    setSelectedProductId(productId);
+    setSelectedLocationId(locationId ?? null);
+    setDetailModalOpen(true);
+  };
+
+  const closeProductDetails = () => {
+    setDetailModalOpen(false);
+    setSelectedProductId(null);
+    setSelectedLocationId(null);
+  };
 
   // Map productId → productName for quick lookup
   const productsMap = products.reduce((map, p) => {
@@ -100,9 +118,21 @@ export function ProductsProvider({ children }) {
         addProduct,
         updateProductById,
         deleteProductById,
+
+        // expose modal controls
+        openProductDetails,
+        closeProductDetails,
       }}
     >
       {children}
+
+      {/* --- Mount the modal once, globally --- */}
+      <ProductDetails
+        isOpen={detailModalOpen}
+        onClose={closeProductDetails}
+        productId={selectedProductId}
+        locationId={selectedLocationId}
+      />
     </ProductsContext.Provider>
   );
 }

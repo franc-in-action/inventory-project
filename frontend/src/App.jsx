@@ -118,17 +118,17 @@ function ThemeConsumerApp() {
                     <ProtectedLayout>
                       <VendorsProvider>
                         <CategoriesProvider>
-                          <ProductsProvider>
-                            <CustomersProvider>
-                              <SalesProvider>
-                                <PaymentsProvider>
-                                  <PurchasesProvider>
+                          <SalesProvider>
+                            <PurchasesProvider>
+                              <ProductsProvider>
+                                <CustomersProvider>
+                                  <PaymentsProvider>
                                     <Dashboard />
-                                  </PurchasesProvider>
-                                </PaymentsProvider>
-                              </SalesProvider>
-                            </CustomersProvider>
-                          </ProductsProvider>
+                                  </PaymentsProvider>
+                                </CustomersProvider>
+                              </ProductsProvider>
+                            </PurchasesProvider>
+                          </SalesProvider>
                         </CategoriesProvider>
                       </VendorsProvider>
                     </ProtectedLayout>
@@ -146,13 +146,13 @@ function ThemeConsumerApp() {
                     <ProtectedLayout>
                       <VendorsProvider>
                         <CategoriesProvider>
-                          <ProductsProvider>
-                            <SalesProvider>
-                              <PurchasesProvider>
+                          <SalesProvider>
+                            <PurchasesProvider>
+                              <ProductsProvider>
                                 <ProductsPage />
-                              </PurchasesProvider>
-                            </SalesProvider>
-                          </ProductsProvider>
+                              </ProductsProvider>
+                            </PurchasesProvider>
+                          </SalesProvider>
                         </CategoriesProvider>
                       </VendorsProvider>
                     </ProtectedLayout>
@@ -169,11 +169,13 @@ function ThemeConsumerApp() {
                   <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
                     <ProtectedLayout>
                       <CategoriesProvider>
-                        <ProductsProvider>
+                        <SalesProvider>
                           <PurchasesProvider>
-                            <StockPage />
+                            <ProductsProvider>
+                              <StockPage />
+                            </ProductsProvider>
                           </PurchasesProvider>
-                        </ProductsProvider>
+                        </SalesProvider>
                       </CategoriesProvider>
                     </ProtectedLayout>
                   </RoleRoute>
@@ -188,9 +190,13 @@ function ThemeConsumerApp() {
                   <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
                     <ProtectedLayout>
                       <CategoriesProvider>
-                        <ProductsProvider>
-                          <StockAdjustmentsPage />
-                        </ProductsProvider>
+                        <SalesProvider>
+                          <PurchasesProvider>
+                            <ProductsProvider>
+                              <StockAdjustmentsPage />
+                            </ProductsProvider>
+                          </PurchasesProvider>
+                        </SalesProvider>
                       </CategoriesProvider>
                     </ProtectedLayout>
                   </RoleRoute>
@@ -208,11 +214,13 @@ function ThemeConsumerApp() {
                       <CustomersProvider>
                         <PaymentsProvider>
                           <CategoriesProvider>
-                            <ProductsProvider>
-                              <SalesProvider>
-                                <CustomersPage />
-                              </SalesProvider>
-                            </ProductsProvider>
+                            <SalesProvider>
+                              <PurchasesProvider>
+                                <ProductsProvider>
+                                  <CustomersPage />
+                                </ProductsProvider>
+                              </PurchasesProvider>
+                            </SalesProvider>
                           </CategoriesProvider>
                         </PaymentsProvider>
                       </CustomersProvider>
@@ -250,13 +258,15 @@ function ThemeConsumerApp() {
                   <RoleRoute allowedRoles={PERMISSIONS.SALES}>
                     <ProtectedLayout>
                       <CategoriesProvider>
-                        <ProductsProvider>
-                          <CustomersProvider>
-                            <SalesProvider>
-                              <SalesPage />
-                            </SalesProvider>
-                          </CustomersProvider>
-                        </ProductsProvider>
+                        <SalesProvider>
+                          <PurchasesProvider>
+                            <ProductsProvider>
+                              <CustomersProvider>
+                                <SalesPage />
+                              </CustomersProvider>
+                            </ProductsProvider>
+                          </PurchasesProvider>
+                        </SalesProvider>
                       </CategoriesProvider>
                     </ProtectedLayout>
                   </RoleRoute>
@@ -286,15 +296,17 @@ function ThemeConsumerApp() {
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={PERMISSIONS.PAYMENTS}>
                     <ProtectedLayout>
-                      <ProductsProvider>
-                        <CustomersProvider>
-                          <PaymentsProvider>
-                            <SalesProvider>
-                              <PaymentsPage />
-                            </SalesProvider>
-                          </PaymentsProvider>
-                        </CustomersProvider>
-                      </ProductsProvider>
+                      <SalesProvider>
+                        <PurchasesProvider>
+                          <ProductsProvider>
+                            <CustomersProvider>
+                              <PaymentsProvider>
+                                <PaymentsPage />
+                              </PaymentsProvider>
+                            </CustomersProvider>
+                          </ProductsProvider>
+                        </PurchasesProvider>
+                      </SalesProvider>
                     </ProtectedLayout>
                   </RoleRoute>
                 </ProtectedRoute>
@@ -307,13 +319,17 @@ function ThemeConsumerApp() {
                 <ProtectedRoute>
                   <RoleRoute allowedRoles={PERMISSIONS.ADJUSTMENTS}>
                     <ProtectedLayout>
-                      <ProductsProvider>
-                        <CustomersProvider>
-                          <PaymentsProvider>
-                            <AdjustmentsPage />
-                          </PaymentsProvider>
-                        </CustomersProvider>
-                      </ProductsProvider>
+                      <SalesProvider>
+                        <PurchasesProvider>
+                          <ProductsProvider>
+                            <CustomersProvider>
+                              <PaymentsProvider>
+                                <AdjustmentsPage />
+                              </PaymentsProvider>
+                            </CustomersProvider>
+                          </ProductsProvider>
+                        </PurchasesProvider>
+                      </SalesProvider>
                     </ProtectedLayout>
                   </RoleRoute>
                 </ProtectedRoute>
@@ -329,11 +345,13 @@ function ThemeConsumerApp() {
                     <ProtectedLayout>
                       <VendorsProvider>
                         <CategoriesProvider>
-                          <ProductsProvider>
+                          <SalesProvider>
                             <PurchasesProvider>
-                              <PurchasesPage />
+                              <ProductsProvider>
+                                <PurchasesPage />
+                              </ProductsProvider>
                             </PurchasesProvider>
-                          </ProductsProvider>
+                          </SalesProvider>
                         </CategoriesProvider>
                       </VendorsProvider>
                     </ProtectedLayout>

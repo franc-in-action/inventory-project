@@ -12,17 +12,20 @@ import {
   Flex,
   useBreakpointValue,
   useToast,
-  useDisclosure,
 } from "@chakra-ui/react";
 import { useProducts } from "./contexts/ProductsContext.jsx";
 import { useCategories } from "../categories/contexts/CategoriesContext.jsx";
 import { useLocations } from "../locations/contexts/LocationsContext.jsx";
-import ProductDetails from "./ProductDetails.jsx";
 import ProductsTable from "./ProductsTable.jsx";
 
 export default function ProductsList({ onEdit }) {
-  const { products, stockMap, reloadProducts, deleteProductById } =
-    useProducts();
+  const {
+    products,
+    stockMap,
+    reloadProducts,
+    deleteProductById,
+    openProductDetails, // ✅ use context-provided modal function
+  } = useProducts();
   const { categories } = useCategories();
   const { locations, loading: locationsLoading } = useLocations();
 
@@ -34,13 +37,6 @@ export default function ProductsList({ onEdit }) {
   const limit = 10;
   const toast = useToast();
   const isDesktop = useBreakpointValue({ base: false, md: true });
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedProductId, setSelectedProductId] = useState(null);
-
-  const handleOpenDetails = (id) => {
-    setSelectedProductId(id);
-    onOpen();
-  };
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this product?")) return;
@@ -131,7 +127,8 @@ export default function ProductsList({ onEdit }) {
           stockByProduct={stockMap}
           onEdit={onEdit}
           onDelete={handleDelete}
-          onOpenDetails={(p) => handleOpenDetails(p.id)}
+          // ✅ directly call context function to open modal
+          onOpenDetails={(p) => openProductDetails(p.id, locationId)}
         />
       ) : (
         <VStack spacing={4}>
@@ -145,7 +142,9 @@ export default function ProductsList({ onEdit }) {
               w="100%"
             >
               {p.sku} –{" "}
-              <Link onClick={() => handleOpenDetails(p.id)}>{p.name}</Link>
+              <Link onClick={() => openProductDetails(p.id, locationId)}>
+                {p.name}
+              </Link>
               <Text>Description: {p.description || "—"}</Text>
               <Text>Category: {p.category?.name || "—"}</Text>
               <Text>
@@ -180,15 +179,6 @@ export default function ProductsList({ onEdit }) {
           Next
         </Button>
       </HStack>
-
-      {selectedProductId && (
-        <ProductDetails
-          isOpen={isOpen}
-          onClose={onClose}
-          productId={selectedProductId}
-          locationId={locationId}
-        />
-      )}
     </Box>
   );
 }

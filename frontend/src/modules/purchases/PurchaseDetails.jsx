@@ -9,6 +9,7 @@ import {
   Button,
   VStack,
   Text,
+  Link,
   Table,
   Thead,
   Tbody,
@@ -29,7 +30,7 @@ export default function PurchaseDetails({
   onEdit,
   locations,
 }) {
-  const { products } = useProducts();
+  const { products, openProductDetails } = useProducts();
   const { vendorsMap } = useVendors();
   const { markReceived } = usePurchases();
   const toast = useToast(); // ✅ Add toast
@@ -100,7 +101,22 @@ export default function PurchaseDetails({
                   const product = products.find((p) => p.id === item.productId);
                   return (
                     <Tr key={idx}>
-                      <Td>{product ? product.name : "Unknown Product"}</Td>
+                      <Td>
+                        {product ? (
+                          <Link
+                            onClick={() =>
+                              openProductDetails(
+                                product.id,
+                                purchase?.locationId
+                              )
+                            }
+                          >
+                            {product.name}
+                          </Link>
+                        ) : (
+                          "Unknown Product"
+                        )}
+                      </Td>
                       <Td isNumeric>{item.qty}</Td>
                       <Td isNumeric>{item.price.toLocaleString()}</Td>
                       <Td isNumeric>
