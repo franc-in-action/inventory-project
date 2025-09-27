@@ -18,13 +18,15 @@ import {
   Th,
   Td,
   ButtonGroup,
+  Badge,
 } from "@chakra-ui/react";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
 import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function InvoiceDetails({ saleId, isOpen, onClose }) {
-  const { getSaleById, previewSaleData, closePreviewSale } = useSales();
+  const { getSaleById, previewSaleData, closePreviewSale, finalizeDraft } =
+    useSales();
   const { productsMap } = useProducts();
 
   const [editing, setEditing] = useState(false);
@@ -48,12 +50,42 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
     setEditing(true); // open InvoiceForm prefilled
   };
 
+  const handleFinalize = async () => {
+    try {
+      await finalizeDraft(sale.id); // call context action
+      onClose();
+    } catch (err) {
+      console.error("Failed to finalize draft:", err);
+    }
+  };
+
+  // Color-coded status badge
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "COMPLETE":
+        return <Badge colorScheme="green">Complete</Badge>;
+      case "PENDING":
+        return <Badge colorScheme="yellow">Draft</Badge>;
+      case "CANCELLED":
+        return <Badge colorScheme="red">Cancelled</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
   return (
     <>
       <Modal isOpen={isOpen && !editing} onClose={onClose} size="6xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Invoice #: {sale.saleUuid}</ModalHeader>
+          <ModalHeader
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <span>Invoice #: {sale.saleUuid}</span>
+            {getStatusBadge(sale.status)}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack
@@ -64,6 +96,7 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
               p={2}
             >
               <Text>Invoice #: {sale.saleUuid}</Text>
+              <Text>Status: {sale.status}</Text>
               <Text>Customer: {sale.customer?.name || "Walk-in"}</Text>
               <Divider />
               <Table size="sm" variant="simple">
@@ -119,9 +152,24 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
           <ModalFooter>
             <ButtonGroup>
               <Button onClick={onClose}>Close</Button>
-              <Button colorScheme="blue" onClick={handleEdit}>
-                Edit
-              </Button>
+              {sale.status === "PENDING" ? (
+                <>
+                  <Button colorScheme="green" onClick={handleFinalize}>
+                    Finalize
+                  </Button>
+                  <Button colorScheme="blue" onClick={handleEdit}>
+                    Edit
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  colorScheme="blue"
+                  onClick={handleEdit}
+                  isDisabled={sale.status === "CANCELLED"}
+                >
+                  Edit
+                </Button>
+              )}
             </ButtonGroup>
           </ModalFooter>
         </ModalContent>

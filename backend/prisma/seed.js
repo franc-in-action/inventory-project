@@ -234,6 +234,8 @@ async function main() {
   console.log("✅ Purchases and stock movements seeded");
 
   // --- 9. Sales + Ledger + ReceivedPayments + Stock Movements ---
+  console.log("🟢 Seeding Sales...");
+
   for (let i = 0; i < 50; i++) {
     const customer = customers[i % customers.length];
     const product = chance.pickone(products);
@@ -253,7 +255,23 @@ async function main() {
       max: Math.min(stock.quantity, 5),
     });
     const total = qtySold * product.price;
-    const saleUuid = await generateSequentialId("Sale");
+
+    // Decide status: PENDING (draft), COMPLETE, CANCELLED (draft but cancelled)
+    const statusRoll = chance.integer({ min: 1, max: 100 });
+    let status;
+    if (statusRoll <= 30) {
+      status = "PENDING"; // 30% chance
+    } else if (statusRoll <= 80) {
+      status = "COMPLETE"; // 50% chance
+    } else {
+      status = "CANCELLED"; // 20% chance
+    }
+
+    // Generate saleUuid depending on draft/final
+    const saleUuid =
+      status === "COMPLETE"
+        ? await generateSequentialId("Sale")
+        : await generateSequentialId("Draft");
 
     const sale = await prisma.sale.create({
       data: {
@@ -261,6 +279,9 @@ async function main() {
         locationId: location.id,
         customerId: customer.id,
         total,
+        status,
+        notes:
+          status === "CANCELLED" ? "Draft was cancelled by staff" : undefined,
         items: {
           create: [
             { productId: product.id, qty: qtySold, price: product.price },
@@ -269,63 +290,68 @@ async function main() {
       },
     });
 
-    await prisma.stockLevel.update({
-      where: { id: stock.id },
-      data: { quantity: stock.quantity - qtySold },
-    });
+    // Only finalized sales affect stock & ledger
+    if (status === "COMPLETE") {
+      await prisma.stockLevel.update({
+        where: { id: stock.id },
+        data: { quantity: stock.quantity - qtySold },
+      });
 
-    const performedBy = chance.pickone(staffUsers);
+      const performedBy = chance.pickone(staffUsers);
 
-    await prisma.stockMovement.create({
-      data: {
-        movementUuid: `STM-${Date.now()}-${i}-SALE`,
-        productId: product.id,
-        locationId: location.id,
-        delta: -qtySold,
-        reason: "SALE",
-        refId: sale.id,
-        performedBy: performedBy.id,
-      },
-    });
-
-    await prisma.ledgerEntry.create({
-      data: {
-        saleId: sale.id,
-        customerId: customer.id,
-        type: "SALE",
-        amount: total,
-        description: `Sale ${saleUuid} to ${customer.name}`,
-      },
-    });
-
-    if (chance.bool()) {
-      const amountPaid = parseFloat(
-        (total * chance.floating({ min: 0.3, max: 1, fixed: 2 })).toFixed(2)
-      );
-      const paymentNumber = await generateSequentialId("ReceivedPayment");
-      const receivedPayment = await prisma.receivedPayment.create({
+      await prisma.stockMovement.create({
         data: {
-          saleId: sale.id,
-          customerId: customer.id,
-          amount: amountPaid,
-          method: chance.pickone(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
-          paymentNumber,
+          movementUuid: `STM-${Date.now()}-${i}-SALE`,
+          productId: product.id,
+          locationId: location.id,
+          delta: -qtySold,
+          reason: "SALE",
+          refId: sale.id,
+          performedBy: performedBy.id,
         },
       });
+
       await prisma.ledgerEntry.create({
         data: {
-          customerId: customer.id,
           saleId: sale.id,
-          receivedPaymentId: receivedPayment.id,
-          type: "PAYMENT_RECEIVED",
-          amount: amountPaid,
-          method: receivedPayment.method,
-          description: `Payment ${paymentNumber} for ${saleUuid}`,
+          customerId: customer.id,
+          type: "SALE",
+          amount: total,
+          description: `Sale ${saleUuid} to ${customer.name}`,
         },
       });
+
+      // Randomly record payment(s)
+      if (chance.bool()) {
+        const amountPaid = parseFloat(
+          (total * chance.floating({ min: 0.3, max: 1, fixed: 2 })).toFixed(2)
+        );
+        const paymentNumber = await generateSequentialId("ReceivedPayment");
+        const receivedPayment = await prisma.receivedPayment.create({
+          data: {
+            saleId: sale.id,
+            customerId: customer.id,
+            amount: amountPaid,
+            method: chance.pickone(["CASH", "CREDIT_CARD", "BANK_TRANSFER"]),
+            paymentNumber,
+          },
+        });
+        await prisma.ledgerEntry.create({
+          data: {
+            customerId: customer.id,
+            saleId: sale.id,
+            receivedPaymentId: receivedPayment.id,
+            type: "PAYMENT_RECEIVED",
+            amount: amountPaid,
+            method: receivedPayment.method,
+            description: `Payment ${paymentNumber} for ${saleUuid}`,
+          },
+        });
+      }
     }
   }
-  console.log("✅ Sales and stock movements seeded");
+
+  console.log("✅ Sales (draft, complete, cancelled) seeded");
 
   // --- 10. Returns + Ledger + Stock Movements ---
   console.log("🟢 Seeding Returns and Ledger adjustments...");

@@ -141,20 +141,27 @@ model Vendor {
 }
 
 model Sale {
-  id         String   @id @default(uuid())
-  saleUuid   String   @unique
+  id         String     @id @default(uuid())
+  saleUuid   String     @unique
   locationId String
   customerId String
   total      Float
-  createdAt  DateTime @default(now())
+  status     SaleStatus @default(PENDING) // NEW
+  notes      String? // NEW
+  createdAt  DateTime   @default(now())
 
   location Location          @relation(fields: [locationId], references: [id])
   customer Customer          @relation(fields: [customerId], references: [id])
   items    SaleItem[]
   payments ReceivedPayment[]
+  ledger   LedgerEntry[]     @relation("SaleLedger")
+  Return   Return[]
+}
 
-  ledger LedgerEntry[] @relation("SaleLedger")
-  Return Return[]
+enum SaleStatus {
+  PENDING // draft
+  COMPLETE // finalized
+  CANCELLED
 }
 
 model SaleItem {

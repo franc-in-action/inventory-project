@@ -7,7 +7,10 @@ import {
 } from "react";
 import {
   fetchSales as apiFetchSales,
+  fetchDrafts as apiFetchDrafts,
   createSale as apiCreateSale,
+  finalizeDraft as apiFinalizeDraft,
+  deleteDraft as apiDeleteDraft,
   fetchReturns as apiFetchReturns,
   createReturn as apiCreateReturn,
   formatReceipt,
@@ -16,11 +19,11 @@ import {
 const SalesContext = createContext();
 
 export function SalesProvider({ children }) {
-  const [sales, setSales] = useState([]);
+  const [sales, setSales] = useState([]); // finalized sales
+  const [drafts, setDrafts] = useState([]); // draft sales
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Preview sale state
   const [previewSaleData, setPreviewSaleData] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -37,6 +40,16 @@ export function SalesProvider({ children }) {
     }
   }, []);
 
+  const loadDrafts = useCallback(async () => {
+    try {
+      const result = await apiFetchDrafts();
+      setDrafts(result.items || []);
+    } catch (err) {
+      console.error(err);
+      setDrafts([]);
+    }
+  }, []);
+
   const loadReturns = useCallback(async () => {
     try {
       const result = await apiFetchReturns();
@@ -49,13 +62,13 @@ export function SalesProvider({ children }) {
 
   useEffect(() => {
     loadSales();
+    loadDrafts();
     loadReturns();
-  }, [loadSales, loadReturns]);
+  }, [loadSales, loadDrafts, loadReturns]);
 
-  // Open preview sale safely
   const previewSale = useCallback((saleData) => {
     const virtualSale = {
-      id: "preview", // dummy ID
+      id: "preview",
       saleUuid: saleData.saleUuid,
       customer: saleData.customer || null,
       items: saleData.items || [],
@@ -69,8 +82,9 @@ export function SalesProvider({ children }) {
   }, []);
 
   const getSaleForEdit = useCallback(
-    (id) => {
-      const sale = sales.find((s) => s.id === id);
+    (id, isDraft = false) => {
+      const source = isDraft ? drafts : sales;
+      const sale = source.find((s) => s.id === id);
       if (!sale) return null;
 
       return {
@@ -83,25 +97,43 @@ export function SalesProvider({ children }) {
         status: sale.status,
       };
     },
-    [sales]
+    [sales, drafts]
   );
 
-  // Close preview safely
   const closePreviewSale = useCallback(() => {
     setIsPreviewOpen(false);
-    // delay clearing data to prevent render errors
     setTimeout(() => setPreviewSaleData(null), 0);
   }, []);
 
   const addSale = useCallback(async (saleData, receiptOptions = {}) => {
     const newSale = await apiCreateSale(saleData);
-    setSales((prev) => [newSale, ...prev]);
+    if (newSale.status === "PENDING") {
+      setDrafts((prev) => [newSale, ...prev]);
+    } else {
+      setSales((prev) => [newSale, ...prev]);
+    }
     const receipt = formatReceipt(
       newSale,
       saleData.productsMap,
       receiptOptions
     );
     return { sale: newSale, receipt };
+  }, []);
+
+  const finalizeDraft = useCallback(
+    async (id, paymentData, receiptOptions = {}) => {
+      const updatedSale = await apiFinalizeDraft(id, paymentData);
+      setDrafts((prev) => prev.filter((d) => d.id !== id));
+      setSales((prev) => [updatedSale, ...prev]);
+      const receipt = formatReceipt(updatedSale, {}, receiptOptions);
+      return { sale: updatedSale, receipt };
+    },
+    []
+  );
+
+  const removeDraft = useCallback(async (id) => {
+    await apiDeleteDraft(id);
+    setDrafts((prev) => prev.filter((d) => d.id !== id));
   }, []);
 
   const addReturn = useCallback(async (returnData, receiptOptions = {}) => {
@@ -117,9 +149,13 @@ export function SalesProvider({ children }) {
   }, []);
 
   const getSaleById = useCallback(
-    (id) => sales.find((s) => s.id === id) || null,
-    [sales]
+    (id, isDraft = false) => {
+      const source = isDraft ? drafts : sales;
+      return source.find((s) => s.id === id) || null;
+    },
+    [sales, drafts]
   );
+
   const getReturnById = useCallback(
     (id) => returns.find((r) => r.id === id) || null,
     [returns]
@@ -129,19 +165,23 @@ export function SalesProvider({ children }) {
     <SalesContext.Provider
       value={{
         sales,
+        drafts,
         returns,
         loading,
         reloadSales: loadSales,
+        reloadDrafts: loadDrafts,
         reloadReturns: loadReturns,
         addSale,
+        finalizeDraft,
+        removeDraft,
         addReturn,
         getSaleById,
+        getSaleForEdit,
         getReturnById,
         previewSale,
         previewSaleData,
         isPreviewOpen,
         closePreviewSale,
-        getSaleForEdit,
       }}
     >
       {children}

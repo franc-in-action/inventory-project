@@ -25,7 +25,7 @@ import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
 import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function SalesPage() {
-  const { sales, loading, reloadSales } = useSales();
+  const { sales, drafts, loading, reloadSales } = useSales();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -34,18 +34,31 @@ export default function SalesPage() {
   const [thermalOpen, setThermalOpen] = useState(false);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    return sales.filter(
+  // search filter
+  const filterBySearch = (list) =>
+    list.filter(
       (s) =>
         s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
         s.saleUuid.toLowerCase().includes(search.toLowerCase())
     );
-  }, [sales, search]);
 
-  const paidSales = filtered.filter((s) => s.status?.toLowerCase() === "paid");
-  const unpaidSales = filtered.filter(
-    (s) => s.status?.toLowerCase() !== "paid"
-  );
+  // categorize completed sales
+  const completedSales = sales.filter((s) => s.status === "COMPLETE");
+  const cancelledSales = sales.filter((s) => s.status === "CANCELLED");
+
+  const filteredCompleted = filterBySearch(completedSales);
+  const filteredDrafts = filterBySearch(drafts);
+  const filteredCancelled = filterBySearch(cancelledSales);
+
+  // within completed → split paid vs unpaid
+  const paidSales = filteredCompleted.filter((s) => {
+    const paid = s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    return paid >= (s.total || 0);
+  });
+  const unpaidSales = filteredCompleted.filter((s) => {
+    const paid = s.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+    return paid < (s.total || 0);
+  });
 
   const totalPages = (salesArray) =>
     Math.max(1, Math.ceil(salesArray.length / limit));
@@ -54,9 +67,9 @@ export default function SalesPage() {
     return salesArray.slice(start, start + limit);
   };
 
-  const handleSelectSale = (sale) => setSelectedSaleId(sale.id); // keep id internally
+  const handleSelectSale = (sale) => setSelectedSaleId(sale.id);
   const handlePrint = (sale) => {
-    setSelectedSaleId(sale.id); // keep UUID for context fetch
+    setSelectedSaleId(sale.id);
     setThermalOpen(true);
   };
 
@@ -96,69 +109,95 @@ export default function SalesPage() {
         />
       </Flex>
 
+      {/* === TOP LEVEL TABS === */}
       <Tabs>
         <TabList>
-          <Tab>Paid</Tab>
-          <Tab>Unpaid / Partial / Credit</Tab>
+          <Tab>Pending (Drafts)</Tab>
+          <Tab>Completed Sales</Tab>
+          <Tab>Deleted Sales</Tab>
         </TabList>
 
         <TabPanels>
+          {/* PENDING */}
           <TabPanel>
             <SalesList
-              sales={paginated(paidSales)}
+              sales={paginated(filteredDrafts)}
               onSelectSale={handleSelectSale}
               onPrint={handlePrint}
             />
-            <HStack>
-              <Button
-                colorScheme="gray"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                isDisabled={page === 1}
-              >
-                Previous
-              </Button>
-              <Text>
-                Page {page} of {totalPages(paidSales)}
-              </Text>
-              <Button
-                colorScheme="gray"
-                onClick={() =>
-                  setPage((p) => Math.min(totalPages(paidSales), p + 1))
-                }
-                isDisabled={page === totalPages(paidSales)}
-              >
-                Next
-              </Button>
-            </HStack>
           </TabPanel>
 
+          {/* COMPLETED with nested tabs */}
+          <TabPanel>
+            <Tabs>
+              <TabList>
+                <Tab>Unpaid / Partial</Tab>
+                <Tab>Paid</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel>
+                  <SalesList
+                    sales={paginated(unpaidSales)}
+                    onSelectSale={handleSelectSale}
+                    onPrint={handlePrint}
+                  />
+                  <HStack>
+                    <Button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      isDisabled={page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Text>
+                      Page {page} of {totalPages(unpaidSales)}
+                    </Text>
+                    <Button
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages(unpaidSales), p + 1))
+                      }
+                      isDisabled={page === totalPages(unpaidSales)}
+                    >
+                      Next
+                    </Button>
+                  </HStack>
+                </TabPanel>
+                <TabPanel>
+                  <SalesList
+                    sales={paginated(paidSales)}
+                    onSelectSale={handleSelectSale}
+                    onPrint={handlePrint}
+                  />
+                  <HStack>
+                    <Button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      isDisabled={page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Text>
+                      Page {page} of {totalPages(paidSales)}
+                    </Text>
+                    <Button
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages(paidSales), p + 1))
+                      }
+                      isDisabled={page === totalPages(paidSales)}
+                    >
+                      Next
+                    </Button>
+                  </HStack>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </TabPanel>
+
+          {/* DELETED */}
           <TabPanel>
             <SalesList
-              sales={paginated(unpaidSales)}
+              sales={paginated(filteredCancelled)}
               onSelectSale={handleSelectSale}
               onPrint={handlePrint}
             />
-            <HStack>
-              <Button
-                colorScheme="gray"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                isDisabled={page === 1}
-              >
-                Previous
-              </Button>
-              <Text>
-                Page {page} of {totalPages(unpaidSales)}
-              </Text>
-              <Button
-                colorScheme="gray"
-                onClick={() =>
-                  setPage((p) => Math.min(totalPages(unpaidSales), p + 1))
-                }
-                isDisabled={page === totalPages(unpaidSales)}
-              >
-                Next
-              </Button>
-            </HStack>
           </TabPanel>
         </TabPanels>
       </Tabs>

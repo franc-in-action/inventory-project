@@ -3,37 +3,54 @@ import { apiFetch } from "../../utils/commonApi.js";
 // -------------------- SALES API --------------------
 
 /**
- * Fetch sales from backend
- * @param {Object} params - optional query params
- * @returns {Object} { items: [], total: number }
+ * Fetch finalized sales
  */
 export async function fetchSales(params = {}) {
-  const query = new URLSearchParams(params).toString();
+  const query = new URLSearchParams({
+    ...params,
+    status: "COMPLETE",
+  }).toString();
   const result = await apiFetch(`/sales?${query}`);
-  if (Array.isArray(result)) {
-    return { items: result, total: result.length };
-  }
-  return {
-    items: result.sales || result.items || [],
-    total: result.sales?.length || result.items?.length || 0,
-  };
+  return Array.isArray(result)
+    ? { items: result, total: result.length }
+    : {
+        items: result.sales || result.items || [],
+        total: result.sales?.length || result.items?.length || 0,
+      };
 }
 
-/** Create a new sale */
+/**
+ * Fetch draft sales
+ */
+export async function fetchDrafts(params = {}) {
+  const query = new URLSearchParams({
+    ...params,
+    status: "PENDING",
+  }).toString();
+  const result = await apiFetch(`/sales?${query}`);
+  return Array.isArray(result)
+    ? { items: result, total: result.length }
+    : {
+        items: result.sales || result.items || [],
+        total: result.sales?.length || result.items?.length || 0,
+      };
+}
+
+/** Create a new sale (can be draft or finalized) */
 export async function createSale(saleData) {
   return apiFetch("/sales", { method: "POST", body: JSON.stringify(saleData) });
 }
 
-/** Update an existing sale */
-export async function updateSale(saleId, saleData) {
-  return apiFetch(`/sales/${saleId}`, {
+/** Finalize a draft */
+export async function finalizeDraft(saleId, paymentData) {
+  return apiFetch(`/sales/${saleId}/finalize`, {
     method: "PUT",
-    body: JSON.stringify(saleData),
+    body: JSON.stringify(paymentData || {}),
   });
 }
 
-/** Delete a sale */
-export async function deleteSale(saleId) {
+/** Delete a draft */
+export async function deleteDraft(saleId) {
   return apiFetch(`/sales/${saleId}`, { method: "DELETE" });
 }
 
@@ -44,15 +61,12 @@ export async function getSaleById(saleId) {
 
 // -------------------- RETURNS API --------------------
 
-/** Fetch returns */
 export async function fetchReturns(params = {}) {
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/returns?${query}`);
-  // Backend returns an array directly, so just return it
   return Array.isArray(result) ? result : [];
 }
 
-/** Create a new return */
 export async function createReturn(returnData) {
   return apiFetch("/returns", {
     method: "POST",
@@ -60,7 +74,6 @@ export async function createReturn(returnData) {
   });
 }
 
-/** Update a return */
 export async function updateReturn(returnId, returnData) {
   return apiFetch(`/returns/${returnId}`, {
     method: "PUT",
@@ -68,36 +81,26 @@ export async function updateReturn(returnId, returnData) {
   });
 }
 
-/** Delete a return */
 export async function deleteReturn(returnId) {
   return apiFetch(`/returns/${returnId}`, { method: "DELETE" });
 }
 
-/** Get return by ID */
 export async function getReturnById(returnId) {
   return apiFetch(`/returns/${returnId}`);
 }
 
-/** Fetch next sale number (for POS numbering) */
+// -------------------- SALE NUMBERS --------------------
+
 export async function fetchNextSaleNumber() {
   if (window.api) {
-    // fallback for Electron
     return window.api.run("SELECT NEXTVAL('sale_seq')");
   }
   const result = await apiFetch("/sales/next-number");
   return result.saleUuid;
 }
 
-// -------------------- POS RECEIPT FORMATTER --------------------
+// -------------------- RECEIPT FORMATTER --------------------
 
-/**
- * Format a sale or return receipt in POS-style text
- * @param {Object} transaction - sale or return object
- * @param {Object} productsMap - Map of productId -> product name
- * @param {Object} options - store info, cashier, tax, etc.
- * @param {boolean} isReturn - true for return receipt
- * @returns {string} formatted receipt
- */
 export function formatReceipt(
   transaction,
   productsMap = {},
@@ -126,7 +129,6 @@ export function formatReceipt(
     return result;
   };
 
-  // Calculate totals
   const subtotal = (transaction?.items || []).reduce(
     (sum, i) => sum + i.qty * i.price,
     0
@@ -134,14 +136,12 @@ export function formatReceipt(
   const tax = subtotal * taxRate;
   const total = isReturn ? -subtotal : subtotal + tax;
 
-  // -------- Header --------
   lines.push(storeName.padStart((maxLine + storeName.length) / 2));
   lines.push(...storeAddress.split("\n"));
   lines.push(storeTel);
   lines.push(`Tax PIN: ${storeTaxPin}`);
   lines.push("-".repeat(maxLine));
 
-  // -------- Customer Info --------
   lines.push(
     `Date: ${date.toLocaleDateString()}   Time: ${date.toLocaleTimeString()}`
   );
@@ -154,7 +154,6 @@ export function formatReceipt(
   lines.push(`Tax PIN: ${customerTaxPin}`);
   lines.push("-".repeat(maxLine));
 
-  // -------- Items --------
   lines.push("Item         Qty   Price   Total");
   lines.push("-".repeat(maxLine));
 
@@ -184,7 +183,6 @@ export function formatReceipt(
     lines.push("-".repeat(maxLine));
   });
 
-  // -------- Totals --------
   if (isReturn) {
     lines.push(
       `Total Refunded:`.padEnd(32, " ") +
@@ -201,7 +199,6 @@ export function formatReceipt(
     lines.push(`TOTAL:`.padEnd(32, " ") + total.toFixed(10).padStart(10, " "));
   }
 
-  // -------- Payment / Refund Info --------
   if (transaction?.payments?.length) {
     const method = transaction.payments[0].method.toUpperCase();
     lines.push(`${isReturn ? "Refund" : "Payment"}: ${method}`);

@@ -10,17 +10,33 @@ import {
   IconButton,
   HStack,
   Spinner,
+  Badge,
 } from "@chakra-ui/react";
 import { FiPrinter } from "react-icons/fi";
 import { useSales } from "./contexts/SalesContext.jsx";
 
 export default function SalesList({ sales, onSelectSale, onPrint }) {
+  const { loading } = useSales();
+
   if (!sales) {
-    const { loading } = useSales();
     if (loading) return <Spinner label="Loading sales..." />;
   }
 
   if (!sales || sales.length === 0) return <Text>No sales found.</Text>;
+
+  // Color-coded status badge
+  const renderStatus = (status) => {
+    switch (status) {
+      case "COMPLETE":
+        return <Badge colorScheme="green">Complete</Badge>;
+      case "PENDING":
+        return <Badge colorScheme="yellow">Draft</Badge>;
+      case "CANCELLED":
+        return <Badge colorScheme="red">Cancelled</Badge>;
+      default:
+        return <Badge>{status || "Unknown"}</Badge>;
+    }
+  };
 
   return (
     <Table>
@@ -59,7 +75,7 @@ export default function SalesList({ sales, onSelectSale, onPrint }) {
               <Td>{paid}</Td>
               <Td>{unpaid}</Td>
               <Td>{s.payments?.[0]?.method || "—"}</Td>
-              <Td>{s.status || "Completed"}</Td>
+              <Td>{renderStatus(s.status)}</Td>
               <Td>
                 <HStack>
                   <IconButton

@@ -165,6 +165,25 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
       return alert(`Insufficient stock for "${product?.name}"`);
     }
 
+    if (status === "draft") {
+      await addSale({
+        saleUuid,
+        locationId,
+        customerId: selectedCustomer?.id || null,
+        items: enrichedCart.map(({ productId, qty, price }) => ({
+          productId,
+          qty,
+          price,
+        })),
+        payment: null,
+        total: totalAmount,
+        status: "PENDING",
+        notes: "Customer will return later",
+      });
+      onClose();
+      return;
+    }
+
     setLoading(true);
     try {
       await addSale({

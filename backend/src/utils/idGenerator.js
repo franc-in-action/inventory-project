@@ -3,6 +3,7 @@ import { prisma } from "../prisma.js";
 
 const PREFIX_MAP = {
   Sale: "SALE",
+  Draft: "DRA", // NEW
   Purchase: "PUR",
   Return: "RET",
   Adjustment: "ADJ",
@@ -13,9 +14,10 @@ const PREFIX_MAP = {
 // Map model names to Prisma clients
 const PRISMA_MODEL_MAP = {
   Sale: prisma.sale,
+  Draft: prisma.sale, // drafts are stored in the same Sale table
   Purchase: prisma.purchase,
   Return: prisma.return,
-  Adjustment: prisma.ledgerEntry, // assuming adjustments are stored in ledgerEntry
+  Adjustment: prisma.ledgerEntry,
   ReceivedPayment: prisma.receivedPayment,
   IssuedPayment: prisma.issuedPayment,
 };
@@ -23,9 +25,10 @@ const PRISMA_MODEL_MAP = {
 // Map model names to the ID field to use
 const ID_FIELD_MAP = {
   Sale: "saleUuid",
+  Draft: "saleUuid", // use same field
   Purchase: "purchaseUuid",
   Return: "returnUuid",
-  Adjustment: "id", // or a custom field if needed
+  Adjustment: "id",
   ReceivedPayment: "paymentNumber",
   IssuedPayment: "paymentNumber",
 };
