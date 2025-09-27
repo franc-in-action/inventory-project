@@ -80,11 +80,11 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
         <ModalContent>
           <ModalHeader
             display="flex"
-            justifyContent="space-between"
+            justifyContent="start"
             alignItems="center"
           >
-            <span>Invoice #: {sale.saleUuid}</span>
             {getStatusBadge(sale.status)}
+            <span>Invoice #: {sale.saleUuid}</span>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Box,
   Flex,
@@ -25,7 +25,7 @@ import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
 import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function SalesPage() {
-  const { sales, drafts, loading, reloadSales } = useSales();
+  const { sales, drafts, deleted, loading, reloadSales } = useSales(); // ✅ include deleted
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -34,21 +34,20 @@ export default function SalesPage() {
   const [thermalOpen, setThermalOpen] = useState(false);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
 
-  // search filter
+  // --- search filter ---
   const filterBySearch = (list) =>
     list.filter(
       (s) =>
-        s.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.saleUuid.toLowerCase().includes(search.toLowerCase())
+        s.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        s.saleUuid?.toLowerCase().includes(search.toLowerCase())
     );
 
-  // categorize completed sales
+  // categorize
   const completedSales = sales.filter((s) => s.status === "COMPLETE");
-  const cancelledSales = sales.filter((s) => s.status === "CANCELLED");
 
   const filteredCompleted = filterBySearch(completedSales);
   const filteredDrafts = filterBySearch(drafts);
-  const filteredCancelled = filterBySearch(cancelledSales);
+  const filteredDeleted = filterBySearch(deleted); // ✅ use context deleted
 
   // within completed → split paid vs unpaid
   const paidSales = filteredCompleted.filter((s) => {
@@ -114,7 +113,7 @@ export default function SalesPage() {
         <TabList>
           <Tab>Pending (Drafts)</Tab>
           <Tab>Completed Sales</Tab>
-          <Tab>Deleted Sales</Tab>
+          <Tab>Cancelled Sales</Tab>
         </TabList>
 
         <TabPanels>
@@ -194,7 +193,7 @@ export default function SalesPage() {
           {/* DELETED */}
           <TabPanel>
             <SalesList
-              sales={paginated(filteredCancelled)}
+              sales={paginated(filteredDeleted)}
               onSelectSale={handleSelectSale}
               onPrint={handlePrint}
             />

@@ -8,6 +8,7 @@ import {
 import {
   fetchSales as apiFetchSales,
   fetchDrafts as apiFetchDrafts,
+  fetchDeleted as apiFetchDeleted, // ✅ import
   createSale as apiCreateSale,
   finalizeDraft as apiFinalizeDraft,
   deleteDraft as apiDeleteDraft,
@@ -21,6 +22,8 @@ const SalesContext = createContext();
 export function SalesProvider({ children }) {
   const [sales, setSales] = useState([]); // finalized sales
   const [drafts, setDrafts] = useState([]); // draft sales
+  const [deleted, setDeleted] = useState([]); // ✅ deleted
+
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +53,16 @@ export function SalesProvider({ children }) {
     }
   }, []);
 
+  const loadDeleted = useCallback(async () => {
+    try {
+      const result = await apiFetchDeleted();
+      setDeleted(result.items || []);
+    } catch (err) {
+      console.error(err);
+      setDeleted([]);
+    }
+  }, []);
+
   const loadReturns = useCallback(async () => {
     try {
       const result = await apiFetchReturns();
@@ -63,8 +76,9 @@ export function SalesProvider({ children }) {
   useEffect(() => {
     loadSales();
     loadDrafts();
+    loadDeleted(); // ✅ load deleted sales
     loadReturns();
-  }, [loadSales, loadDrafts, loadReturns]);
+  }, [loadSales, loadDrafts, loadDeleted, loadReturns]);
 
   const previewSale = useCallback((saleData) => {
     const virtualSale = {
@@ -80,25 +94,6 @@ export function SalesProvider({ children }) {
     setIsPreviewOpen(true);
     return virtualSale;
   }, []);
-
-  const getSaleForEdit = useCallback(
-    (id, isDraft = false) => {
-      const source = isDraft ? drafts : sales;
-      const sale = source.find((s) => s.id === id);
-      if (!sale) return null;
-
-      return {
-        id: sale.id,
-        saleUuid: sale.saleUuid,
-        customer: sale.customer || null,
-        items: sale.items || [],
-        payment: sale.payments?.[0] || { amount: 0, method: "cash" },
-        total: sale.total || 0,
-        status: sale.status,
-      };
-    },
-    [sales, drafts]
-  );
 
   const closePreviewSale = useCallback(() => {
     setIsPreviewOpen(false);
@@ -148,10 +143,38 @@ export function SalesProvider({ children }) {
     return { return: newReturn, receipt };
   }, []);
 
+  // ---------------- HELPERS ----------------
   const getSaleById = useCallback(
-    (id, isDraft = false) => {
-      const source = isDraft ? drafts : sales;
-      return source.find((s) => s.id === id) || null;
+    (id) => {
+      return (
+        sales.find((s) => s.id === id) ||
+        drafts.find((d) => d.id === id) ||
+        deleted.find((x) => x.id === id) || // ✅ include deleted
+        null
+      );
+    },
+    [sales, drafts, deleted]
+  );
+
+  const getSaleForEdit = useCallback(
+    (id) => {
+      const sale =
+        sales.find((s) => s.id === id) ||
+        drafts.find((d) => d.id === id) ||
+        deleted.find((x) => x.id === id) || // ✅ include deleted
+        null;
+
+      if (!sale) return null;
+
+      return {
+        id: sale.id,
+        saleUuid: sale.saleUuid,
+        customer: sale.customer || null,
+        items: sale.items || [],
+        payment: sale.payments?.[0] || { amount: 0, method: "cash" },
+        total: sale.total || 0,
+        status: sale.status,
+      };
     },
     [sales, drafts]
   );
@@ -166,10 +189,12 @@ export function SalesProvider({ children }) {
       value={{
         sales,
         drafts,
+        deleted, // ✅ expose deleted
         returns,
         loading,
         reloadSales: loadSales,
         reloadDrafts: loadDrafts,
+        reloadDeleted: loadDeleted, // ✅ expose reloader
         reloadReturns: loadReturns,
         addSale,
         finalizeDraft,

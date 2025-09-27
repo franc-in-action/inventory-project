@@ -36,6 +36,21 @@ export async function fetchDrafts(params = {}) {
       };
 }
 
+/** Fetch deleted drafts */
+export async function fetchDeleted(params = {}) {
+  const query = new URLSearchParams({
+    ...params,
+    status: "CANCELLED",
+  }).toString();
+  const result = await apiFetch(`/sales?${query}`);
+  return Array.isArray(result)
+    ? { items: result, total: result.length }
+    : {
+        items: result.sales || result.items || [],
+        total: result.sales?.length || result.items?.length || 0,
+      };
+}
+
 /** Create a new sale (can be draft or finalized) */
 export async function createSale(saleData) {
   return apiFetch("/sales", { method: "POST", body: JSON.stringify(saleData) });
