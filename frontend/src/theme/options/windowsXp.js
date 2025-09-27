@@ -669,7 +669,18 @@ export default {
     },
 
     Spinner: {
-      baseStyle: { color: light.xpBlue, _dark: { color: dark.xpBlue } },
+      baseStyle: {
+        color: light.xpBlue,
+        _dark: { color: dark.xpBlue },
+        display: "block",
+        m: "auto",
+      },
+    },
+
+    ButtonGroup: {
+      baseStyle: {
+        alignItems: "center",
+      },
     },
 
     Progress: {

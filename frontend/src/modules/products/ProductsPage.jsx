@@ -35,7 +35,7 @@ export default function Products() {
   };
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
         <Box p="2">
           <Heading size={"md"} mb={2}>
@@ -53,15 +53,14 @@ export default function Products() {
         </Flex>
       </Flex>
 
-<Flex mb={2} w="100%" maxW="600px" justify="flex-end">
       <ProductsList onEdit={handleEdit} />
-      </Flex>
+
       <ProductForm
         productId={editingId}
         isOpen={isOpen}
         onClose={onClose}
         onSaved={handleSaved}
       />
-    </Box>
+    </Flex>
   );
 }

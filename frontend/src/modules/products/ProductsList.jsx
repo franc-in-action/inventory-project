@@ -8,6 +8,7 @@ import {
   Input,
   Select,
   Button,
+  ButtonGroup,
   Spinner,
   Flex,
   useBreakpointValue,
@@ -82,7 +83,8 @@ export default function ProductsList({ onEdit }) {
 
   return (
     <Box>
-      <HStack>
+      <Flex mb={4} w="100%">
+        {/* <HStack> */}
         <Input
           placeholder="Search name or SKU..."
           value={search}
@@ -119,7 +121,8 @@ export default function ProductsList({ onEdit }) {
             </option>
           ))}
         </Select>
-      </HStack>
+        {/* </HStack> */}
+      </Flex>
 
       {isDesktop ? (
         <ProductsTable
@@ -162,23 +165,25 @@ export default function ProductsList({ onEdit }) {
         </VStack>
       )}
 
-      <HStack>
-        <Button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1}
-        >
-          Previous
-        </Button>
-        <Text>
-          Page {page} of {totalPages}
-        </Text>
-        <Button
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages}
-        >
-          Next
-        </Button>
-      </HStack>
+      <Flex m={4} w="100%" justify="center" align={"center"}>
+        <ButtonGroup alignItems="center">
+          <Button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <Text>
+            Page {page} of {totalPages}
+          </Text>
+          <Button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </ButtonGroup>
+      </Flex>
     </Box>
   );
 }
