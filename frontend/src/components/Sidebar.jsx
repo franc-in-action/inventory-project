@@ -63,11 +63,6 @@ export default function Sidebar({ isOpen, onClose }) {
         },
         { to: "/purchases", label: "Purchases", roles: PERMISSIONS.PURCHASES },
         { to: "/vendors", label: "Vendors", roles: PERMISSIONS.VENDORS },
-        {
-          to: "/reports",
-          label: "Stock Valuation",
-          roles: PERMISSIONS.REPORTS,
-        },
       ],
     },
     {
@@ -79,6 +74,11 @@ export default function Sidebar({ isOpen, onClose }) {
         { to: "/returns", label: "Returns", roles: PERMISSIONS.RETURNS },
         { to: "/customers", label: "Customers", roles: PERMISSIONS.CUSTOMERS },
         { to: "/payments", label: "Payments", roles: PERMISSIONS.PAYMENTS },
+        {
+          to: "/reports/sales",
+          label: "Sales Reports",
+          roles: PERMISSIONS.REPORTS,
+        },
       ],
     },
     {
@@ -93,11 +93,7 @@ export default function Sidebar({ isOpen, onClose }) {
           label: "Adjustments",
           roles: PERMISSIONS.ADJUSTMENTS,
         },
-        {
-          to: "/returns",
-          label: "Returns",
-          roles: PERMISSIONS.RETURNS,
-        },
+        { to: "/returns", label: "Returns", roles: PERMISSIONS.RETURNS },
       ],
     },
     {
@@ -106,8 +102,18 @@ export default function Sidebar({ isOpen, onClose }) {
       roles: [PERMISSIONS.REPORTS],
       submenu: [
         {
-          to: "/reports",
-          label: "Stock Valuation",
+          to: "/reports/stock",
+          label: "Stock Reports",
+          roles: PERMISSIONS.REPORTS,
+        },
+        {
+          to: "/reports/sales",
+          label: "Sales Reports",
+          roles: PERMISSIONS.REPORTS,
+        },
+        {
+          to: "/reports/customers",
+          label: "Customer Reports",
           roles: PERMISSIONS.REPORTS,
         },
       ],

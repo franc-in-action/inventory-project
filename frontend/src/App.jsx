@@ -34,6 +34,10 @@ import StockPage from "./modules/stock/StockPage.jsx";
 import StockAdjustmentsPage from "./modules/stock/StockAdjustmentsPage.jsx";
 import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 
+// --- Reports ---
+import StockReportsPage from "./modules/reports/models/StockReportsPage.jsx";
+import SalesReportsPage from "./modules/reports/models/SalesReportsPage.jsx";
+import CustomerReportsPage from "./modules/reports/models/CustomerReportsPage.jsx";
 import ReportsPage from "./modules/reports/ReportsPage.jsx";
 
 import Header from "./components/Header.jsx";
@@ -393,6 +397,7 @@ function ThemeConsumerApp() {
                 }
               />
 
+              {/* ---------- Reports ---------- */}
               <Route
                 path="/reports"
                 element={
@@ -400,6 +405,45 @@ function ThemeConsumerApp() {
                     <RoleRoute allowedRoles={PERMISSIONS.REPORTS}>
                       <ProtectedLayout>
                         <ReportsPage />
+                      </ProtectedLayout>
+                    </RoleRoute>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/reports/stock"
+                element={
+                  <ProtectedRoute>
+                    <RoleRoute allowedRoles={PERMISSIONS.REPORTS}>
+                      <ProtectedLayout>
+                        <StockReportsPage />
+                      </ProtectedLayout>
+                    </RoleRoute>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/reports/sales"
+                element={
+                  <ProtectedRoute>
+                    <RoleRoute allowedRoles={PERMISSIONS.REPORTS}>
+                      <ProtectedLayout>
+                        <SalesReportsPage />
+                      </ProtectedLayout>
+                    </RoleRoute>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/reports/customers"
+                element={
+                  <ProtectedRoute>
+                    <RoleRoute allowedRoles={PERMISSIONS.REPORTS}>
+                      <ProtectedLayout>
+                        <CustomerReportsPage />
                       </ProtectedLayout>
                     </RoleRoute>
                   </ProtectedRoute>
