@@ -17,6 +17,22 @@ function validatePeriod(period) {
   return period === "daily" ? "day" : period === "weekly" ? "week" : "month";
 }
 
+/** Get start-date for given period relative to now */
+function periodStart(period) {
+  const now = new Date();
+  if (period === "daily")
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (period === "weekly") {
+    const d = new Date(now);
+    const day = d.getDay(); // 0=Sun
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  // monthly
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
 /* -----------------------------------------------------------
    STOCK VALUATION REPORT
 ----------------------------------------------------------- */
@@ -187,7 +203,7 @@ router.get(
 );
 
 /* -----------------------------------------------------------
-   CUSTOMER PERFORMANCE REPORTS  ✅ NEW
+   CUSTOMER PERFORMANCE REPORTS
 ----------------------------------------------------------- */
 /**
  * GET /api/reports/customer-performance
@@ -275,6 +291,137 @@ router.get(
       });
     } catch (err) {
       console.error("[GET /reports/customer-performance] Error:", err);
+      res.status(err.statusCode || 500).json({ error: err.message });
+    }
+  }
+);
+
+/* -----------------------------------------------------------
+   CUSTOMER PERFORMANCE REPORTS – NEW
+----------------------------------------------------------- */
+/**
+ * GET /api/reports/customers/new
+ * ?period=daily|weekly|monthly (default: monthly)
+ * New customers who bought for the first time within the selected period.
+ */
+router.get(
+  "/customers/new",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER"]),
+  async (req, res) => {
+    try {
+      const { period = "monthly" } = req.query;
+      const start = periodStart(period);
+
+      // Customers whose very first sale is within the selected period
+      const results = await prisma.$queryRaw`
+          SELECT c.id AS customer_id, c.name AS customer_name,
+                 MIN(s."createdAt") AS first_sale_date
+          FROM "Customer" c
+          JOIN "Sale" s ON s."customerId" = c.id
+          GROUP BY c.id, c.name
+          HAVING MIN(s."createdAt") >= ${start}
+          ORDER BY first_sale_date ASC;
+        `;
+
+      res.json({
+        type: "customers-new",
+        period,
+        data: results.map((r) => ({
+          customer_id: r.customer_id,
+          customer_name: r.customer_name,
+          first_sale_date: r.first_sale_date.toISOString(),
+        })),
+      });
+    } catch (err) {
+      console.error("[GET /reports/customers/new] Error:", err);
+      res.status(err.statusCode || 500).json({ error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/reports/customers/qualified
+ * Qualified customers: at least one sale in the 90 days
+ * prior to the start of the current month.
+ */
+router.get(
+  "/customers/qualified",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER"]),
+  async (_req, res) => {
+    try {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const ninetyDaysAgo = new Date(monthStart);
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+      const results = await prisma.$queryRaw`
+          SELECT DISTINCT c.id AS customer_id, c.name AS customer_name
+          FROM "Customer" c
+          JOIN "Sale" s ON s."customerId" = c.id
+          WHERE s."createdAt" >= ${ninetyDaysAgo}
+            AND s."createdAt" <  ${monthStart}
+          ORDER BY c.name;
+        `;
+
+      res.json({
+        type: "customers-qualified",
+        from: ninetyDaysAgo.toISOString(),
+        to: monthStart.toISOString(),
+        data: results.map((r) => ({
+          customer_id: r.customer_id,
+          customer_name: r.customer_name,
+        })),
+      });
+    } catch (err) {
+      console.error("[GET /reports/customers/qualified] Error:", err);
+      res.status(err.statusCode || 500).json({ error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/reports/customers/recalled
+ * Recalled customers:
+ *  - NOT in the qualified list (no sale in last 90 days before this month)
+ *  - but purchased in the current month.
+ */
+router.get(
+  "/customers/recalled",
+  authMiddleware,
+  requireRole(["ADMIN", "MANAGER"]),
+  async (_req, res) => {
+    try {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const ninetyDaysAgo = new Date(monthStart);
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+      const results = await prisma.$queryRaw`
+          SELECT DISTINCT c.id AS customer_id, c.name AS customer_name
+          FROM "Customer" c
+          JOIN "Sale" s ON s."customerId" = c.id
+          WHERE s."createdAt" >= ${monthStart}
+            AND c.id NOT IN (
+                SELECT DISTINCT s2."customerId"
+                FROM "Sale" s2
+                WHERE s2."createdAt" >= ${ninetyDaysAgo}
+                  AND s2."createdAt" <  ${monthStart}
+            )
+          ORDER BY c.name;
+        `;
+
+      res.json({
+        type: "customers-recalled",
+        monthStart: monthStart.toISOString(),
+        data: results.map((r) => ({
+          customer_id: r.customer_id,
+          customer_name: r.customer_name,
+        })),
+      });
+    } catch (err) {
+      console.error("[GET /reports/customers/recalled] Error:", err);
       res.status(err.statusCode || 500).json({ error: err.message });
     }
   }

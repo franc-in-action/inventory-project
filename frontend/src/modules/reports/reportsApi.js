@@ -44,3 +44,16 @@ export async function getCustomerPerformanceReport({
   if (locationId) query.append("locationId", locationId);
   return apiFetch(`/reports/customer-performance?${query.toString()}`);
 }
+
+export async function getNewCustomersReport({ period = "monthly" } = {}) {
+  const q = new URLSearchParams({ period });
+  return apiFetch(`/reports/customers/new?${q}`);
+}
+
+export async function getQualifiedCustomersReport() {
+  return apiFetch(`/reports/customers/qualified`);
+}
+
+export async function getRecalledCustomersReport() {
+  return apiFetch(`/reports/customers/recalled`);
+}
