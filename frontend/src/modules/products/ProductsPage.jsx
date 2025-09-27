@@ -37,17 +37,25 @@ export default function Products() {
   return (
     <Box>
       <Flex>
-        <Heading>Products</Heading>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage products
+          </Heading>
+        </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button leftIcon={<AddIcon />} onClick={handleAdd}>
-            New
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button leftIcon={<AddIcon />} onClick={handleAdd}>
+              New Product
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
+<Flex mb={2} w="100%" maxW="600px" justify="flex-end">
       <ProductsList onEdit={handleEdit} />
-
+      </Flex>
       <ProductForm
         productId={editingId}
         isOpen={isOpen}

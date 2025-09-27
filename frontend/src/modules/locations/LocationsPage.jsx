@@ -49,28 +49,35 @@ export default function LocationsPage() {
   );
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
-        <Box>
-          <Heading>Branches / Locations</Heading>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage branches and locations
+          </Heading>
         </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            variant={"primary"}
-            leftIcon={<AddIcon />}
-            onClick={openCreateModal}
-          >
-            Location
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              variant={"primary"}
+              leftIcon={<AddIcon />}
+              onClick={openCreateModal}
+            >
+              New Location
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search locations..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search locations..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      </Flex>
 
       <LocationList
         locations={filteredLocations}
@@ -85,6 +92,6 @@ export default function LocationsPage() {
         onClose={() => setIsModalOpen(false)}
         onSaved={loadLocations}
       />
-    </Box>
+    </Flex>
   );
 }

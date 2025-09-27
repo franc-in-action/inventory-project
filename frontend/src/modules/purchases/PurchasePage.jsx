@@ -115,19 +115,26 @@ export default function PurchasesPage() {
   if (loading || locationsLoading) return <Spinner />;
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
-        <Heading>Purchases</Heading>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage product purchases
+          </Heading>
+        </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="blue"
-            onClick={() => setShowForm(true)}
-          >
-            New Purchase
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              onClick={() => setShowForm(true)}
+            >
+              New Purchase
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
       <Tabs>
@@ -167,6 +174,6 @@ export default function PurchasesPage() {
         }}
         locations={locations}
       />
-    </Box>
+    </Flex>
   );
 }

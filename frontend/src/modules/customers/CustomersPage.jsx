@@ -46,23 +46,32 @@ export default function CustomersPage() {
   );
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
-        <Heading size="md">Customers</Heading>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage customers
+          </Heading>
+        </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button leftIcon={<AddIcon />} onClick={openCreateModal}>
-            Customer
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button leftIcon={<AddIcon />} onClick={openCreateModal}>
+              New Customer
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search customers..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        mb={4}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search customers..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          mb={4}
+        />
+      </Flex>
 
       {loading ? (
         <Box>Loading customers...</Box>
@@ -79,6 +88,6 @@ export default function CustomersPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-    </Box>
+    </Flex>
   );
 }

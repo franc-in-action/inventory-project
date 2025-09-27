@@ -38,6 +38,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const links = [
     {
+      label: "POS",
+      icon: FaCashRegister,
+      roles: PERMISSIONS.POS,
+      to: "/pos",
+    },
+    {
       label: "Dashboard",
       icon: FaTachometerAlt,
       roles: PERMISSIONS.DASHBOARD,
@@ -67,7 +73,7 @@ export default function Sidebar({ isOpen, onClose }) {
     },
     {
       label: "Sales",
-      icon: FaCashRegister,
+      icon: FaShoppingCart,
       roles: [PERMISSIONS.SALES, PERMISSIONS.CUSTOMERS, PERMISSIONS.PAYMENTS],
       submenu: [
         { to: "/sales", label: "Invoices", roles: PERMISSIONS.SALES },

@@ -55,27 +55,36 @@ export default function PaymentsPage() {
   });
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
-        <Heading size="md">Payments</Heading>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage customer payments
+          </Heading>
+        </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            variant="primary"
-            leftIcon={<AddIcon />}
-            onClick={openCreateModal}
-          >
-            Payment
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              colorScheme="blue"
+              leftIcon={<AddIcon />}
+              onClick={openCreateModal}
+            >
+              New Payment
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search by customer or payment number or sale UUID..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        mb={4}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search by customer or payment number or sale number..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          mb={4}
+        />
+      </Flex>
 
       <PaymentList
         payments={filteredPayments}
@@ -90,6 +99,6 @@ export default function PaymentsPage() {
         onClose={() => setIsModalOpen(false)}
         onSaved={reloadPayments}
       />
-    </Box>
+    </Flex>
   );
 }

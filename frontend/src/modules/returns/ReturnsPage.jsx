@@ -49,27 +49,36 @@ export default function ReturnsPage() {
   });
 
   return (
-    <Box>
-      <Flex mb={4}>
-        <Heading size="md">Returns</Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage sale returns
+          </Heading>
+        </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            variant="primary"
-            leftIcon={<AddIcon />}
-            onClick={openCreateModal}
-          >
-            New Return
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              variant="primary"
+              leftIcon={<AddIcon />}
+              onClick={openCreateModal}
+            >
+              New Return
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search by customer..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        mb={4}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search by customer..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          mb={4}
+        />
+      </Flex>
 
       <ReturnList
         returns={filteredReturns}
@@ -83,6 +92,6 @@ export default function ReturnsPage() {
         onClose={() => setIsModalOpen(false)}
         onSaved={reloadReturns}
       />
-    </Box>
+    </Flex>
   );
 }

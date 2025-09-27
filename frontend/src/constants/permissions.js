@@ -1,4 +1,5 @@
 export const PERMISSIONS = {
+  POS: ["Admin", "Manager", "Staff"],
   DASHBOARD: ["Admin", "Manager", "Staff"],
   PRODUCTS: ["Admin", "Manager"],
   ADMIN_TOOLS: ["Admin"],

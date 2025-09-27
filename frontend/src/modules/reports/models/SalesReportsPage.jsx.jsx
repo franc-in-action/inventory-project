@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useReports } from "../contexts/ReportsContext.jsx";
-import { Box, Heading, Spinner } from "@chakra-ui/react";
+import { Flex, Box, Heading, Spinner, Spacer } from "@chakra-ui/react";
 
 export default function SalesReportPage({ period, locationId }) {
   const { salesReport, loading, loadSalesReport } = useReports();
@@ -12,8 +12,15 @@ export default function SalesReportPage({ period, locationId }) {
   if (loading && !salesReport) return <Spinner />;
 
   return (
-    <Box mt={6}>
-      <Heading size="md">Sales Report ({period})</Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            View and analyse different sales performance metrics
+          </Heading>
+        </Box>
+        <Spacer />
+      </Flex>
       {salesReport?.data?.length ? (
         <ul>
           {salesReport.data.map((row) => (
@@ -25,6 +32,6 @@ export default function SalesReportPage({ period, locationId }) {
       ) : (
         <p>No sales data</p>
       )}
-    </Box>
+    </Flex>
   );
 }

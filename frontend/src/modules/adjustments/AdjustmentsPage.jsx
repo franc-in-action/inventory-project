@@ -50,27 +50,36 @@ export default function AdjustmentsPage() {
   });
 
   return (
-    <Box>
-      <Flex mb={4}>
-        <Heading size="md">Ledger Adjustments</Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage payments adjustments, credit notes and debit notes
+          </Heading>
+        </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            variant="primary"
-            leftIcon={<AddIcon />}
-            onClick={openCreateModal}
-          >
-            Adjustment
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              variant="primary"
+              leftIcon={<AddIcon />}
+              onClick={openCreateModal}
+            >
+              New Adjustment
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search by customer or description..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        mb={4}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search by customer or description..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          mb={4}
+        />
+      </Flex>
 
       <AdjustmentList
         adjustments={filteredAdjustments}
@@ -85,6 +94,6 @@ export default function AdjustmentsPage() {
         onClose={() => setIsModalOpen(false)}
         onSaved={reloadAdjustments}
       />
-    </Box>
+    </Flex>
   );
 }

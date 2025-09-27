@@ -11,6 +11,7 @@ import {
   Icon,
   Card,
   Box,
+  Spacer,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -36,9 +37,10 @@ import CustomerReportsPage from "../modules/reports/models/CustomerReportsPage.j
 
 // Dashboard navigation links
 const dashboardLinks = [
+  { label: "POS", href: "/pos", icon: FaCashRegister },
   { label: "Products", href: "/products", icon: FaBox },
   { label: "Stock", href: "/stock", icon: FaWarehouse },
-  { label: "Sales", href: "/sales", icon: FaCashRegister },
+  { label: "Sales", href: "/sales", icon: FaShoppingCart },
   { label: "Returns", href: "/returns", icon: FaUndoAlt },
   { label: "Purchases", href: "/purchases", icon: FaShoppingCart },
   { label: "Locations", href: "/locations", icon: FaMapMarkerAlt },
@@ -73,8 +75,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <Flex direction="column" align="center" justify="flex-start" p={4}>
-      <Heading mb={4}>Dashboard</Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Dashboard
+          </Heading>
+        </Box>
+        <Spacer />
+      </Flex>
 
       {user && (
         <Text mb={6}>
@@ -96,12 +105,12 @@ export default function Dashboard() {
 
       {/* Reports Tabs Section */}
       <Box w="100%" maxW="1200px" mt={8}>
-        <Heading size="md" mb={4}>
-          Access / Reports
+        <Heading size={"md"} mb={2}>
+          Quick summary
         </Heading>
 
-        <Tabs colorScheme="blue" isFitted variant="enclosed">
-          <TabList mb="1em">
+        <Tabs>
+          <TabList>
             <Tab>Stock Reports</Tab>
             <Tab>Sales Reports</Tab>
             <Tab>Customer Reports</Tab>

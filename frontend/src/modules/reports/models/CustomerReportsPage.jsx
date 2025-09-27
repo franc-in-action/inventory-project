@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Flex,
   Box,
   Heading,
   Text,
@@ -18,6 +19,7 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  Spacer,
 } from "@chakra-ui/react";
 import { useReports } from "../contexts/ReportsContext.jsx";
 
@@ -61,10 +63,15 @@ export default function CustomerReportsPage() {
   ]);
 
   return (
-    <Box p={4}>
-      <Heading size="lg" mb={4}>
-        Customer Reports
-      </Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            View and analyse different customer performance metrics
+          </Heading>
+        </Box>
+        <Spacer />
+      </Flex>
 
       <Tabs index={activeTab} onChange={setActiveTab} variant="enclosed">
         <TabList>
@@ -240,6 +247,6 @@ export default function CustomerReportsPage() {
           </TabPanels>
         </Box>
       </Tabs>
-    </Box>
+    </Flex>
   );
 }

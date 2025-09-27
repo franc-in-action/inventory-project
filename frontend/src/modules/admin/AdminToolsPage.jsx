@@ -33,8 +33,12 @@ export default function AdminToolsPage() {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <Box>
-      <Heading>Admin Tools</Heading>
+    <Flex direction="column" p={4}>
+      <Box p="2">
+        <Heading size={"md"} mb={2}>
+          Perform different system admin operations
+        </Heading>
+      </Box>
 
       <Tabs>
         <TabList>
@@ -78,6 +82,6 @@ export default function AdminToolsPage() {
 
       <BackupModal isOpen={isBackupOpen} onClose={() => setBackupOpen(false)} />
       <ExportModal isOpen={isExportOpen} onClose={() => setExportOpen(false)} />
-    </Box>
+    </Flex>
   );
 }

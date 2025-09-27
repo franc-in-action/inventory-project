@@ -46,28 +46,34 @@ export default function VendorsPage() {
   );
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
         <Box p="2">
-          <Heading size="md">Vendors</Heading>
+          <Heading size="md" mb={2}>
+            Manage vendors and suppliers
+          </Heading>
         </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            colorScheme="blue"
-            leftIcon={<AddIcon />}
-            onClick={openCreateModal}
-          >
-            Vendor
-          </Button>
-        </ButtonGroup>
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              colorScheme="blue"
+              leftIcon={<AddIcon />}
+              onClick={openCreateModal}
+            >
+              Vendor
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search vendors..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search vendors..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      </Flex>
 
       <VendorList
         vendors={filteredVendors}
@@ -80,6 +86,6 @@ export default function VendorsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-    </Box>
+    </Flex>
   );
 }

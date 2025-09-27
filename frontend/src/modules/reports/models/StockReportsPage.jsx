@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Heading, Select, Flex, Spacer, Button } from "@chakra-ui/react";
+import { Flex, Box, Heading, Select, Spacer, Button } from "@chakra-ui/react";
 import StockValuationReport from "../StockValuationReport.jsx";
 import StockMovementsReport from "../StockMovementsReport.jsx";
 
@@ -8,13 +8,17 @@ export default function StockReportsPage() {
   const [locationId, setLocationId] = useState("");
 
   return (
-    <Box>
-      <Flex mb={4}>
-        <Heading size="md">Stock Reports</Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            View and analyse different stock performance metrics
+          </Heading>
+        </Box>
         <Spacer />
       </Flex>
 
-      <Flex gap={4} mb={4}>
+      <Flex gap={4} mb={4} w="100%">
         <Select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
@@ -50,6 +54,6 @@ export default function StockReportsPage() {
         period={period}
         locationId={locationId || undefined}
       />
-    </Box>
+    </Flex>
   );
 }

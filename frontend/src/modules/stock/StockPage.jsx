@@ -50,29 +50,41 @@ export default function StockPage() {
   );
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
         <Box p="2">
-          <Heading size="md">Stock Management</Heading>
+          <Heading size={"md"} mb={2}>
+            Manage stock and inventory
+          </Heading>
         </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            variant="outline"
-            leftIcon={<ViewIcon />}
-            onClick={() => navigate("/stock-adjustments")}
-          >
-            View Adjustments
-          </Button>
-        </ButtonGroup>
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              variant="outline"
+              leftIcon={<ViewIcon />}
+              onClick={() => navigate("/reports/stock")}
+            >
+              View Reports
+            </Button>
+            <Button
+              variant="outline"
+              leftIcon={<ViewIcon />}
+              onClick={() => navigate("/stock-adjustments")}
+            >
+              View Adjustments
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
-
-      <Input
-        placeholder="Search products or locations..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        my={4}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search products or locations..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          my={4}
+        />
+      </Flex>
 
       <StockList stocks={filteredStocks} onEdit={openEditModal} />
 
@@ -88,6 +100,6 @@ export default function StockPage() {
           onSaved={loadStocks}
         />
       )}
-    </Box>
+    </Flex>
   );
 }

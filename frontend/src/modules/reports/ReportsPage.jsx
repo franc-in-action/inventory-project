@@ -13,10 +13,15 @@ import CustomerReportsPage from "./models/CustomerReportsPage.jsx";
 
 export default function ReportsPage() {
   return (
-    <Box>
-      <Heading size="md" mb={4}>
-        Access / Reports
-      </Heading>
+    <Flex direction="column" p={4}>
+      <Flex>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Access and generate different reports
+          </Heading>
+        </Box>
+        <Spacer />
+      </Flex>
 
       <Tabs colorScheme="blue" isFitted variant="enclosed">
         <TabList mb="1em">
@@ -37,6 +42,6 @@ export default function ReportsPage() {
           </TabPanel>
         </TabPanels>
       </Tabs>
-    </Box>
+    </Flex>
   );
 }

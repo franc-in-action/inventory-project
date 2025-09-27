@@ -20,6 +20,8 @@ import { CategoriesProvider } from "./modules/categories/contexts/CategoriesCont
 import { ReportsProvider } from "./modules/reports/contexts/ReportsContext.jsx";
 
 import Dashboard from "./pages/Dashboard.jsx";
+import POSDashboard from "./pages/POSDashboard.jsx";
+
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
 import VendorsPage from "./modules/vendors/VendorsPage.jsx";
@@ -150,6 +152,33 @@ function ProtectedRoutes() {
             <RoleRoute allowedRoles={PERMISSIONS.DASHBOARD}>
               <ProtectedLayout>
                 <Dashboard />
+              </ProtectedLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      {/* --- Products --- */}
+      <Route
+        path="/pos"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
+              <ProtectedLayout>
+                <VendorsProvider>
+                  <CategoriesProvider>
+                    <CustomersProvider>
+                      <SalesProvider>
+                        <PaymentsProvider>
+                          <PurchasesProvider>
+                            <ProductsProvider>
+                              <POSDashboard />
+                            </ProductsProvider>
+                          </PurchasesProvider>
+                        </PaymentsProvider>
+                      </SalesProvider>
+                    </CustomersProvider>
+                  </CategoriesProvider>
+                </VendorsProvider>
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>

@@ -63,33 +63,40 @@ export default function SalesPage() {
   if (loading) return <Spinner />;
 
   return (
-    <Box>
+    <Flex direction="column" p={4}>
       <Flex>
-        <Box>
-          <Heading size="md">Invoices</Heading>
+        <Box p="2">
+          <Heading size={"md"} mb={2}>
+            Manage sales and invoices
+          </Heading>
         </Box>
         <Spacer />
-        <ButtonGroup>
-          <Button
-            colorScheme="blue"
-            leftIcon={<AddIcon />}
-            onClick={() => setInvoiceFormOpen(true)}
-          >
-            Invoice
-          </Button>
-        </ButtonGroup>
+
+        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
+          <ButtonGroup>
+            <Button
+              colorScheme="blue"
+              leftIcon={<AddIcon />}
+              onClick={() => setInvoiceFormOpen(true)}
+            >
+              Invoice
+            </Button>
+          </ButtonGroup>
+        </Flex>
       </Flex>
 
-      <Input
-        placeholder="Search by customer or Invoice No..."
-        value={search}
-        onChange={(e) => {
-          setPage(1);
-          setSearch(e.target.value);
-        }}
-      />
+      <Flex mb={4} w="100%">
+        <Input
+          placeholder="Search customers or Invoice No..."
+          value={search}
+          onChange={(e) => {
+            setPage(1);
+            setSearch(e.target.value);
+          }}
+        />
+      </Flex>
 
-      <Tabs variant="enclosed">
+      <Tabs>
         <TabList>
           <Tab>Paid</Tab>
           <Tab>Unpaid / Partial / Credit</Tab>
@@ -180,6 +187,6 @@ export default function SalesPage() {
           reloadSales();
         }}
       />
-    </Box>
+    </Flex>
   );
 }
