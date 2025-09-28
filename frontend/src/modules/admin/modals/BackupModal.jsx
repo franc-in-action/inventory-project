@@ -11,7 +11,7 @@ import {
   VStack,
   useToast,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import CloseBtn from "../../../components/CloseBtn.jsx"; // import your custom CloseBtn
 
 import { adminApi } from "../adminApi.js";
 
