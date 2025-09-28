@@ -4,7 +4,7 @@ import StockValuationReport from "../StockValuationReport.jsx";
 import StockMovementsReport from "../StockMovementsReport.jsx";
 
 export default function StockReportsPage() {
-  const [period, setPeriod] = useState("daily");
+  const [period, setPeriod] = useState("monthly");
   const [locationId, setLocationId] = useState("");
 
   return (
