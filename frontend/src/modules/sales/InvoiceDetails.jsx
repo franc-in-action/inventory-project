@@ -104,7 +104,9 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
               <Table size="sm" variant="simple">
                 <Thead>
                   <Tr>
-                    <Th>Item</Th>
+                    <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                      Item
+                    </Th>
                     <Th isNumeric>Qty</Th>
                     <Th isNumeric>Price</Th>
                     <Th isNumeric>Total</Th>

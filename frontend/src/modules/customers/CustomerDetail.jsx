@@ -169,43 +169,80 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                   {customerSales.length === 0 ? (
                     <Text>No sales for this customer</Text>
                   ) : (
-                    <Table size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Sale #</Th>
-                          <Th>Date</Th>
-                          <Th>Total</Th>
-                          <Th>Paid</Th>
-                          <Th>Balance</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {salesWithBalances.map((s) => (
-                          <Tr key={s.id}>
-                            <Td>
-                              <Link onClick={() => setSelectedSaleId(s.id)}>
-                                {s.saleUuid}
-                              </Link>
-                            </Td>
-                            <Td>
-                              {new Date(s.createdAt).toLocaleDateString()}
-                            </Td>
-                            <Td>{s.total.toFixed(2)}</Td>
-                            <Td>{s.paid.toFixed(2)}</Td>
-                            <Td>{s.balance.toFixed(2)}</Td>
+                    <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+                      <Table variant="simple" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Sale #
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Date
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Total
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Paid
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Balance
+                            </Th>
                           </Tr>
-                        ))}
-                      </Tbody>
-                      <Tfoot>
-                        <Tr fontWeight="bold">
-                          <Td>Total</Td>
-                          <Td></Td>
-                          <Td>{totalSales.toFixed(2)}</Td>
-                          <Td>{totalPaid.toFixed(2)}</Td>
-                          <Td>{totalBalance.toFixed(2)}</Td>
-                        </Tr>
-                      </Tfoot>
-                    </Table>
+                        </Thead>
+                        <Tbody>
+                          {salesWithBalances.map((s) => (
+                            <Tr key={s.id}>
+                              <Td>
+                                <Link onClick={() => setSelectedSaleId(s.id)}>
+                                  {s.saleUuid}
+                                </Link>
+                              </Td>
+                              <Td>
+                                {new Date(s.createdAt).toLocaleDateString()}
+                              </Td>
+                              <Td>{s.total.toFixed(2)}</Td>
+                              <Td>{s.paid.toFixed(2)}</Td>
+                              <Td>{s.balance.toFixed(2)}</Td>
+                            </Tr>
+                          ))}
+                        </Tbody>
+                        <Tfoot>
+                          <Tr fontWeight="bold">
+                            <Td>Total</Td>
+                            <Td></Td>
+                            <Td>{totalSales.toFixed(2)}</Td>
+                            <Td>{totalPaid.toFixed(2)}</Td>
+                            <Td>{totalBalance.toFixed(2)}</Td>
+                          </Tr>
+                        </Tfoot>
+                      </Table>
+                    </Box>
                   )}
                 </TabPanel>
 
@@ -214,56 +251,97 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                   {payments.length === 0 ? (
                     <Text>No payments for this customer</Text>
                   ) : (
-                    <Table size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Pay #</Th>
-                          <Th>Date</Th>
-                          <Th>Inv #</Th>
-                          <Th>Amount</Th>
-                          <Th>Method</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {payments.map((entry) => {
-                          // Only include entries that are linked to a ReceivedPayment
-                          if (!entry.receivedPaymentId) return null;
+                    <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+                      <Table variant="simple" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Pay #
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Date
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Inv #
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Amount
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Method
+                            </Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {payments.map((entry) => {
+                            // Only include entries that are linked to a ReceivedPayment
+                            if (!entry.receivedPaymentId) return null;
 
-                          return (
-                            <Tr key={entry.receivedPaymentId}>
-                              <Td>
-                                <Link
-                                  onClick={() =>
-                                    setSelectedPayment(entry.receivedPaymentId)
-                                  }
-                                >
-                                  {entry.receivedPayment?.paymentNumber ||
-                                    entry.receivedPaymentId.slice(0, 7)}
-                                </Link>
-                              </Td>
-                              <Td>
-                                {new Date(entry.createdAt).toLocaleDateString()}
-                              </Td>
-                              <Td>
-                                {entry.saleId ? (
+                            return (
+                              <Tr key={entry.receivedPaymentId}>
+                                <Td>
                                   <Link
                                     onClick={() =>
-                                      setSelectedSaleId(entry.saleId)
+                                      setSelectedPayment(
+                                        entry.receivedPaymentId
+                                      )
                                     }
                                   >
-                                    {saleMap[entry.saleId]}
+                                    {entry.receivedPayment?.paymentNumber ||
+                                      entry.receivedPaymentId.slice(0, 7)}
                                   </Link>
-                                ) : (
-                                  "N/A"
-                                )}
-                              </Td>
-                              <Td>{entry.amount.toFixed(2)}</Td>
-                              <Td>{entry.method || "N/A"}</Td>
-                            </Tr>
-                          );
-                        })}
-                      </Tbody>
-                    </Table>
+                                </Td>
+                                <Td>
+                                  {new Date(
+                                    entry.createdAt
+                                  ).toLocaleDateString()}
+                                </Td>
+                                <Td>
+                                  {entry.saleId ? (
+                                    <Link
+                                      onClick={() =>
+                                        setSelectedSaleId(entry.saleId)
+                                      }
+                                    >
+                                      {saleMap[entry.saleId]}
+                                    </Link>
+                                  ) : (
+                                    "N/A"
+                                  )}
+                                </Td>
+                                <Td>{entry.amount.toFixed(2)}</Td>
+                                <Td>{entry.method || "N/A"}</Td>
+                              </Tr>
+                            );
+                          })}
+                        </Tbody>
+                      </Table>
+                    </Box>
                   )}
                 </TabPanel>
 
@@ -272,22 +350,68 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
                   {ledger.length === 0 ? (
                     <Text>No ledger entries for this customer</Text>
                   ) : (
-                    <Box overflowX="auto" w="100%" mt={4}>
-                      <Table
-                        size="sm"
-                        variant="simple"
-                        overflowX="auto"
-                        display="block"
-                      >
+                    <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+                      <Table variant="simple" size="sm">
                         <Thead>
                           <Tr>
-                            <Th>Entry #</Th>
-                            <Th>Date</Th>
-                            <Th>Type</Th>
-                            <Th>Invoice / Purchase #</Th>
-                            <Th isNumeric>Debit</Th>
-                            <Th isNumeric>Credit</Th>
-                            <Th>Notes</Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Entry #
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Date
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Type
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Invoice / Purchase #
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                              isNumeric
+                            >
+                              Debit
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                              isNumeric
+                            >
+                              Credit
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Notes
+                            </Th>
                           </Tr>
                         </Thead>
                         <Tbody>

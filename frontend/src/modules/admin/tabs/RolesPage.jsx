@@ -70,12 +70,16 @@ export default function RolesPage() {
             {users.length === 0 ? (
               <Text>No users in this role.</Text>
             ) : (
-              <Box>
-                <Table>
+              <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+                <Table variant="simple" size="sm">
                   <Thead>
                     <Tr>
-                      <Th>User</Th>
-                      <Th>Actions</Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        User
+                      </Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Actions
+                      </Th>
                     </Tr>
                   </Thead>
                   <Tbody>

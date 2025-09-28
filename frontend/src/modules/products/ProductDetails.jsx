@@ -169,11 +169,25 @@ export default function ProductDetails({
                         <b>Sales Count:</b> {productSales.length}
                       </Text>
                     </HStack>
-                    <Table>
+                    <Table variant="simple" size="sm">
                       <Thead>
                         <Tr>
-                          <Th>Date</Th>
-                          <Th>Customer</Th>
+                          <Th
+                            position="sticky"
+                            top={0}
+                            bg="gray.100"
+                            zIndex={1}
+                          >
+                            Date
+                          </Th>
+                          <Th
+                            position="sticky"
+                            top={0}
+                            bg="gray.100"
+                            zIndex={1}
+                          >
+                            Customer
+                          </Th>
                           <Th isNumeric>Qty</Th>
                           <Th isNumeric>Total ($)</Th>
                         </Tr>
@@ -208,11 +222,15 @@ export default function ProductDetails({
                 ) : productPurchases.length === 0 ? (
                   <Text>No purchases found for this product.</Text>
                 ) : (
-                  <Table>
+                  <Table variant="simple" size="sm">
                     <Thead>
                       <Tr>
-                        <Th>Date</Th>
-                        <Th>Vendor</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Date
+                        </Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Vendor
+                        </Th>
                         <Th isNumeric>Qty</Th>
                         <Th isNumeric>Total ($)</Th>
                       </Tr>
@@ -278,12 +296,18 @@ export default function ProductDetails({
                 {!product.productVendors?.length ? (
                   <Text>No vendors linked to this product.</Text>
                 ) : (
-                  <Table>
+                  <Table variant="simple" size="sm">
                     <Thead>
                       <Tr>
-                        <Th>Vendor Name</Th>
-                        <Th>Email</Th>
-                        <Th>Phone</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Vendor Name
+                        </Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Email
+                        </Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Phone
+                        </Th>
                         <Th isNumeric>Vendor Price ($)</Th>
                       </Tr>
                     </Thead>

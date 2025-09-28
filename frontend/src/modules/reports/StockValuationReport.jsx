@@ -28,7 +28,9 @@ export default function StockValuationReport({ period, locationId }) {
       <Table size="sm">
         <Thead>
           <Tr>
-            <Th>Period</Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Period
+            </Th>
             <Th isNumeric>Valuation</Th>
           </Tr>
         </Thead>

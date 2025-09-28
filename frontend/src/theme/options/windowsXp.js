@@ -329,38 +329,50 @@ export default {
     Table: {
       baseStyle: {
         table: {
-          borderCollapse: "collapse", // classic Excel look
           width: "100%",
+          borderCollapse: "collapse",
         },
         th: {
-          bg: light.xpLight, // light XP-style header
+          position: "sticky",
+          top: 0,
+          bg: "xpLight",
           border: "1px solid",
-          borderColor: light.xpDark, // subtle dark border
+          borderColor: "xpDark",
           fontWeight: "bold",
           textAlign: "left",
-          px: 2, // compact padding
+          px: 2,
           py: 1,
+          zIndex: 1,
           _dark: {
-            bg: dark.xpLight,
-            borderColor: dark.xpDark,
+            bg: "xpLightDark",
+            borderColor: "xpDarkDark",
           },
         },
         td: {
           border: "1px solid",
-          borderColor: light.xpDark, // subtle grid lines
+          borderColor: "xpDark",
           px: 2,
           py: 1,
           _dark: {
-            borderColor: dark.xpDark,
+            borderColor: "xpDarkDark",
           },
         },
         tfoot: {
           fontWeight: "bold",
-          bg: light.xpLight,
+          bg: "xpLight",
           _dark: {
-            bg: dark.xpLight,
+            bg: "xpLightDark",
           },
         },
+      },
+      sizes: {
+        sm: {
+          th: { px: 2, py: 1 },
+          td: { px: 2, py: 1 },
+        },
+      },
+      variants: {
+        simple: {}, // keep default simple variant
       },
     },
 

@@ -100,6 +100,8 @@ export default function POSDashboardWithSearch() {
   const navigate = useNavigate();
   const toast = useToast();
 
+  const [period, setPeriod] = useState("today"); // "today" | "week" | "month"
+
   // ---- Load data from contexts ----
   const { sales, loading: salesLoading } = useSales();
   const { products, loading: productsLoading } = useProducts();
@@ -110,7 +112,37 @@ export default function POSDashboardWithSearch() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  // ---- Filter results ----
+  const filterByPeriod = (items) => {
+    const now = new Date();
+    let start;
+
+    switch (period) {
+      case "week":
+        start = new Date(now);
+        start.setDate(now.getDate() - now.getDay()); // Sunday start
+        start.setHours(0, 0, 0, 0);
+        break;
+      case "month":
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        start.setHours(0, 0, 0, 0);
+        break;
+      case "today":
+      default:
+        start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        break;
+    }
+
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+
+    return items.filter((item) => {
+      const created = new Date(item.createdAt);
+      return created >= start && created <= end;
+    });
+  };
+
+  // ---- Filter results for search ----
   const filteredCustomers = useMemo(
     () =>
       customers.filter((c) =>
@@ -186,9 +218,9 @@ export default function POSDashboardWithSearch() {
     return () => window.removeEventListener("keydown", handler);
   }, [navigate, toast]);
 
-  // ---- Search delay spinner ----
+  // ---- Search spinner ----
   useEffect(() => {
-    if (searchTerm === "") {
+    if (!searchTerm) {
       setIsSearching(false);
       return;
     }
@@ -197,13 +229,13 @@ export default function POSDashboardWithSearch() {
     return () => clearTimeout(t);
   }, [searchTerm]);
 
-  // ---- Filter today's sales & payments ----
-  const today = new Date().toISOString().slice(0, 10);
-  const salesToday = sales.filter(
-    (s) => s.createdAt && s.createdAt.slice(0, 10) === today
+  const filteredSalesByPeriod = useMemo(
+    () => filterByPeriod(sales),
+    [sales, period]
   );
-  const paymentsToday = payments.filter(
-    (p) => p.createdAt && p.createdAt.slice(0, 10) === today
+  const filteredPaymentsByPeriod = useMemo(
+    () => filterByPeriod(payments),
+    [payments, period]
   );
 
   const loading =
@@ -211,14 +243,14 @@ export default function POSDashboardWithSearch() {
 
   return (
     <Flex direction="column" p={4}>
-      <Flex>
+      {/* Header + Search */}
+      <Flex mb={2}>
         <Box p="2">
-          <Heading size={"md"} mb={2}>
+          <Heading size="md" mb={2}>
             Create and manage orders
           </Heading>
         </Box>
         <Spacer />
-
         <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
           <InputGroup>
             <InputLeftElement pointerEvents="none">
@@ -233,6 +265,7 @@ export default function POSDashboardWithSearch() {
         </Flex>
       </Flex>
 
+      {/* Search / Loading */}
       {loading ? (
         <Spinner size="lg" />
       ) : isSearching ? (
@@ -304,54 +337,137 @@ export default function POSDashboardWithSearch() {
             ))}
           </Flex>
 
+          {/* Period Selector */}
+          <Flex mb={4} align="center">
+            <Text fontWeight="bold" mr={2}>
+              Period:
+            </Text>
+            {["today", "week", "month"].map((p) => (
+              <Box
+                key={p}
+                as="button"
+                onClick={() => setPeriod(p)}
+                px={3}
+                py={1}
+                mx={1}
+                borderRadius="md"
+                bg={period === p ? "blue.500" : "gray.200"}
+                color={period === p ? "white" : "black"}
+                _hover={{ bg: period === p ? "blue.600" : "gray.300" }}
+              >
+                {p === "today"
+                  ? "Today"
+                  : p === "week"
+                  ? "This Week"
+                  : "This Month"}
+              </Box>
+            ))}
+          </Flex>
+
           {/* Summary Tables */}
           <Flex wrap="wrap" gap={8}>
             <Box flex="1" minW="300px">
               <Heading size="md" mb={4}>
-                Sales Today
+                Sales (
+                {period === "today"
+                  ? "Today"
+                  : period === "week"
+                  ? "This Week"
+                  : "This Month"}
+                )
               </Heading>
-              <Table variant="simple" size="sm">
-                <Thead>
-                  <Tr>
-                    <Th>Invoice</Th>
-                    <Th>Customer</Th>
-                    <Th isNumeric>Total ($)</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {salesToday.map((s) => (
-                    <Tr key={s.id}>
-                      <Td>{s.invoice || s.id}</Td>
-                      <Td>{s.customerName || "Unknown"}</Td>
-                      <Td isNumeric>{s.total?.toFixed(2) ?? "0.00"}</Td>
+              <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+                <Table variant="simple" size="sm">
+                  <Thead>
+                    <Tr>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Invoice
+                      </Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Customer
+                      </Th>
+                      <Th
+                        position="sticky"
+                        top={0}
+                        bg="gray.100"
+                        zIndex={1}
+                        isNumeric
+                      >
+                        Total ($)
+                      </Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {filteredSalesByPeriod.length === 0 ? (
+                      <Tr>
+                        <Td colSpan={3} textAlign="center">
+                          No sales found for the selected period.
+                        </Td>
+                      </Tr>
+                    ) : (
+                      filteredSalesByPeriod.map((s) => (
+                        <Tr key={s.id}>
+                          <Td>{s.invoice || s.id}</Td>
+                          <Td>{s.customerName || "Unknown"}</Td>
+                          <Td isNumeric>{s.total?.toFixed(2) ?? "0.00"}</Td>
+                        </Tr>
+                      ))
+                    )}
+                  </Tbody>
+                </Table>
+              </Box>
             </Box>
 
             <Box flex="1" minW="300px">
               <Heading size="md" mb={4}>
-                Payments Today
+                Payments (
+                {period === "today"
+                  ? "Today"
+                  : period === "week"
+                  ? "This Week"
+                  : "This Month"}
+                )
               </Heading>
-              <Table variant="simple" size="sm">
-                <Thead>
-                  <Tr>
-                    <Th>Payer</Th>
-                    <Th>Method</Th>
-                    <Th isNumeric>Amount ($)</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {paymentsToday.map((p) => (
-                    <Tr key={p.id}>
-                      <Td>{p.payerName || p.customerName || "Unknown"}</Td>
-                      <Td>{p.method || ""}</Td>
-                      <Td isNumeric>{p.amount?.toFixed(2) ?? "0.00"}</Td>
+              <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+                <Table variant="simple" size="sm">
+                  <Thead>
+                    <Tr>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Payer
+                      </Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Method
+                      </Th>
+                      <Th
+                        position="sticky"
+                        top={0}
+                        bg="gray.100"
+                        zIndex={1}
+                        isNumeric
+                      >
+                        Amount ($)
+                      </Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {filteredPaymentsByPeriod.length === 0 ? (
+                      <Tr>
+                        <Td colSpan={3} textAlign="center">
+                          No payments found for the selected period.
+                        </Td>
+                      </Tr>
+                    ) : (
+                      filteredPaymentsByPeriod.map((p) => (
+                        <Tr key={p.id}>
+                          <Td>{p.payerName || p.customerName || "Unknown"}</Td>
+                          <Td>{p.method || ""}</Td>
+                          <Td isNumeric>{p.amount?.toFixed(2) ?? "0.00"}</Td>
+                        </Tr>
+                      ))
+                    )}
+                  </Tbody>
+                </Table>
+              </Box>
             </Box>
           </Flex>
         </>

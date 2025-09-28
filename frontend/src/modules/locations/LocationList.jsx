@@ -44,12 +44,18 @@ export default function LocationList({ locations, onEdit }) {
 
   return (
     <>
-      <Table>
+      <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            <Th>Name</Th>
-            <Th>Address</Th>
-            <Th>Actions</Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Name
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Address
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Actions
+            </Th>
           </Tr>
         </Thead>
         <Tbody>

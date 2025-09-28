@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Box,
   Table,
   Thead,
   Tbody,
@@ -23,39 +24,49 @@ export default function StockList({ stocks, onEdit }) {
 
   return (
     <>
-      <Table>
-        <Thead>
-          <Tr>
-            <Th>Product</Th>
-            <Th>Location</Th>
-            <Th>Quantity</Th>
-            <Th>Actions</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {stocks.map((s) => (
-            <Tr key={`${s.productId}-${s.locationId}`}>
-              <Td>{s.productName}</Td>
-              <Td>{s.locationName}</Td>
-              <Td>{s.quantity}</Td>
-              <Td>
-                <ButtonGroup>
-                  <IconButton
-                    icon={<ViewIcon />}
-                    aria-label="View"
-                    onClick={() => openDetails(s.productId, s.locationId)}
-                  />
-                  <IconButton
-                    icon={<EditIcon />}
-                    aria-label="Edit"
-                    onClick={() => onEdit(s.productId, s.locationId)}
-                  />
-                </ButtonGroup>
-              </Td>
+      <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+        <Table variant="simple" size="sm">
+          <Thead>
+            <Tr>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Product
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Location
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Quantity
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Actions
+              </Th>
             </Tr>
-          ))}
-        </Tbody>
-      </Table>
+          </Thead>
+          <Tbody>
+            {stocks.map((s) => (
+              <Tr key={`${s.productId}-${s.locationId}`}>
+                <Td>{s.productName}</Td>
+                <Td>{s.locationName}</Td>
+                <Td>{s.quantity}</Td>
+                <Td>
+                  <ButtonGroup>
+                    <IconButton
+                      icon={<ViewIcon />}
+                      aria-label="View"
+                      onClick={() => openDetails(s.productId, s.locationId)}
+                    />
+                    <IconButton
+                      icon={<EditIcon />}
+                      aria-label="Edit"
+                      onClick={() => onEdit(s.productId, s.locationId)}
+                    />
+                  </ButtonGroup>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
 
       {selected && (
         <StockDetail

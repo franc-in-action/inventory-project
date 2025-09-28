@@ -54,16 +54,30 @@ export default function PurchasesPage() {
   const receivedPurchases = purchases.filter((p) => p.received);
 
   const renderPurchaseTable = (purchaseList, showReceiveButton = false) => (
-    <Table>
+    <Table variant="simple" size="sm">
       <Thead>
         <Tr>
-          <Th>Purchase #</Th>
-          <Th>Vendor</Th>
-          <Th>Location</Th>
-          <Th>Total</Th>
-          <Th>Received</Th>
-          <Th>Received By</Th>
-          <Th>Actions</Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Purchase #
+          </Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Vendor
+          </Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Location
+          </Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Total
+          </Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Received
+          </Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Received By
+          </Th>
+          <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+            Actions
+          </Th>
         </Tr>
       </Thead>
       <Tbody>

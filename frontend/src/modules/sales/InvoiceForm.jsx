@@ -343,11 +343,15 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
                   <Table size="sm" variant="simple">
                     <Thead>
                       <Tr>
-                        <Th>Product</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Product
+                        </Th>
                         <Th isNumeric>Qty</Th>
                         <Th isNumeric>Price</Th>
                         <Th isNumeric>Total</Th>
-                        <Th>Actions</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Actions
+                        </Th>
                       </Tr>
                     </Thead>
                     <Tbody>

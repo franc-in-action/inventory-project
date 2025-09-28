@@ -70,13 +70,19 @@ export default function LogsPage() {
       ) : logs.length === 0 ? (
         <Text>No logs found.</Text>
       ) : (
-        <Box>
-          <Table>
+        <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+          <Table variant="simple" size="sm">
             <Thead>
               <Tr>
-                <Th>User</Th>
-                <Th>Action</Th>
-                <Th>Date</Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  User
+                </Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  Action
+                </Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  Date
+                </Th>
               </Tr>
             </Thead>
             <Tbody>

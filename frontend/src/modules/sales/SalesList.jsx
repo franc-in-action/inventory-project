@@ -100,20 +100,42 @@ export default function SalesList({ onSelectSale, onPrint }) {
         </HStack>
       </Flex>
 
-      <Table>
+      <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            <Th>Date</Th>
-            <Th>Invoice No</Th>
-            <Th>Customer</Th>
-            <Th>Total ($)</Th>
-            <Th>Paid ($)</Th>
-            <Th>Unpaid ($)</Th>
-            <Th>Payment Method</Th>
-            <Th>Status</Th>
-            <Th>Created By</Th>
-            <Th>Finalized By</Th>
-            <Th>Actions</Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Date
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Invoice No
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Customer
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Total ($)
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Paid ($)
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Unpaid ($)
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Payment Method
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Status
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Created By
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Finalized By
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Actions
+            </Th>
           </Tr>
         </Thead>
         <Tbody>

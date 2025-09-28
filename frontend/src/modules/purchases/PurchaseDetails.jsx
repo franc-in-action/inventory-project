@@ -87,10 +87,12 @@ export default function PurchaseDetails({
             </Text>
 
             <Text>Items</Text>
-            <Table>
+            <Table variant="simple" size="sm">
               <Thead>
                 <Tr>
-                  <Th>Product</Th>
+                  <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                    Product
+                  </Th>
                   <Th isNumeric>Qty</Th>
                   <Th isNumeric>Price</Th>
                   <Th isNumeric>Total</Th>

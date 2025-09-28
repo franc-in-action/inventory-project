@@ -29,13 +29,21 @@ export default function VendorList({ vendors, onEdit, onDelete }) {
 
   return (
     <>
-      <Table>
+      <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            <Th>Name</Th>
-            <Th>Email</Th>
-            <Th>Phone</Th>
-            <Th>Actions</Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Name
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Email
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Phone
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Actions
+            </Th>
           </Tr>
         </Thead>
         <Tbody>

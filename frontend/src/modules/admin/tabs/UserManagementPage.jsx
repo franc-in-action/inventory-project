@@ -118,14 +118,22 @@ export default function UserManagementPage() {
       ) : filteredUsers.length === 0 ? (
         <Text>No users found.</Text>
       ) : (
-        <Box>
-          <Table>
+        <Box flex="1" h="300px" overflowY="auto" overflowX="auto">
+          <Table variant="simple" size="sm">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Email</Th>
-                <Th>Role</Th>
-                <Th>Actions</Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  Name
+                </Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  Email
+                </Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  Role
+                </Th>
+                <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                  Actions
+                </Th>
               </Tr>
             </Thead>
             <Tbody>

@@ -57,16 +57,30 @@ export default function StockAdjustmentsPage() {
       {loading ? (
         <Spinner />
       ) : (
-        <Table>
+        <Table variant="simple" size="sm">
           <Thead>
             <Tr>
-              <Th>Product</Th>
-              <Th>Location</Th>
-              <Th>Change</Th>
-              <Th>Reason</Th>
-              <Th>Reference</Th>
-              <Th>Performed By</Th>
-              <Th>Date</Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Product
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Location
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Change
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Reason
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Reference
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Performed By
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Date
+              </Th>
             </Tr>
           </Thead>
           <Tbody>

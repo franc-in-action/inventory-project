@@ -67,16 +67,30 @@ export default function PaymentList({ onEdit, filter = "" }) {
 
   return (
     <>
-      <Table>
+      <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            <Th>Payment #</Th>
-            <Th>Customer</Th>
-            <Th>Sale #</Th>
-            <Th>Amount</Th>
-            <Th>Method</Th>
-            <Th>Created At</Th>
-            <Th>Actions</Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Payment #
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Customer
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Sale #
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Amount
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Method
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Created At
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Actions
+            </Th>
           </Tr>
         </Thead>
         <Tbody>

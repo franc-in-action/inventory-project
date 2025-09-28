@@ -123,8 +123,22 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                       <Table variant="striped" size="sm">
                         <Thead>
                           <Tr>
-                            <Th>Name</Th>
-                            <Th>SKU</Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Name
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              SKU
+                            </Th>
                             <Th isNumeric>Price</Th>
                           </Tr>
                         </Thead>
@@ -160,13 +174,34 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
                       border="1px solid #e2e8f0"
                       borderRadius="md"
                     >
-                      <Table>
+                      <Table variant="simple" size="sm">
                         <Thead>
                           <Tr>
-                            <Th>Payment #</Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Payment #
+                            </Th>
                             <Th isNumeric>Amount</Th>
-                            <Th>Method</Th>
-                            <Th>Date</Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Method
+                            </Th>
+                            <Th
+                              position="sticky"
+                              top={0}
+                              bg="gray.100"
+                              zIndex={1}
+                            >
+                              Date
+                            </Th>
                           </Tr>
                         </Thead>
                         <Tbody>

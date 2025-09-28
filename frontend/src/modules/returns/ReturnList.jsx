@@ -51,15 +51,27 @@ export default function ReturnList({ returns, onEdit, onDelete }) {
 
   return (
     <>
-      <Table>
+      <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            <Th>ID</Th>
-            <Th>Customer</Th>
-            <Th>Items</Th>
-            <Th>Total</Th>
-            <Th>Created At</Th>
-            <Th>Actions</Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              ID
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Customer
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Items
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Total
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Created At
+            </Th>
+            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+              Actions
+            </Th>
           </Tr>
         </Thead>
         <Tbody>

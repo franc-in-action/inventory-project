@@ -121,9 +121,13 @@ export default function CustomerReportsPage() {
                   <Table variant="striped" size="sm" mb={8}>
                     <Thead>
                       <Tr>
-                        <Th>Customer</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Customer
+                        </Th>
                         <Th isNumeric>Total Sales</Th>
-                        <Th>Period</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Period
+                        </Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -145,9 +149,13 @@ export default function CustomerReportsPage() {
                   <Table variant="striped" size="sm">
                     <Thead>
                       <Tr>
-                        <Th>Customer</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Customer
+                        </Th>
                         <Th isNumeric>Sales Count</Th>
-                        <Th>Period</Th>
+                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                          Period
+                        </Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -174,8 +182,12 @@ export default function CustomerReportsPage() {
                 <Table variant="striped" size="sm">
                   <Thead>
                     <Tr>
-                      <Th>Customer</Th>
-                      <Th>First Purchase Date</Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Customer
+                      </Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        First Purchase Date
+                      </Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -200,8 +212,12 @@ export default function CustomerReportsPage() {
                 <Table variant="striped" size="sm">
                   <Thead>
                     <Tr>
-                      <Th>Customer</Th>
-                      <Th>Last Sale Date</Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Customer
+                      </Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Last Sale Date
+                      </Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -226,8 +242,12 @@ export default function CustomerReportsPage() {
                 <Table variant="striped" size="sm">
                   <Thead>
                     <Tr>
-                      <Th>Customer</Th>
-                      <Th>Purchase Date (This Month)</Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Customer
+                      </Th>
+                      <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                        Purchase Date (This Month)
+                      </Th>
                     </Tr>
                   </Thead>
                   <Tbody>
