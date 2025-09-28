@@ -166,46 +166,87 @@ export default {
 
     Button: {
       baseStyle: {
-        fontFamily: "var(--sans-serif)",
+        fontFamily: "Calibri, sans-serif",
         fontSize: "11px",
         fontWeight: "bold",
         boxSizing: "border-box",
         borderRadius: "3px",
-        border: "1px solid #003c74",
-        bg: "linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(236, 235, 229, 1) 86%, rgba(216, 208, 196, 1) 100%)",
-        boxShadow: "none",
         px: 3,
         py: 1,
-        _hover: {
-          boxShadow:
-            "inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a",
-          cursor: "pointer",
-        },
-        _active: {
-          bg: "linear-gradient(180deg, rgba(205, 202, 195, 1) 0%, rgba(227, 227, 219, 1) 8%, rgba(229, 229, 222, 1) 94%, rgba(242, 242, 241, 1) 100%)",
-          boxShadow: "none",
-        },
-        _focus: {
-          boxShadow:
-            "inset -1px 1px #cee7ff, inset 1px 2px #98b8ea, inset -2px 2px #bcd4f6, inset 1px -1px #89ade4, inset 2px -2px #89ade4",
-        },
+        _focus: { outline: "none" },
         _dark: {
-          border: "1px solid #003c74",
-          bg: "linear-gradient(180deg, #3a3a3a 0%, #2c2c2c 100%)",
           color: "#ddd",
+        },
+      },
+      variants: {
+        win7: {
+          border: "1px solid #707070",
+          bg: "linear-gradient(to bottom, #f2f2f2 0%, #ebebeb 42%, #dddddd 47%, #cfcfcf 100%)",
           _hover: {
-            boxShadow:
-              "inset -1px 1px #555, inset 1px 2px #666, inset -2px 2px #444, inset 2px -2px #333",
+            bg: "linear-gradient(to bottom, #eaf6fd 0%, #d9f0fc 42%, #bee6fd 47%, #bce5fc 58%, #a7d9f5 100%)",
+            border: "1px solid #3C7FB1",
+            boxShadow: "0 0 3px #A7D9F5",
+            cursor: "pointer",
           },
           _active: {
-            bg: "linear-gradient(180deg, #2a2a2a 0%, #1f1f1f 100%)",
-            boxShadow: "none",
-          },
-          _focus: {
             boxShadow:
-              "inset -1px 1px #667, inset 1px 2px #444, inset -2px 2px #555, inset 1px -1px #333, inset 2px -2px #222",
+              "inset 0 -1px 6px rgba(0,0,0,0.2), inset 0 -0.7em #BEE6FD, 0 0 3px #A7D9F5",
+          },
+          _dark: {
+            border: "1px solid #555",
+            bg: "linear-gradient(to bottom, #333 0%, #222 100%)",
+            _hover: {
+              bg: "linear-gradient(to bottom, #444 0%, #555 100%)",
+              boxShadow: "0 0 3px #555",
+            },
+            _active: {
+              boxShadow: "inset 0 -1px 6px rgba(0,0,0,0.5)",
+            },
           },
         },
+        winClassic: {
+          border: "1px solid #000",
+          bg: "#c6c6c6",
+          px: 3,
+          py: 1,
+          _hover: { bg: "#c6c6c6" },
+          _active: {
+            borderLeft: "1px solid #848484",
+            borderTop: "1px solid #848484",
+            borderRight: "1px solid #fff",
+            borderBottom: "1px solid #fff",
+          },
+          _dark: {
+            border: "1px solid #888",
+            bg: "#333",
+            _active: {
+              borderLeft: "1px solid #444",
+              borderTop: "1px solid #444",
+              borderRight: "1px solid #222",
+              borderBottom: "1px solid #222",
+            },
+          },
+        },
+        winXP: {
+          border: "2px solid transparent",
+          bg: "transparent",
+          px: 3,
+          py: 1,
+          _hover: { border: "2px solid #B9D0F0" },
+          _active: {
+            bg: "linear-gradient(to bottom, #dad3c9 0%, #e7e0d8 6%, #f8f3ef 18%, #f7f3f0 53%, #f8f7f5 59%, #fbf9fa 82%, #fffdfe 88%, #ffffff 94%, #f6f6f6 100%)",
+          },
+          _dark: {
+            border: "2px solid #555",
+            _hover: { border: "2px solid #88A0C0" },
+            _active: {
+              bg: "linear-gradient(to bottom, #444 0%, #555 100%)",
+            },
+          },
+        },
+      },
+      defaultProps: {
+        variant: "winXP",
       },
     },
 
