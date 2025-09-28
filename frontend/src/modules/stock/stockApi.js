@@ -66,17 +66,24 @@ export async function fetchTotalStockForProducts(productIds = []) {
  * @param {string} [locationId]
  * @returns {Promise<Object[]>} movements
  */
-export async function fetchStockMovements(productId, locationId) {
+export async function fetchStockMovements({
+  productId,
+  locationId,
+  page = 1,
+  pageSize = 10,
+} = {}) {
   try {
     const q = new URLSearchParams({
       ...(productId ? { productId } : {}),
       ...(locationId ? { locationId } : {}),
+      page,
+      pageSize,
     }).toString();
 
     const res = await apiFetch(`/stock/movements?${q}`);
-    return res.movements || [];
+    return res; // now returns { data, meta }
   } catch (err) {
     console.error("[stockApi] fetchStockMovements error:", err);
-    return [];
+    return { data: [], meta: { total: 0, page: 1, pageSize, totalPages: 1 } };
   }
 }

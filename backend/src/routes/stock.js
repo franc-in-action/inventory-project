@@ -195,13 +195,16 @@ router.get("/total", authMiddleware, async (req, res) => {
  * GET /api/stock/movements?productId=...&locationId=...
  * Returns list of stock movements for a product (and optional location)
  */
+// GET /api/stock/movements?productId=...&locationId=...&page=1&pageSize=10
 router.get("/movements", authMiddleware, async (req, res) => {
-  const { productId, locationId } = req.query;
+  const { productId, locationId, page = 1, pageSize = 10 } = req.query;
 
   try {
     const where = {};
     if (productId) where.productId = productId;
     if (locationId) where.locationId = locationId;
+
+    const totalCount = await prisma.stockMovement.count({ where });
 
     const movements = await prisma.stockMovement.findMany({
       where,
@@ -211,6 +214,8 @@ router.get("/movements", authMiddleware, async (req, res) => {
         user: { select: { name: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: parseInt(pageSize),
     });
 
     const result = movements.map((m) => ({
@@ -226,7 +231,15 @@ router.get("/movements", authMiddleware, async (req, res) => {
       createdAt: m.createdAt,
     }));
 
-    res.json({ movements: result });
+    res.json({
+      data: result,
+      meta: {
+        total: totalCount,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    });
   } catch (err) {
     console.error("[GET /stock/movements] Error:", err);
     res.status(500).json({ error: err.message });
