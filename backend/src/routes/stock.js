@@ -70,13 +70,22 @@ router.post(
 
 // GET /api/stock/all
 // Returns all stock levels with product and location names
+// GET /api/stock/all?page=1&pageSize=10
 router.get("/all", authMiddleware, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    const totalCount = await prisma.stockLevel.count();
+
     const stocks = await prisma.stockLevel.findMany({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       include: {
         product: { select: { name: true } },
         location: { select: { name: true } },
       },
+      orderBy: { productId: "asc" },
     });
 
     const result = stocks.map((s) => ({
@@ -87,7 +96,15 @@ router.get("/all", authMiddleware, async (req, res) => {
       quantity: s.quantity,
     }));
 
-    res.json(result);
+    res.json({
+      data: result,
+      meta: {
+        total: totalCount,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    });
   } catch (err) {
     console.error("[GET /stock/all] Error:", err);
     res.status(500).json({ error: err.message });

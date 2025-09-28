@@ -10,6 +10,7 @@ import {
 import Login from "./modules/auth/Login.jsx";
 import { UserPreferenceProvider } from "./modules/userpreferences/contexts/UserPreferenceContext.jsx";
 import { LocationsProvider } from "./modules/locations/contexts/LocationsContext.jsx";
+import { StockProvider } from "./modules/stock/contexts/StockContext.jsx";
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
 import { VendorsProvider } from "./modules/vendors/contexts/VendorsContext.jsx";
@@ -22,7 +23,6 @@ import { ReportsProvider } from "./modules/reports/contexts/ReportsContext.jsx";
 
 import Dashboard from "./pages/Dashboard.jsx";
 import POSDashboard from "./pages/POSDashboard.jsx";
-
 import ProductsPage from "./modules/products/ProductsPage.jsx";
 import CustomersPage from "./modules/customers/CustomersPage.jsx";
 import VendorsPage from "./modules/vendors/VendorsPage.jsx";
@@ -36,7 +36,7 @@ import StockPage from "./modules/stock/StockPage.jsx";
 import StockAdjustmentsPage from "./modules/stock/StockAdjustmentsPage.jsx";
 import AdminToolsPage from "./modules/admin/AdminToolsPage.jsx";
 
-// --- Reports ---
+// Reports
 import StockReportsPage from "./modules/reports/models/StockReportsPage.jsx";
 import SalesReportsPage from "./modules/reports/models/SalesReportsPage.jsx";
 import CustomerReportsPage from "./modules/reports/models/CustomerReportsPage.jsx";
@@ -117,10 +117,7 @@ function ThemeConsumerApp() {
     <ChakraProvider theme={theme}>
       <Router>
         <Routes>
-          {/* ---------- Public: Login is isolated ---------- */}
           <Route path="/login" element={<Login />} />
-
-          {/* ---------- Protected: everything else ---------- */}
           <Route
             path="/*"
             element={
@@ -135,11 +132,29 @@ function ThemeConsumerApp() {
   );
 }
 
-/* ----------------- Providers Wrapper ----------------- */
+/* ----------------- Providers Wrapper (All Providers) ----------------- */
 function AppProviders({ children }) {
   return (
     <LocationsProvider>
-      <ReportsProvider>{children}</ReportsProvider>
+      <StockProvider>
+        <SalesProvider>
+          <PurchasesProvider>
+            <ProductsProvider>
+              <CustomersProvider>
+                <VendorsProvider>
+                  <IssuedPaymentsProvider>
+                    <PaymentsProvider>
+                      <CategoriesProvider>
+                        <ReportsProvider>{children}</ReportsProvider>
+                      </CategoriesProvider>
+                    </PaymentsProvider>
+                  </IssuedPaymentsProvider>
+                </VendorsProvider>
+              </CustomersProvider>
+            </ProductsProvider>
+          </PurchasesProvider>
+        </SalesProvider>
+      </StockProvider>
     </LocationsProvider>
   );
 }
@@ -160,74 +175,37 @@ function ProtectedRoutes() {
           </ProtectedRoute>
         }
       />
-      {/* --- Products --- */}
       <Route
         path="/pos"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
               <ProtectedLayout>
-                <VendorsProvider>
-                  <CategoriesProvider>
-                    <CustomersProvider>
-                      <SalesProvider>
-                        <PaymentsProvider>
-                          <PurchasesProvider>
-                            <ProductsProvider>
-                              <POSDashboard />
-                            </ProductsProvider>
-                          </PurchasesProvider>
-                        </PaymentsProvider>
-                      </SalesProvider>
-                    </CustomersProvider>
-                  </CategoriesProvider>
-                </VendorsProvider>
+                <POSDashboard />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Products --- */}
       <Route
         path="/products"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.PRODUCTS}>
               <ProtectedLayout>
-                <VendorsProvider>
-                  <CategoriesProvider>
-                    <SalesProvider>
-                      <PurchasesProvider>
-                        <ProductsProvider>
-                          <ProductsPage />
-                        </ProductsProvider>
-                      </PurchasesProvider>
-                    </SalesProvider>
-                  </CategoriesProvider>
-                </VendorsProvider>
+                <ProductsPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Stock --- */}
       <Route
         path="/stock"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
               <ProtectedLayout>
-                <CategoriesProvider>
-                  <SalesProvider>
-                    <PurchasesProvider>
-                      <ProductsProvider>
-                        <StockPage />
-                      </ProductsProvider>
-                    </PurchasesProvider>
-                  </SalesProvider>
-                </CategoriesProvider>
+                <StockPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
@@ -239,85 +217,43 @@ function ProtectedRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.STOCK}>
               <ProtectedLayout>
-                <CategoriesProvider>
-                  <SalesProvider>
-                    <PurchasesProvider>
-                      <ProductsProvider>
-                        <StockAdjustmentsPage />
-                      </ProductsProvider>
-                    </PurchasesProvider>
-                  </SalesProvider>
-                </CategoriesProvider>
+                <StockAdjustmentsPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Customers --- */}
       <Route
         path="/customers"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.CUSTOMERS}>
               <ProtectedLayout>
-                <CustomersProvider>
-                  <PaymentsProvider>
-                    <CategoriesProvider>
-                      <SalesProvider>
-                        <PurchasesProvider>
-                          <ProductsProvider>
-                            <CustomersPage />
-                          </ProductsProvider>
-                        </PurchasesProvider>
-                      </SalesProvider>
-                    </CategoriesProvider>
-                  </PaymentsProvider>
-                </CustomersProvider>
+                <CustomersPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Vendors --- */}
       <Route
         path="/vendors"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.VENDORS}>
               <ProtectedLayout>
-                <VendorsProvider>
-                  <PurchasesProvider>
-                    <IssuedPaymentsProvider>
-                      <VendorsPage />
-                    </IssuedPaymentsProvider>
-                  </PurchasesProvider>
-                </VendorsProvider>
+                <VendorsPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Sales --- */}
       <Route
         path="/sales"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.SALES}>
               <ProtectedLayout>
-                <CategoriesProvider>
-                  <SalesProvider>
-                    <PurchasesProvider>
-                      <ProductsProvider>
-                        <CustomersProvider>
-                          <SalesPage />
-                        </CustomersProvider>
-                      </ProductsProvider>
-                    </PurchasesProvider>
-                  </SalesProvider>
-                </CategoriesProvider>
+                <SalesPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
@@ -329,87 +265,48 @@ function ProtectedRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.SALES}>
               <ProtectedLayout>
-                <SalesProvider>
-                  <ReturnsPage />
-                </SalesProvider>
+                <ReturnsPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Payments --- */}
       <Route
         path="/payments"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.PAYMENTS}>
               <ProtectedLayout>
-                <SalesProvider>
-                  <PurchasesProvider>
-                    <ProductsProvider>
-                      <CustomersProvider>
-                        <PaymentsProvider>
-                          <PaymentsPage />
-                        </PaymentsProvider>
-                      </CustomersProvider>
-                    </ProductsProvider>
-                  </PurchasesProvider>
-                </SalesProvider>
+                <PaymentsPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/adjustments"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.ADJUSTMENTS}>
               <ProtectedLayout>
-                <SalesProvider>
-                  <PurchasesProvider>
-                    <ProductsProvider>
-                      <CustomersProvider>
-                        <PaymentsProvider>
-                          <AdjustmentsPage />
-                        </PaymentsProvider>
-                      </CustomersProvider>
-                    </ProductsProvider>
-                  </PurchasesProvider>
-                </SalesProvider>
+                <AdjustmentsPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Purchases --- */}
       <Route
         path="/purchases"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={PERMISSIONS.PURCHASES}>
               <ProtectedLayout>
-                <VendorsProvider>
-                  <CategoriesProvider>
-                    <SalesProvider>
-                      <PurchasesProvider>
-                        <ProductsProvider>
-                          <PurchasesPage />
-                        </ProductsProvider>
-                      </PurchasesProvider>
-                    </SalesProvider>
-                  </CategoriesProvider>
-                </VendorsProvider>
+                <PurchasesPage />
               </ProtectedLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
       />
-
-      {/* --- Locations --- */}
       <Route
         path="/locations"
         element={
@@ -422,8 +319,6 @@ function ProtectedRoutes() {
           </ProtectedRoute>
         }
       />
-
-      {/* --- Admin Tools --- */}
       <Route
         path="/admin-tools"
         element={
@@ -436,8 +331,6 @@ function ProtectedRoutes() {
           </ProtectedRoute>
         }
       />
-
-      {/* --- Reports --- */}
       <Route
         path="/reports"
         element={
@@ -487,7 +380,7 @@ function ProtectedRoutes() {
         }
       />
 
-      {/* --- Catch-all --- */}
+      {/* Catch-all */}
       <Route
         path="*"
         element={

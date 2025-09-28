@@ -1,5 +1,9 @@
 import { apiFetch } from "../../utils/commonApi.js";
 
+export async function fetchStocks({ page = 1, pageSize = 10 } = {}) {
+  return apiFetch(`/stock/all?page=${page}&pageSize=${pageSize}`);
+}
+
 /**
  * Get current stock quantity for a product at a specific location
  * @param {string} productId

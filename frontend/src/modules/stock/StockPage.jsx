@@ -1,42 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Heading,
   Flex,
   Spacer,
-  Button,
   Input,
-  useToast,
+  Button,
   ButtonGroup,
+  Select,
+  useToast,
 } from "@chakra-ui/react";
-import { AddIcon, ViewIcon } from "@chakra-ui/icons";
-import { fetchTotalStockForProducts } from "./stockApi.js";
+import {
+  AddIcon,
+  ViewIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@chakra-ui/icons";
+import { useStock } from "./contexts/StockContext.jsx";
 import StockList from "./StockList.jsx";
 import StockForm from "./StockForm.jsx";
-import { apiFetch } from "../../utils/commonApi.js";
-import { useNavigate } from "react-router-dom"; // <- for navigation
+import { useNavigate } from "react-router-dom";
 
 export default function StockPage() {
-  const [stocks, setStocks] = useState([]);
+  const {
+    stocks,
+    loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    reloadStocks,
+  } = useStock();
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const toast = useToast();
-  const navigate = useNavigate(); // <- initialize navigation
-
-  const loadStocks = async () => {
-    try {
-      const res = await apiFetch("/stock/all");
-      setStocks(res);
-    } catch (err) {
-      console.error(err);
-      toast({ status: "error", description: "Failed to load stocks" });
-    }
-  };
-
-  useEffect(() => {
-    loadStocks();
-  }, []);
+  const navigate = useNavigate();
 
   const openEditModal = (productId, locationId) => {
     setEditing({ productId, locationId });
@@ -51,42 +51,78 @@ export default function StockPage() {
 
   return (
     <Flex direction="column" p={4}>
-      <Flex>
+      <Flex mb={2}>
         <Box p="2">
-          <Heading size={"md"} mb={2}>
-            Manage stock and inventory
-          </Heading>
+          <Heading size="md">Manage stock and inventory</Heading>
         </Box>
         <Spacer />
-        <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
-          <ButtonGroup>
-            <Button
-              variant="outline"
-              leftIcon={<ViewIcon />}
-              onClick={() => navigate("/reports/stock")}
-            >
-              View Reports
-            </Button>
-            <Button
-              variant="outline"
-              leftIcon={<ViewIcon />}
-              onClick={() => navigate("/stock-adjustments")}
-            >
-              View Adjustments
-            </Button>
-          </ButtonGroup>
-        </Flex>
+        <ButtonGroup>
+          <Button
+            variant="outline"
+            leftIcon={<ViewIcon />}
+            onClick={() => navigate("/reports/stock")}
+          >
+            View Reports
+          </Button>
+          <Button
+            variant="outline"
+            leftIcon={<ViewIcon />}
+            onClick={() => navigate("/stock-adjustments")}
+          >
+            View Adjustments
+          </Button>
+        </ButtonGroup>
       </Flex>
-      <Flex mb={4} w="100%">
+
+      <Flex mb={4} w="100%" align="center">
         <Input
           placeholder="Search products or locations..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          my={4}
+          mr={2}
         />
+        <Select
+          value={pageSize}
+          onChange={(e) => setPageSize(parseInt(e.target.value))}
+          w="120px"
+        >
+          {[10, 20, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size} / page
+            </option>
+          ))}
+        </Select>
       </Flex>
 
-      <StockList stocks={filteredStocks} onEdit={openEditModal} />
+      {loading ? (
+        <Box>Loading stock...</Box>
+      ) : (
+        <>
+          <StockList stocks={filteredStocks} onEdit={openEditModal} />
+
+          <Flex mt={4} justify="center" align="center">
+            <Button
+              leftIcon={<ChevronLeftIcon />}
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              mr={2}
+            >
+              Previous
+            </Button>
+            <Box mx={2}>
+              Page {page} of {totalPages}
+            </Box>
+            <Button
+              rightIcon={<ChevronRightIcon />}
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              ml={2}
+            >
+              Next
+            </Button>
+          </Flex>
+        </>
+      )}
 
       {modalOpen && (
         <StockForm
@@ -97,7 +133,7 @@ export default function StockPage() {
             setModalOpen(false);
             setEditing(null);
           }}
-          onSaved={loadStocks}
+          onSaved={reloadStocks}
         />
       )}
     </Flex>
