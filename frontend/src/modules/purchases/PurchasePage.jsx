@@ -19,8 +19,9 @@ import {
   Tab,
   TabPanel,
   Link,
+  Select,
 } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
+import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 import PurchaseForm from "./PurchaseForm.jsx";
 import PurchaseDetails from "./PurchaseDetails.jsx";
@@ -31,7 +32,16 @@ import { useLocations } from "../locations/contexts/LocationsContext.jsx";
 export default function PurchasesPage() {
   const toast = useToast();
   const { vendorsMap } = useVendors();
-  const { purchases, loading, markReceived } = usePurchases();
+  const {
+    purchases,
+    loading,
+    markReceived,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+  } = usePurchases();
   const { locations, loading: locationsLoading } = useLocations();
 
   const [showForm, setShowForm] = useState(false);
@@ -40,7 +50,7 @@ export default function PurchasesPage() {
 
   const handleReceive = async (purchaseId) => {
     try {
-      await markReceived(purchaseId); // still uses internal UUID
+      await markReceived(purchaseId);
       toast({ title: "Purchase received", status: "success" });
     } catch {
       toast({ title: "Error receiving purchase", status: "error" });
@@ -90,7 +100,6 @@ export default function PurchasesPage() {
         ) : (
           purchaseList.map((p) => (
             <Tr key={p.id}>
-              {/* ✅ Show human-readable purchase number */}
               <Td>
                 <Link variant="link" onClick={() => setSelectedPurchase(p)}>
                   {p.purchaseUuid}
@@ -107,7 +116,6 @@ export default function PurchasesPage() {
                   ? "Unknown User"
                   : "-"}
               </Td>
-
               <Td>
                 {showReceiveButton && (
                   <Button
@@ -130,14 +138,14 @@ export default function PurchasesPage() {
 
   return (
     <Flex direction="column" p={4}>
-      <Flex>
+      {/* Header */}
+      <Flex mb={4}>
         <Box p="2">
           <Heading size={"md"} mb={2}>
             Manage product purchases
           </Heading>
         </Box>
         <Spacer />
-
         <Flex mb={2} w="100%" maxW="600px" justify="flex-end">
           <ButtonGroup>
             <Button
@@ -151,6 +159,7 @@ export default function PurchasesPage() {
         </Flex>
       </Flex>
 
+      {/* Tabs for Pending / Received */}
       <Tabs>
         <TabList>
           <Tab
@@ -167,6 +176,42 @@ export default function PurchasesPage() {
         </TabPanels>
       </Tabs>
 
+      {/* Pagination Controls */}
+      <Flex mt={4} justify="space-between" align="center">
+        <Button
+          leftIcon={<ChevronLeftIcon />}
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+        >
+          Previous
+        </Button>
+
+        <Box>
+          Page {page} of {totalPages}
+        </Box>
+
+        <Button
+          rightIcon={<ChevronRightIcon />}
+          onClick={() => setPage(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+        >
+          Next
+        </Button>
+
+        <Select
+          value={pageSize}
+          onChange={(e) => setPageSize(parseInt(e.target.value))}
+          w="120px"
+        >
+          {[10, 20, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size} / page
+            </option>
+          ))}
+        </Select>
+      </Flex>
+
+      {/* Purchase Form Modal */}
       <PurchaseForm
         isOpen={showForm}
         onClose={() => {
@@ -177,6 +222,7 @@ export default function PurchasesPage() {
         purchase={editingPurchase}
       />
 
+      {/* Purchase Details Modal */}
       <PurchaseDetails
         purchase={selectedPurchase}
         isOpen={!!selectedPurchase}

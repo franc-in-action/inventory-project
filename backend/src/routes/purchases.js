@@ -16,19 +16,18 @@ router.post(
     const { locationId, vendorId, items, received, issuedPayment } = req.body;
     const userId = req.user.userId;
 
-    if (!items || items.length === 0)
+    if (!items?.length)
       return res.status(400).json({ error: "No items provided" });
     if (!vendorId) return res.status(400).json({ error: "vendorId required" });
 
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Generate purchase number
         const purchaseNumber = await generateSequentialId("Purchase");
-
         const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+
         const newPurchase = await tx.purchase.create({
           data: {
-            purchaseUuid: purchaseNumber, // <-- use generated sequential ID
+            purchaseUuid: purchaseNumber,
             locationId,
             vendorId,
             total,
@@ -44,7 +43,6 @@ router.post(
           },
         });
 
-        // Update stock if received
         if (received) {
           for (const item of items) {
             const stockLevel = await tx.stockLevel.findUnique({
@@ -52,6 +50,7 @@ router.post(
                 productId_locationId: { productId: item.productId, locationId },
               },
             });
+
             if (stockLevel) {
               await tx.stockLevel.update({
                 where: { id: stockLevel.id },
@@ -81,7 +80,6 @@ router.post(
           }
         }
 
-        // Create ledger entry for PURCHASE
         await tx.ledgerEntry.create({
           data: {
             purchaseId: newPurchase.id,
@@ -92,7 +90,6 @@ router.post(
           },
         });
 
-        // Handle optional issuedPayment
         let paymentRecord = null;
         if (issuedPayment?.amount > 0) {
           paymentRecord = await tx.issuedPayment.create({
@@ -127,32 +124,43 @@ router.post(
   }
 );
 
-// -------------------- GET ALL PURCHASES --------------------
+// -------------------- GET PAGINATED PURCHASES --------------------
 router.get("/", authMiddleware, async (req, res) => {
-  const { startDate, endDate, locationId, vendorId, productId } = req.query;
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const skip = (page - 1) * pageSize;
+
   try {
+    const { startDate, endDate, locationId, vendorId, productId } = req.query;
+
     const where = {};
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
-    }
+    if (startDate || endDate) where.createdAt = {};
+    if (startDate) where.createdAt.gte = new Date(startDate);
+    if (endDate) where.createdAt.lte = new Date(endDate);
     if (locationId) where.locationId = locationId;
     if (vendorId) where.vendorId = vendorId;
     if (productId) where.items = { some: { productId } };
 
-    const purchases = await prisma.purchase.findMany({
-      where,
-      include: {
-        items: true,
-        vendor: true,
-        ledger: true,
-        receivedByUser: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const [total, items] = await prisma.$transaction([
+      prisma.purchase.count({ where }),
+      prisma.purchase.findMany({
+        where,
+        skip,
+        take: pageSize,
+        include: {
+          items: true,
+          vendor: true,
+          ledger: true,
+          receivedByUser: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
 
-    res.json(purchases);
+    res.json({
+      data: items,
+      meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -160,10 +168,9 @@ router.get("/", authMiddleware, async (req, res) => {
 
 // -------------------- GET SINGLE PURCHASE --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
-  const id = req.params.id;
   try {
     const purchase = await prisma.purchase.findUnique({
-      where: { id },
+      where: { id: req.params.id },
       include: {
         items: true,
         vendor: true,
@@ -184,35 +191,28 @@ router.put(
   authMiddleware,
   requireRole(["ADMIN", "MANAGER"]),
   async (req, res) => {
-    const id = req.params.id;
     const { locationId, vendorId, received, items } = req.body;
-
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Update purchase info
         const data = {};
         if (locationId) data.location = { connect: { id: locationId } };
         if (vendorId) data.vendor = { connect: { id: vendorId } };
         if (typeof received === "boolean") data.received = received;
 
         const purchase = await tx.purchase.update({
-          where: { id },
+          where: { id: req.params.id },
           data,
           include: { items: true },
         });
 
         if (items) {
-          // Map of current items by id
-          const existingItemsMap = {};
-          purchase.items.forEach((i) => {
-            existingItemsMap[i.id] = i;
-          });
-
+          const existingItemsMap = Object.fromEntries(
+            purchase.items.map((i) => [i.id, i])
+          );
           const newItemIds = [];
 
           for (const item of items) {
             if (item.id && existingItemsMap[item.id]) {
-              // Update existing item
               await tx.purchaseItem.update({
                 where: { id: item.id },
                 data: {
@@ -223,10 +223,9 @@ router.put(
               });
               newItemIds.push(item.id);
             } else {
-              // Create new item
               const newItem = await tx.purchaseItem.create({
                 data: {
-                  purchaseId: id,
+                  purchaseId: req.params.id,
                   productId: item.productId,
                   qty: item.qty,
                   price: item.price,
@@ -236,16 +235,13 @@ router.put(
             }
           }
 
-          // Delete removed items
           const toDelete = purchase.items
             .filter((i) => !newItemIds.includes(i.id))
             .map((i) => i.id);
-
-          if (toDelete.length > 0) {
+          if (toDelete.length)
             await tx.purchaseItem.deleteMany({
               where: { id: { in: toDelete } },
             });
-          }
         }
 
         return purchase;
@@ -258,7 +254,7 @@ router.put(
   }
 );
 
-//  --------------------- RECEIVE PURCHASE
+// -------------------- RECEIVE PURCHASE --------------------
 router.put(
   "/:id/receive",
   authMiddleware,
@@ -269,21 +265,15 @@ router.put(
 
     try {
       const updatedPurchase = await prisma.$transaction(async (tx) => {
-        // Mark purchase as received
         const purchase = await tx.purchase.update({
           where: { id: purchaseId },
           data: { received: true, receivedBy: userId },
-          include: {
-            items: true, // for stock updates
-            receivedByUser: true, // ✅ include the user who received
-          },
+          include: { items: true, receivedByUser: true },
         });
 
-        if (!purchase.items || purchase.items.length === 0) {
+        if (!purchase.items.length)
           throw new Error("Purchase has no items to receive");
-        }
 
-        // Update stock levels and create stock movements
         for (const item of purchase.items) {
           const stockLevel = await tx.stockLevel.findUnique({
             where: {
@@ -294,12 +284,12 @@ router.put(
             },
           });
 
-          if (stockLevel) {
+          if (stockLevel)
             await tx.stockLevel.update({
               where: { id: stockLevel.id },
               data: { quantity: stockLevel.quantity + item.qty },
             });
-          } else {
+          else
             await tx.stockLevel.create({
               data: {
                 productId: item.productId,
@@ -307,7 +297,6 @@ router.put(
                 quantity: item.qty,
               },
             });
-          }
 
           await tx.stockMovement.create({
             data: {
@@ -322,14 +311,13 @@ router.put(
           });
         }
 
-        // Create ledger entry for PURCHASE
         await tx.ledgerEntry.create({
           data: {
             purchaseId: purchase.id,
             vendorId: purchase.vendorId,
             type: "PURCHASE",
             amount: purchase.total,
-            description: `Purchase from vendor received`,
+            description: "Purchase from vendor received",
           },
         });
 
@@ -350,15 +338,16 @@ router.delete(
   authMiddleware,
   requireRole(["ADMIN"]),
   async (req, res) => {
-    const id = req.params.id;
     try {
       const result = await prisma.$transaction(async (tx) => {
-        await tx.ledgerEntry.deleteMany({ where: { purchaseId: id } });
-        await tx.purchaseItem.deleteMany({ where: { purchaseId: id } });
-        const purchase = await tx.purchase.delete({ where: { id } });
-        return purchase;
+        await tx.ledgerEntry.deleteMany({
+          where: { purchaseId: req.params.id },
+        });
+        await tx.purchaseItem.deleteMany({
+          where: { purchaseId: req.params.id },
+        });
+        return await tx.purchase.delete({ where: { id: req.params.id } });
       });
-
       res.json({ message: "Purchase deleted", deleted: result });
     } catch (err) {
       res.status(400).json({ error: err.message });
