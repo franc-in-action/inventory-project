@@ -137,7 +137,7 @@ router.get(
 );
 
 /* -----------------------------------------------------------
-   SALES REPORT
+   SALES REPORT (grouped by customer)
 ----------------------------------------------------------- */
 /**
  * GET /api/reports/sales
@@ -169,15 +169,19 @@ router.get(
 
       const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
+      // Group by customer even if no specific customerId is passed
       const results = await prisma.$queryRawUnsafe(
         `
         SELECT
           DATE_TRUNC('${dateTrunc}', s."createdAt") AS period,
+          c.id AS customer_id,
+          c.name AS customer_name,
           COUNT(s.id)::int AS sales_count,
           SUM(s.total)::float AS total_sales
         FROM "Sale" s
+        INNER JOIN "Customer" c ON c.id = s."customerId"
         ${where}
-        GROUP BY 1
+        GROUP BY 1, c.id, c.name
         ORDER BY 1 DESC
         `,
         ...params
@@ -191,6 +195,8 @@ router.get(
         customerId: customerId || null,
         data: results.map((r) => ({
           period: r.period.toISOString().split("T")[0],
+          customer_id: r.customer_id,
+          customer_name: r.customer_name,
           sales_count: parseInt(r.sales_count, 10),
           total_sales: parseFloat(r.total_sales),
         })),

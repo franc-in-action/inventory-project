@@ -23,6 +23,11 @@ export function ReportsProvider({ children }) {
   const [qualifiedCustomers, setQualifiedCustomers] = useState([]); // Qualified list
   const [recalledCustomers, setRecalledCustomers] = useState([]); // Recalled list
 
+  const [customerActivity, setCustomerActivity] = useState([]); // Heatmap data
+  const [customerActivityByCustomer, setCustomerActivityByCustomer] = useState(
+    {}
+  );
+
   const [loading, setLoading] = useState(false);
 
   // -------------------- Loaders --------------------
@@ -108,6 +113,32 @@ export function ReportsProvider({ children }) {
     }
   }, []);
 
+  const loadCustomerActivityHeatmap = useCallback(async () => {
+    setLoading(true);
+    try {
+      const today = new Date();
+      const lastYear = new Date();
+      lastYear.setFullYear(today.getFullYear() - 1);
+
+      const res = await getSalesReport({ period: "daily" }); // all customers
+
+      // Group by customer name
+      const grouped = res.data.reduce((acc, record) => {
+        const customerName = record.customer_name || "Unknown"; // use name as key
+        if (!acc[customerName]) acc[customerName] = [];
+        acc[customerName].push({
+          date: record.period,
+          count: record.sales_count,
+        });
+        return acc;
+      }, {});
+
+      setCustomerActivityByCustomer(grouped);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // -------------------- Context value --------------------
   return (
     <ReportsContext.Provider
@@ -117,6 +148,8 @@ export function ReportsProvider({ children }) {
         movementReport,
         salesReport,
         customerPerformance,
+        customerActivity, // 🔹 add here
+        customerActivityByCustomer, // per-customer heatmap data
 
         // ✅ New customer reports (already arrays)
         newCustomers,
@@ -134,6 +167,8 @@ export function ReportsProvider({ children }) {
         loadNewCustomers,
         loadQualifiedCustomers,
         loadRecalledCustomers,
+
+        loadCustomerActivityHeatmap, // 🔹 add here
       }}
     >
       {children}

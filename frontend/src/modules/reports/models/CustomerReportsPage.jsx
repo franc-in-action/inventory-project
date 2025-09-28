@@ -22,6 +22,7 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { useReports } from "../contexts/ReportsContext.jsx";
+import HeatmapModal from "./HeatmapModal.jsx";
 
 export default function CustomerReportsPage() {
   const {
@@ -97,6 +98,9 @@ export default function CustomerReportsPage() {
           </Heading>
         </Box>
         <Spacer />
+        <Box p="2">
+          <HeatmapModal />
+        </Box>
       </Flex>
 
       <Tabs index={activeTab} onChange={setActiveTab} variant="enclosed">
