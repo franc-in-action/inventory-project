@@ -8,7 +8,7 @@ import {
 import {
   fetchSales as apiFetchSales,
   fetchDrafts as apiFetchDrafts,
-  fetchDeleted as apiFetchDeleted, // ✅ import
+  fetchDeleted as apiFetchDeleted,
   createSale as apiCreateSale,
   finalizeDraft as apiFinalizeDraft,
   deleteDraft as apiDeleteDraft,
@@ -20,20 +20,30 @@ import {
 const SalesContext = createContext();
 
 export function SalesProvider({ children }) {
-  const [sales, setSales] = useState([]); // finalized sales
-  const [drafts, setDrafts] = useState([]); // draft sales
-  const [deleted, setDeleted] = useState([]); // ✅ deleted
-
+  const [sales, setSales] = useState([]); // recent sales (last 3 months)
+  const [drafts, setDrafts] = useState([]);
+  const [deleted, setDeleted] = useState([]);
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [previewSaleData, setPreviewSaleData] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const loadSales = useCallback(async () => {
+  const threeMonthsAgo = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 3);
+    return d.toISOString();
+  };
+
+  // ---------------- LOADERS ----------------
+  const loadSales = useCallback(async (params = {}) => {
     setLoading(true);
     try {
-      const result = await apiFetchSales();
+      const recentParams = {
+        ...params,
+        startDate: params.startDate || threeMonthsAgo(),
+      };
+      const result = await apiFetchSales(recentParams);
       setSales(result.items || []);
     } catch (err) {
       console.error(err);
@@ -73,13 +83,40 @@ export function SalesProvider({ children }) {
     }
   }, []);
 
+  // ---------------- HISTORICAL SALES ----------------
+  /**
+   * Fetch historical sales using backend pagination.
+   * @param {Object} params - filter params (startDate, endDate, customerId, productId, etc.)
+   * @param {number} page - 1-based page number
+   * @param {number} pageSize - number of records per page
+   */
+  const fetchHistoricalSales = useCallback(
+    async (params = {}, page = 1, pageSize = 100) => {
+      try {
+        const result = await apiFetchSales({ ...params, page, pageSize });
+        return {
+          items: result.items || [],
+          total: result.total || 0,
+          page,
+          pageSize,
+          hasMore: page * pageSize < (result.total || 0),
+        };
+      } catch (err) {
+        console.error(err);
+        return { items: [], total: 0, page, pageSize, hasMore: false };
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     loadSales();
     loadDrafts();
-    loadDeleted(); // ✅ load deleted sales
+    loadDeleted();
     loadReturns();
   }, [loadSales, loadDrafts, loadDeleted, loadReturns]);
 
+  // ---------------- SALE OPERATIONS ----------------
   const previewSale = useCallback((saleData) => {
     const virtualSale = {
       id: "preview",
@@ -145,28 +182,19 @@ export function SalesProvider({ children }) {
 
   // ---------------- HELPERS ----------------
   const getSaleById = useCallback(
-    (id) => {
-      return (
-        sales.find((s) => s.id === id) ||
-        drafts.find((d) => d.id === id) ||
-        deleted.find((x) => x.id === id) || // ✅ include deleted
-        null
-      );
-    },
+    (id) =>
+      sales.find((s) => s.id === id) ||
+      drafts.find((d) => d.id === id) ||
+      deleted.find((x) => x.id === id) ||
+      null,
     [sales, drafts, deleted]
   );
 
   const getSaleForEdit = useCallback(
     (id) => {
-      const sale =
-        sales.find((s) => s.id === id) ||
-        drafts.find((d) => d.id === id) ||
-        deleted.find((x) => x.id === id) || // ✅ include deleted
-        null;
-
+      const sale = getSaleById(id);
       if (!sale) return null;
 
-      // 🔒 Return a deep clone so InvoiceForm edits are local only
       return {
         id: sale.id,
         saleUuid: sale.saleUuid,
@@ -179,7 +207,7 @@ export function SalesProvider({ children }) {
         status: sale.status,
       };
     },
-    [sales, drafts]
+    [getSaleById]
   );
 
   const getReturnById = useCallback(
@@ -192,13 +220,14 @@ export function SalesProvider({ children }) {
       value={{
         sales,
         drafts,
-        deleted, // ✅ expose deleted
+        deleted,
         returns,
         loading,
         reloadSales: loadSales,
         reloadDrafts: loadDrafts,
-        reloadDeleted: loadDeleted, // ✅ expose reloader
+        reloadDeleted: loadDeleted,
         reloadReturns: loadReturns,
+        fetchHistoricalSales,
         addSale,
         finalizeDraft,
         removeDraft,

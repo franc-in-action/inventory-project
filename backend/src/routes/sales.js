@@ -232,12 +232,24 @@ router.put("/:id/finalize", authMiddleware, async (req, res) => {
   }
 });
 
-// -------------------- GET SALES --------------------
+// -------------------- GET SALES WITH PAGINATION --------------------
 router.get("/", authMiddleware, async (req, res) => {
-  const { startDate, endDate, locationId, customerId, productId, status } =
-    req.query;
-
   try {
+    const {
+      startDate,
+      endDate,
+      locationId,
+      customerId,
+      productId,
+      status,
+      page = 1,
+      pageSize = 100,
+    } = req.query;
+
+    const pageNum = Math.max(Number(page), 1);
+    const size = Math.max(Number(pageSize), 1);
+    const skip = (pageNum - 1) * size;
+
     const where = {};
     if (startDate || endDate) {
       where.createdAt = {};
@@ -247,8 +259,12 @@ router.get("/", authMiddleware, async (req, res) => {
     if (locationId) where.locationId = locationId;
     if (customerId) where.customerId = customerId;
     if (productId) where.items = { some: { productId } };
-    if (status) where.status = status; // ✅ allow filtering (COMPLETE, PENDING, CANCELLED)
+    if (status) where.status = status;
 
+    // Fetch total count for pagination
+    const total = await prisma.sale.count({ where });
+
+    // Fetch paginated sales
     const sales = await prisma.sale.findMany({
       where,
       include: {
@@ -259,6 +275,8 @@ router.get("/", authMiddleware, async (req, res) => {
         finalizedByUser: { select: { id: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
+      skip,
+      take: size,
     });
 
     let qtySold = 0;
@@ -273,7 +291,14 @@ router.get("/", authMiddleware, async (req, res) => {
       });
     }
 
-    res.json(productId ? { sales: salesWithQty, qtySold } : salesWithQty);
+    res.json({
+      items: productId ? salesWithQty : sales,
+      total,
+      page: pageNum,
+      pageSize: size,
+      hasMore: skip + sales.length < total,
+      qtySold: productId ? qtySold : undefined,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

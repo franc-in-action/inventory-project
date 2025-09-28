@@ -3,12 +3,17 @@ import { apiFetch } from "../../utils/commonApi.js";
 // -------------------- SALES API --------------------
 
 /**
- * Fetch finalized sales
+ * Fetch finalized sales with optional pagination
+ * @param {Object} params - filter params (startDate, endDate, customerId, productId, etc.)
+ * @param {number} page - 1-based page number
+ * @param {number} pageSize - number of records per page
  */
-export async function fetchSales(params = {}) {
+export async function fetchSales(params = {}, page = 1, pageSize = 100) {
   const query = new URLSearchParams({
     ...params,
     status: "COMPLETE",
+    page,
+    pageSize,
   }).toString();
   const result = await apiFetch(`/sales?${query}`);
   return Array.isArray(result)
@@ -20,12 +25,14 @@ export async function fetchSales(params = {}) {
 }
 
 /**
- * Fetch draft sales
+ * Fetch draft sales (PENDING) with optional pagination
  */
-export async function fetchDrafts(params = {}) {
+export async function fetchDrafts(params = {}, page = 1, pageSize = 100) {
   const query = new URLSearchParams({
     ...params,
     status: "PENDING",
+    page,
+    pageSize,
   }).toString();
   const result = await apiFetch(`/sales?${query}`);
   return Array.isArray(result)
@@ -36,11 +43,15 @@ export async function fetchDrafts(params = {}) {
       };
 }
 
-/** Fetch deleted drafts */
-export async function fetchDeleted(params = {}) {
+/**
+ * Fetch deleted/cancelled drafts with optional pagination
+ */
+export async function fetchDeleted(params = {}, page = 1, pageSize = 100) {
   const query = new URLSearchParams({
     ...params,
     status: "CANCELLED",
+    page,
+    pageSize,
   }).toString();
   const result = await apiFetch(`/sales?${query}`);
   return Array.isArray(result)
@@ -51,12 +62,11 @@ export async function fetchDeleted(params = {}) {
       };
 }
 
-/** Create a new sale (can be draft or finalized) */
+// -------------------- SALE OPERATIONS --------------------
 export async function createSale(saleData) {
   return apiFetch("/sales", { method: "POST", body: JSON.stringify(saleData) });
 }
 
-/** Finalize a draft */
 export async function finalizeDraft(saleId, paymentData) {
   return apiFetch(`/sales/${saleId}/finalize`, {
     method: "PUT",
@@ -64,18 +74,15 @@ export async function finalizeDraft(saleId, paymentData) {
   });
 }
 
-/** Delete a draft */
 export async function deleteDraft(saleId) {
   return apiFetch(`/sales/${saleId}`, { method: "DELETE" });
 }
 
-/** Get sale by ID */
 export async function getSaleById(saleId) {
   return apiFetch(`/sales/${saleId}`);
 }
 
 // -------------------- RETURNS API --------------------
-
 export async function fetchReturns(params = {}) {
   const query = new URLSearchParams(params).toString();
   const result = await apiFetch(`/returns?${query}`);
@@ -105,7 +112,6 @@ export async function getReturnById(returnId) {
 }
 
 // -------------------- SALE NUMBERS --------------------
-
 export async function fetchNextSaleNumber() {
   if (window.api) {
     return window.api.run("SELECT NEXTVAL('sale_seq')");
@@ -115,7 +121,6 @@ export async function fetchNextSaleNumber() {
 }
 
 // -------------------- RECEIPT FORMATTER --------------------
-
 export function formatReceipt(
   transaction,
   productsMap = {},

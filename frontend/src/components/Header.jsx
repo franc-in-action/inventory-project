@@ -17,8 +17,8 @@ import {
   getDefaultPage,
 } from "../modules/auth/authApi.js";
 import { useThemeSwitcher } from "../theme/ThemeContext";
+import { useUserPreferences } from "../modules/userpreferences/contexts/UserPreferenceContext";
 
-/** Map known route patterns to friendly titles */
 const PAGE_TITLES = [
   { path: "/dashboard", title: "Dashboard" },
   { path: "/pos", title: "POS Order Management" },
@@ -48,30 +48,29 @@ export default function Header({ onOpenSidebar, onRefresh }) {
 
   const { themeKey, allThemes, changeTheme, colorMode, toggleColorMode } =
     useThemeSwitcher();
+  const { setPreference } = useUserPreferences();
 
-  // Determine current heading:
-  // - If we are on the default page -> show default heading "Inventory App"
-  // - Otherwise match route to PAGE_TITLES or fallback to pathname
   let headingText = "Inventory App";
   if (location.pathname !== defaultPage) {
-    const match =
-      PAGE_TITLES.find((p) => location.pathname.startsWith(p.path)) || null;
+    const match = PAGE_TITLES.find((p) => location.pathname.startsWith(p.path));
     headingText = match ? match.title : location.pathname.replace("/", "");
   }
+
+  const handleThemeChange = (key) => {
+    changeTheme(key); // Update UI theme
+    setPreference?.("themeKey", key); // Save to UserPreferenceContext
+  };
 
   return (
     <Box px={{ base: 4, md: 6 }} py={{ base: 3, md: 4 }} boxShadow="sm">
       <Flex align="center" justify="space-between" wrap="wrap" gap={2}>
-        {/* Sidebar toggle (mobile) */}
         <IconButton
           display={{ base: "flex", md: "none" }}
           icon={<HamburgerIcon />}
           onClick={onOpenSidebar}
           aria-label="Open navigation"
         />
-
         <Heading>{headingText}</Heading>
-
         <Spacer />
 
         {user && (
@@ -87,8 +86,6 @@ export default function Header({ onOpenSidebar, onRefresh }) {
             icon={<RepeatIcon />}
             onClick={onRefresh}
           />
-
-          {/* 🌗 Dark/Light Mode Toggle */}
           <Button
             onClick={toggleColorMode}
             variant="outline"
@@ -97,15 +94,14 @@ export default function Header({ onOpenSidebar, onRefresh }) {
             {colorMode === "light" ? "Dark Mode" : "Light Mode"}
           </Button>
 
-          {/* 💻 Dynamic Theme Selector Dropdown */}
           <Select
             value={themeKey}
-            onChange={(e) => changeTheme(e.target.value)}
+            onChange={(e) => handleThemeChange(e.target.value)}
             width="auto"
             minW="180px"
             title="Select theme"
           >
-            {allThemes.map((t) => (
+            {allThemes?.map((t) => (
               <option key={t.key} value={t.key}>
                 {t.label}
               </option>

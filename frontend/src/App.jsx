@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import Login from "./modules/auth/Login.jsx";
+import { UserPreferenceProvider } from "./modules/userpreferences/contexts/UserPreferenceContext.jsx";
 import { LocationsProvider } from "./modules/locations/contexts/LocationsContext.jsx";
 import { ProductsProvider } from "./modules/products/contexts/ProductsContext.jsx";
 import { CustomersProvider } from "./modules/customers/contexts/CustomersContext.jsx";
@@ -100,9 +101,11 @@ export function ProtectedLayout({ children }) {
 /* ----------------- App Root ----------------- */
 export default function App() {
   return (
-    <ThemeProvider>
-      <ThemeConsumerApp />
-    </ThemeProvider>
+    <UserPreferenceProvider>
+      <ThemeProvider>
+        <ThemeConsumerApp />
+      </ThemeProvider>
+    </UserPreferenceProvider>
   );
 }
 
