@@ -483,6 +483,69 @@ export default {
       },
     },
 
+    CloseBtn: {
+      baseStyle: {
+        position: "absolute",
+        top: "8px",
+        right: "8px",
+        borderRadius: "50%",
+        width: "30px",
+        height: "30px",
+        padding: "0",
+        border: "2px solid",
+        borderColor: "xpDark",
+        bg: "red",
+        color: "white",
+        cursor: "pointer",
+
+        _before: {
+          content: '""',
+          position: "absolute",
+          width: "12px",
+          height: "2px",
+          bg: "white",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%) rotate(45deg)",
+        },
+        _after: {
+          content: '""',
+          position: "absolute",
+          width: "12px",
+          height: "2px",
+          bg: "white",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%) rotate(-45deg)",
+        },
+
+        _hover: {
+          bg: "yellow",
+          color: "red",
+          borderColor: "xpDark",
+          boxShadow: "inset 1px 1px #ffffff, inset -1px -1px #808080",
+        },
+        _active: {
+          boxShadow: "inset 2px 2px #ffffff, inset -2px -2px #808080",
+        },
+        _dark: {
+          bg: "dark.xpBlue",
+          borderColor: "dark.xpDark",
+          color: "white",
+          _before: { bg: "white" },
+          _after: { bg: "white" },
+          _hover: {
+            bg: "yellow",
+            color: "dark.xpBlue",
+            boxShadow: "inset 1px 1px #2a2a2a, inset -1px -1px #000000",
+          },
+          _active: {
+            boxShadow: "inset 2px 2px #2a2a2a, inset -2px -2px #000000",
+          },
+        },
+      },
+    },
+
     Input: {
       baseStyle: {
         border: "1px solid #7f9db9",

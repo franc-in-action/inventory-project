@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -16,6 +15,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useCustomers } from "./contexts/CustomersContext.jsx";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
 
 export default function CustomerForm({ customerId, isOpen, onClose }) {
   const toast = useToast();
@@ -73,16 +73,19 @@ export default function CustomerForm({ customerId, isOpen, onClose }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent as="form" onSubmit={handleSubmit}>
+      <ModalContent as="form" onSubmit={handleSubmit} position="relative">
         <ModalHeader>
           {customerId ? "Edit Customer" : "Add Customer"}
         </ModalHeader>
-        <ModalCloseButton />
+
+        {/* Custom CloseBtn positioned absolutely */}
+        <CloseBtn onClick={onClose} />
+
         <ModalBody>
           {loading ? (
             <Spinner />
           ) : (
-            <VStack>
+            <VStack spacing={4}>
               <FormControl isRequired>
                 <FormLabel>Name</FormLabel>
                 <Input
@@ -112,6 +115,7 @@ export default function CustomerForm({ customerId, isOpen, onClose }) {
             </VStack>
           )}
         </ModalBody>
+
         <ModalFooter>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" isLoading={saving}>
