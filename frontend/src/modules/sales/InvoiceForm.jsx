@@ -1,11 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Table,
   Thead,
   Tbody,
@@ -20,18 +14,22 @@ import {
   NumberInput,
   NumberInputField,
   Select,
-  IconButton,
   Switch,
   FormControl,
   FormLabel,
   ButtonGroup,
   Box,
+  IconButton,
 } from "@chakra-ui/react";
-import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
-
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
-import { ComboBox } from "../../components/Xp.jsx";
+import {
+  CloseBtn,
+  Window,
+  WindowBody,
+  TitleBar,
+  ComboBox,
+} from "../../components/Xp.jsx";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
@@ -107,7 +105,6 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
       .catch(() => setCustomerData(null));
   }, [selectedCustomer, fetchCustomerById]);
 
-  // Enriched cart
   const enrichedCart = useMemo(
     () =>
       cart.map((item) => {
@@ -223,217 +220,194 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <>
-      <Modal size="6xl" isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {editingSale ? "Editing Sale: " : "New Invoice #: "} {saleUuid}
-          </ModalHeader>
-          <CloseBtn onClick={onClose} />
-          <ModalBody>
-            {editingSale && (
-              <Text fontWeight="bold" mb={2}>
-                You are editing an existing sale
+    <Window onClose={onClose} defaultSize={{ width: 800, height: 600 }}>
+      <TitleBar>Invoice #: {saleUuid}</TitleBar>
+      <WindowBody>
+        <HStack spacing={4} mb={4} align="flex-start">
+          {/* Add Product */}
+          <VStack align="stretch" spacing={2} flex={2}>
+            <Text fontWeight="bold">Add Product</Text>
+            <Select
+              placeholder="Select Product"
+              value={newProduct.productId}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedProduct = products.find(
+                  (p) => p.id === selectedId
+                );
+                setNewProduct((prev) => ({
+                  ...prev,
+                  productId: selectedId,
+                  price: selectedProduct?.price || 0,
+                }));
+              }}
+            >
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} (Stock: {stockMap[p.id] || 0})
+                </option>
+              ))}
+            </Select>
+            <NumberInput
+              min={1}
+              value={newProduct.qty}
+              onChange={(v) =>
+                setNewProduct((prev) => ({ ...prev, qty: Number(v) }))
+              }
+            >
+              <NumberInputField placeholder="Qty" />
+            </NumberInput>
+            <NumberInput
+              min={0}
+              value={newProduct.price}
+              onChange={(v) =>
+                setNewProduct((prev) => ({ ...prev, price: Number(v) }))
+              }
+            >
+              <NumberInputField placeholder="Price" />
+            </NumberInput>
+            <Button leftIcon={<AddIcon />} onClick={handleAddProduct}>
+              Add to Cart
+            </Button>
+          </VStack>
+
+          {/* Customer */}
+          <VStack align="stretch" spacing={2} flex={1}>
+            <Text fontWeight="bold">Customer Options</Text>
+            <Button onClick={() => alert("Implement New Customer Modal")}>
+              New Customer
+            </Button>
+            <ComboBox
+              items={customers}
+              selectedItemId={selectedCustomer?.id}
+              placeholder="Search Customer"
+              onSelect={setSelectedCustomer}
+              createNewItem={async (name) => {
+                const newCust = await createCustomer({ name });
+                reloadCustomers();
+                return newCust;
+              }}
+              itemToString={(c) => c.name}
+            />
+            {customerData && (
+              <Text>
+                Credit Limit: {customerData.credit_limit.toFixed(2)}, Balance:{" "}
+                {customerData.balance.toFixed(2)}
               </Text>
             )}
+            <FormControl>
+              <FormLabel htmlFor="cash-sale">Cash Sale</FormLabel>
+              <Switch
+                id="cash-sale"
+                isChecked={isCashSale}
+                onChange={(e) => setIsCashSale(e.target.checked)}
+              />
+            </FormControl>
+          </VStack>
 
-            {/* Top Row */}
-            <HStack spacing={4} mb={4} align="flex-start">
-              {/* Add Product */}
-              <VStack align="stretch" spacing={2} flex={2}>
-                <Text fontWeight="bold">Add Product</Text>
-                <Select
-                  placeholder="Select Product"
-                  value={newProduct.productId}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    const selectedProduct = products.find(
-                      (p) => p.id === selectedId
+          {/* Actions */}
+          <VStack spacing={2} flex={1}>
+            <Button onClick={handlePreview}>Preview Sale</Button>
+            <Button onClick={() => handleSubmit("complete")}>
+              {editingSale ? "Update Sale" : "Complete Sale"}
+            </Button>
+          </VStack>
+        </HStack>
+
+        <Divider mb={4} />
+
+        {/* Cart & Summary */}
+        <HStack spacing={4}>
+          <VStack align="stretch" spacing={2} flex={3}>
+            <Text fontWeight="bold">Cart Items</Text>
+            {enrichedCart.length === 0 ? (
+              <Text>No items in cart</Text>
+            ) : (
+              <Table size="sm" variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Product</Th>
+                    <Th isNumeric>Qty</Th>
+                    <Th isNumeric>Price</Th>
+                    <Th isNumeric>Total</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {enrichedCart.map((item, idx) => {
+                    const product = products.find(
+                      (p) => p.id === item.productId
                     );
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      productId: selectedId,
-                      price: selectedProduct?.price || 0,
-                    }));
-                  }}
-                >
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (Stock: {stockMap[p.id] || 0})
-                    </option>
-                  ))}
-                </Select>
-                <NumberInput
-                  min={1}
-                  value={newProduct.qty}
-                  onChange={(v) =>
-                    setNewProduct((prev) => ({ ...prev, qty: Number(v) }))
-                  }
-                >
-                  <NumberInputField placeholder="Qty" />
-                </NumberInput>
-                <NumberInput
-                  min={0}
-                  value={newProduct.price}
-                  onChange={(v) =>
-                    setNewProduct((prev) => ({ ...prev, price: Number(v) }))
-                  }
-                >
-                  <NumberInputField placeholder="Price" />
-                </NumberInput>
-                <Button leftIcon={<AddIcon />} onClick={handleAddProduct}>
-                  Add to Cart
-                </Button>
-              </VStack>
-
-              {/* Customer */}
-              <VStack align="stretch" spacing={2} flex={1}>
-                <Text fontWeight="bold">Customer Options</Text>
-                <Button onClick={() => alert("Implement New Customer Modal")}>
-                  New Customer
-                </Button>
-                <ComboBox
-                  items={customers}
-                  selectedItemId={selectedCustomer?.id}
-                  placeholder="Search Customer"
-                  onSelect={setSelectedCustomer}
-                  createNewItem={async (name) => {
-                    const newCust = await createCustomer({ name });
-                    reloadCustomers();
-                    return newCust;
-                  }}
-                  itemToString={(c) => c.name}
-                />
-                {customerData && (
-                  <Text>
-                    Credit Limit: {customerData.credit_limit.toFixed(2)},
-                    Balance: {customerData.balance.toFixed(2)}
-                  </Text>
-                )}
-                <FormControl>
-                  <FormLabel htmlFor="cash-sale">Cash Sale</FormLabel>
-                  <Switch
-                    id="cash-sale"
-                    isChecked={isCashSale}
-                    onChange={(e) => setIsCashSale(e.target.checked)}
-                  />
-                </FormControl>
-              </VStack>
-
-              {/* Actions */}
-              <VStack spacing={2} flex={1}>
-                <Button onClick={handlePreview}>Preview Sale</Button>
-                <Button onClick={() => handleSubmit("complete")}>
-                  {editingSale ? "Update Sale" : "Complete Sale"}
-                </Button>
-              </VStack>
-            </HStack>
-
-            <Divider mb={4} />
-
-            {/* Bottom Row */}
-            <HStack spacing={4}>
-              {/* Cart */}
-              <VStack align="stretch" spacing={2} flex={3}>
-                <Text fontWeight="bold">Cart Items</Text>
-                {enrichedCart.length === 0 ? (
-                  <Text>No items in cart</Text>
-                ) : (
-                  <Table size="sm" variant="simple">
-                    <Thead>
-                      <Tr>
-                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-                          Product
-                        </Th>
-                        <Th isNumeric>Qty</Th>
-                        <Th isNumeric>Price</Th>
-                        <Th isNumeric>Total</Th>
-                        <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-                          Actions
-                        </Th>
+                    return (
+                      <Tr key={idx}>
+                        <Td>{product?.name || item.productId}</Td>
+                        <Td isNumeric>
+                          <NumberInput
+                            size="sm"
+                            min={1}
+                            value={item.qty}
+                            onChange={(v) =>
+                              handleCartChange(idx, "qty", Number(v))
+                            }
+                          >
+                            <NumberInputField />
+                          </NumberInput>
+                        </Td>
+                        <Td isNumeric>
+                          <NumberInput
+                            size="sm"
+                            min={0}
+                            value={item.price}
+                            onChange={(v) =>
+                              handleCartChange(idx, "price", Number(v))
+                            }
+                          >
+                            <NumberInputField />
+                          </NumberInput>
+                        </Td>
+                        <Td isNumeric>{(item.qty * item.price).toFixed(2)}</Td>
+                        <Td>
+                          <IconButton
+                            size="sm"
+                            icon={<DeleteIcon />}
+                            onClick={() => removeCartRow(idx)}
+                            aria-label="Remove item"
+                          />
+                        </Td>
                       </Tr>
-                    </Thead>
-                    <Tbody>
-                      {enrichedCart.map((item, idx) => {
-                        const product = products.find(
-                          (p) => p.id === item.productId
-                        );
-                        return (
-                          <Tr key={idx}>
-                            <Td>{product?.name || item.productId}</Td>
-                            <Td isNumeric>
-                              <NumberInput
-                                size="sm"
-                                min={1}
-                                value={item.qty}
-                                onChange={(v) =>
-                                  handleCartChange(idx, "qty", Number(v))
-                                }
-                              >
-                                <NumberInputField />
-                              </NumberInput>
-                            </Td>
-                            <Td isNumeric>
-                              <NumberInput
-                                size="sm"
-                                min={0}
-                                value={item.price}
-                                onChange={(v) =>
-                                  handleCartChange(idx, "price", Number(v))
-                                }
-                              >
-                                <NumberInputField />
-                              </NumberInput>
-                            </Td>
-                            <Td isNumeric>
-                              {(item.qty * item.price).toFixed(2)}
-                            </Td>
-                            <Td>
-                              <IconButton
-                                size="sm"
-                                icon={<DeleteIcon />}
-                                onClick={() => removeCartRow(idx)}
-                                aria-label="Remove item"
-                              />
-                            </Td>
-                          </Tr>
-                        );
-                      })}
-                    </Tbody>
-                  </Table>
-                )}
-              </VStack>
+                    );
+                  })}
+                </Tbody>
+              </Table>
+            )}
+          </VStack>
 
-              {/* Summary */}
-              <Box flex={1}>
-                <VStack align="stretch" spacing={2}>
-                  <Text fontWeight="bold">Order Summary</Text>
-                  <Text>Total: {totalAmount.toFixed(2)}</Text>
-                  <Text>Tax (10%): {(totalAmount * 0.1).toFixed(2)}</Text>
-                  <Text fontWeight="bold">
-                    Grand Total: {(totalAmount * 1.1).toFixed(2)}
-                  </Text>
-                </VStack>
-              </Box>
-            </HStack>
-          </ModalBody>
+          <Box flex={1}>
+            <VStack align="stretch" spacing={2}>
+              <Text fontWeight="bold">Order Summary</Text>
+              <Text>Total: {totalAmount.toFixed(2)}</Text>
+              <Text>Tax (10%): {(totalAmount * 0.1).toFixed(2)}</Text>
+              <Text fontWeight="bold">
+                Grand Total: {(totalAmount * 1.1).toFixed(2)}
+              </Text>
+            </VStack>
+          </Box>
+        </HStack>
 
-          <ModalFooter>
-            <ButtonGroup>
-              <Button onClick={() => setCart([])}>Delete</Button>
-              <Button onClick={() => handleSubmit("draft")}>
-                Save as Draft
-              </Button>
-              <Button onClick={() => handleSubmit("edit")}>
-                {editingSale ? "Update Sale" : "Edit"}
-              </Button>
-            </ButtonGroup>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        <Divider my={4} />
+        <ButtonGroup>
+          <Button onClick={() => setCart([])}>Delete</Button>
+          <Button onClick={() => handleSubmit("draft")}>Save as Draft</Button>
+          <Button onClick={() => handleSubmit("edit")}>
+            {editingSale ? "Update Sale" : "Edit"}
+          </Button>
+        </ButtonGroup>
+      </WindowBody>
 
+      {/* Preview Sale */}
       {previewSaleData && (
         <InvoiceDetails
           saleId={previewSaleData.id}
@@ -441,6 +415,6 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
           onClose={closePreviewSale}
         />
       )}
-    </>
+    </Window>
   );
 }

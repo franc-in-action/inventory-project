@@ -1,24 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, createContext, useContext } from "react";
 import { Rnd } from "react-rnd";
 import {
   Box,
-  Flex,
-  IconButton,
-  Heading,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  Button,
   Input,
   Text,
-  useTheme,
-  useColorModeValue,
   chakra,
-  Button,
+  useColorModeValue,
   useStyleConfig,
 } from "@chakra-ui/react";
-import { CloseIcon, MinusIcon, AddIcon } from "@chakra-ui/icons";
 import { useCombobox } from "downshift";
 
 // Chakra-wrapped ComboBox elements
@@ -35,8 +25,6 @@ export const ComboBox = ({
   createNewItem,
   itemToString = (item) => (item ? item.name : ""),
 }) => {
-  const theme = useTheme();
-
   const sortedItems = [...items].sort((a, b) =>
     itemToString(a).localeCompare(itemToString(b))
   );
@@ -79,51 +67,32 @@ export const ComboBox = ({
       (item) => itemToString(item).toLowerCase() === inputValue.toLowerCase()
     );
 
-  const menuBg = useColorModeValue(
-    theme.components.ComboBox?.baseStyle?.menu?.bg ?? "white",
-    theme.components.ComboBox?.baseStyle?.menu?._dark?.bg ?? "gray.700"
-  );
-
-  const menuBorder = useColorModeValue(
-    theme.components.ComboBox?.baseStyle?.menu?.borderColor ?? "gray.200",
-    theme.components.ComboBox?.baseStyle?.menu?._dark?.borderColor ?? "gray.600"
-  );
+  const menuBg = useColorModeValue("white", "gray.700");
+  const menuBorder = useColorModeValue("gray.200", "gray.600");
 
   return (
-    <ComboBoxWrapper __css={theme.components.ComboBox?.baseStyle?.wrapper}>
+    <ComboBoxWrapper>
       <Input
         placeholder={placeholder}
         value={inputValue || ""}
         onChange={(e) => setInputValue(e.target.value)}
         {...getInputProps()}
-        __css={theme.components.ComboBox?.baseStyle?.input}
       />
-      <ComboBoxMenu
-        {...getMenuProps()}
-        bg={menuBg}
-        borderColor={menuBorder}
-        __css={theme.components.ComboBox?.baseStyle?.menu}
-      >
+      <ComboBoxMenu bg={menuBg} borderColor={menuBorder} {...getMenuProps()}>
         {isOpen &&
           filtered.map((item, index) => (
             <ComboBoxItem
               key={item.id}
               {...getItemProps({ item, index })}
-              __css={{
-                ...theme.components.ComboBox?.baseStyle?.item,
-                ...(highlightedIndex === index
-                  ? theme.components.ComboBox?.baseStyle?.item?._selected
-                  : {}),
-              }}
+              bg={highlightedIndex === index ? "blue.100" : "transparent"}
+              px={2}
+              py={1}
             >
               <Text fontSize="sm">{itemToString(item)}</Text>
             </ComboBoxItem>
           ))}
         {isOpen && canCreate && (
-          <ComboBoxItem
-            onClick={() => selectItem(inputValue)}
-            __css={theme.components.ComboBox?.baseStyle?.item}
-          >
+          <ComboBoxItem onClick={() => selectItem(inputValue)} px={2} py={1}>
             <Text fontSize="sm">+ Create "{inputValue}"</Text>
           </ComboBoxItem>
         )}
@@ -132,192 +101,219 @@ export const ComboBox = ({
   );
 };
 
-/** Custom CloseBtn */
+/** Custom Close Button */
 export const CloseBtn = ({ onClick, ...props }) => {
   const styles = useStyleConfig("CloseBtn");
   return <Button onClick={onClick} __css={styles} {...props} />;
 };
 
-/** Custom Buttons */
-const WindowButton = ({ type, onClick }) => {
-  const labels = { minimize: "─", maximize: "☐", close: "✕" };
-  return (
-    <button
-      className={`window-btn ${type}-btn`}
-      aria-label={type}
-      onClick={onClick}
-      style={{
-        width: "20px",
-        height: "20px",
-        marginLeft: "2px",
-        fontWeight: "bold",
-        cursor: "pointer",
-      }}
-    >
-      {labels[type]}
-    </button>
-  );
-};
+/** Window Context */
+const WindowContext = createContext();
 
-/** TitleBarText */
-const TitleBarText = ({ children }) => (
-  <div className="title-bar-text" style={{ fontWeight: "bold" }}>
-    {children}
-  </div>
-);
-
-/** TitleBarControls */
-const TitleBarControls = ({ onMinimize, onMaximize, onClose }) => (
-  <div className="title-bar-controls" style={{ display: "flex" }}>
-    <WindowButton type="minimize" onClick={onMinimize} />
-    <WindowButton type="maximize" onClick={onMaximize} />
-    <WindowButton type="close" onClick={onClose} />
-  </div>
-);
-
-/** TitleBar */
-const TitleBar = ({
-  title,
-  onMinimize,
-  onMaximize,
+/** Window Component */
+export const Window = ({
+  children,
   onClose,
-  onDoubleClick,
-}) => (
-  <div
-    className="title-bar"
-    onDoubleClick={onDoubleClick}
-    style={{
-      background: "#000080",
-      color: "white",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "2px 5px",
-      cursor: "move",
-      userSelect: "none",
-    }}
-  >
-    <TitleBarText>{title}</TitleBarText>
-    <TitleBarControls
-      onMinimize={onMinimize}
-      onMaximize={onMaximize}
-      onClose={onClose}
-    />
-  </div>
-);
-
-/** WindowBody */
-const WindowBody = ({ children, isMinimized, isMaximized }) => {
-  if (isMinimized) return null;
-  return (
-    <div
-      className="window-body"
-      style={{
-        flex: 1,
-        background: "#e0e0e0",
-        overflow: "auto",
-        padding: "5px",
-      }}
-    >
-      {children}
-    </div>
-  );
-};
-
-/** Main Window Component */
-export const Window = ({ title, children, onClose }) => {
+  allowMinimize = true,
+  allowMaximize = true,
+  defaultPosition = { x: 100, y: 100 },
+  defaultSize = { width: 400, height: 300 },
+  minWidth = 300,
+  minHeight = 200,
+}) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
 
-  const toggleMinimize = () => setIsMinimized(!isMinimized);
-  const toggleMaximize = () => setIsMaximized(!isMaximized);
-  const handleTitleDoubleClick = () => toggleMaximize();
+  const toggleMinimize = () => allowMinimize && setIsMinimized(!isMinimized);
+  const toggleMaximize = () => allowMaximize && setIsMaximized(!isMaximized);
+
+  const containerStyle = {
+    fontSize: "11px",
+    borderRadius: "8px",
+    boxShadow:
+      "inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf, inset -2px -2px grey, inset 2px 2px #fff",
+    background: "#ece9d8",
+    padding: "3px",
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+  };
 
   return (
-    <Rnd
-      default={{ x: 100, y: 100, width: 400, height: 300 }}
-      size={isMaximized ? { width: "100vw", height: "100vh" } : undefined}
-      minWidth={300}
-      minHeight={200}
-      bounds="window"
-      enableResizing={!isMaximized}
-      dragHandleClassName="title-bar"
+    <WindowContext.Provider
+      value={{
+        isMinimized,
+        isMaximized,
+        toggleMinimize,
+        toggleMaximize,
+        onClose,
+        allowMinimize,
+        allowMaximize,
+      }}
     >
-      <div
-        className="window"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          border: "2px solid black",
-          boxShadow: "4px 4px 10px rgba(0,0,0,0.5)",
-          background: "#c0c0c0",
-          width: "100%",
-          height: "100%",
-        }}
+      <Rnd
+        default={{ ...defaultPosition, ...defaultSize }}
+        size={isMaximized ? { width: "100vw", height: "100vh" } : undefined}
+        minWidth={minWidth}
+        minHeight={minHeight}
+        bounds="window"
+        enableResizing={!isMaximized}
+        dragHandleClassName="title-bar"
       >
-        <TitleBar
-          title={title}
-          onMinimize={toggleMinimize}
-          onMaximize={toggleMaximize}
-          onClose={onClose}
-          onDoubleClick={handleTitleDoubleClick}
-        />
-        <WindowBody isMinimized={isMinimized} isMaximized={isMaximized}>
-          {children}
-        </WindowBody>
-      </div>
-    </Rnd>
+        <Box __css={containerStyle}>{children}</Box>
+      </Rnd>
+    </WindowContext.Provider>
   );
+};
+
+/** TitleBar Component */
+export const TitleBar = ({ children }) => {
+  const {
+    toggleMinimize,
+    toggleMaximize,
+    onClose,
+    allowMinimize,
+    allowMaximize,
+  } = useContext(WindowContext);
+
+  const titleBarStyle = {
+    fontFamily: "Trebuchet MS, sans-serif",
+    fontWeight: 700,
+    fontSize: "11px",
+    color: "#fff",
+    letterSpacing: 0,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    height: "21px",
+    padding: "3px 2px 3px 3px",
+    background:
+      "linear-gradient(180deg,#0997ff,#0053ee 8%,#0050ee 40%,#06f 88%,#06f 93%,#005bff 95%,#003dd7 96%,#003dd7)",
+    borderTop: "1px solid #0831d9",
+    borderLeft: "1px solid #0831d9",
+    borderRight: "1px solid #001ea0",
+    borderTopLeftRadius: "8px",
+    borderTopRightRadius: "7px",
+    textShadow: "1px 1px #0f1089",
+  };
+
+  const buttonStyle = {
+    minWidth: "16px",
+    minHeight: "14px",
+    marginLeft: "2px",
+    padding: "0",
+    display: "block",
+    backgroundColor: "#0050ee",
+    border: "none",
+    boxShadow: "none",
+    cursor: "pointer",
+    fontSize: "11px",
+  };
+
+  return (
+    <Box
+      className="title-bar"
+      __css={titleBarStyle}
+      onDoubleClick={toggleMaximize}
+    >
+      <Box>{children}</Box>
+      <Box display="flex">
+        {allowMinimize && (
+          <Box as="button" __css={buttonStyle} onClick={toggleMinimize}>
+            ─
+          </Box>
+        )}
+        {allowMaximize && (
+          <Box as="button" __css={buttonStyle} onClick={toggleMaximize}>
+            ☐
+          </Box>
+        )}
+        <Box as="button" __css={buttonStyle} onClick={onClose}>
+          ✕
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+/** WindowBody Component */
+export const WindowBody = ({ children }) => {
+  const { isMinimized } = useContext(WindowContext);
+
+  if (isMinimized) return null;
+
+  const bodyStyle = {
+    margin: "8px",
+    padding: "10px",
+    boxShadow:
+      "inset 1px 1px #fcfcfe, inset -1px -1px #fcfcfe, 1px 2px 2px 0 rgba(208,206,191,.75)",
+    background: "linear-gradient(180deg,#fcfcfe,#f4f3ee)",
+    border: "1px solid #919b9c",
+    borderRadius: "4px",
+    flex: 1,
+    overflow: "auto",
+  };
+
+  return <Box __css={bodyStyle}>{children}</Box>;
 };
 
 /** XP-style Tabs */
 export const XpTab = ({ tabs }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const tabListStyle = {
+    display: "flex",
+    margin: "0 0 -2px",
+    paddingLeft: "3px",
+    listStyle: "none",
+    position: "relative",
+  };
+
+  const tabStyle = {
+    padding: "3px 6px",
+    marginRight: "2px",
+    border: "1px solid #003c74",
+    borderBottom: "none",
+    background: "linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)",
+    fontSize: "11px",
+    cursor: "pointer",
+    borderRadius: "3px",
+  };
+
+  const activeTabStyle = {
+    ...tabStyle,
+    background: "#fff",
+    borderBottom: "1px solid #fff",
+  };
+
+  const tabPanelStyle = {
+    padding: "14px",
+    background: "linear-gradient(180deg,#fcfcfe,#f4f3ee)",
+    border: "1px solid #919b9c",
+    boxShadow:
+      "inset 1px 1px #fcfcfe,inset -1px -1px #fcfcfe,1px 2px 2px 0 rgba(208,206,191,.75)",
+    marginBottom: "9px",
+    borderRadius: "3px",
+  };
+
   return (
-    <div
-      className="xp-tabs"
-      style={{ display: "flex", flexDirection: "column" }}
-    >
-      <div
-        className="tab-list"
-        style={{ display: "flex", borderBottom: "2px solid black" }}
-      >
+    <Box display="flex" flexDirection="column">
+      <Box as="menu" role="tablist" __css={tabListStyle}>
         {tabs.map((tab, idx) => (
-          <button
+          <Box
             key={tab.label}
+            as="button"
+            role="tab"
+            __css={activeIndex === idx ? activeTabStyle : tabStyle}
             onClick={() => setActiveIndex(idx)}
-            style={{
-              padding: "4px 8px",
-              cursor: "pointer",
-              background: activeIndex === idx ? "#e0e0e0" : "#c0c0c0",
-              borderTop: "2px solid black",
-              borderLeft: "2px solid black",
-              borderRight: "2px solid black",
-              marginRight: "-2px",
-            }}
-            aria-selected={activeIndex === idx}
-            aria-controls={`tabpanel-${idx}`}
           >
             {tab.label}
-          </button>
+          </Box>
         ))}
-      </div>
-      <div
-        className="tab-panels"
-        style={{ padding: "5px", background: "#e0e0e0", flex: 1 }}
-      >
-        {tabs.map((tab, idx) => (
-          <div
-            key={idx}
-            id={`tabpanel-${idx}`}
-            role="tabpanel"
-            hidden={activeIndex !== idx}
-          >
-            {tab.content}
-          </div>
-        ))}
-      </div>
-    </div>
+      </Box>
+      <Box role="tabpanel" __css={tabPanelStyle}>
+        {tabs[activeIndex].content}
+      </Box>
+    </Box>
   );
 };

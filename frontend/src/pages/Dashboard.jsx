@@ -36,8 +36,7 @@ import SalesReportsPage from "../modules/reports/models/SalesReportsPage.jsx";
 import CustomerReportsPage from "../modules/reports/models/CustomerReportsPage.jsx";
 
 // Import the Windows XP Window component
-import { Window } from "../components/Xp.jsx";
-import { XP_Tabs } from "../components/XP_Tabs.jsx";
+import { Window, TitleBar, WindowBody, XpTab } from "../components/Xp.jsx";
 
 // Dashboard navigation links
 const dashboardLinks = [
@@ -73,6 +72,52 @@ function NavCard({ icon, label, onClick }) {
     </Card>
   );
 }
+
+// Sample content for XP-style tabs
+const xpTab = [
+  {
+    label: "General",
+    content: (
+      <div>
+        <p>This is the General tab content.</p>
+        <p>You can put forms, text, or other components here.</p>
+        <fieldset>
+          <legend>Settings</legend>
+          <label>
+            <input type="checkbox" /> Enable feature A
+          </label>
+          <br />
+          <label>
+            <input type="checkbox" /> Enable feature B
+          </label>
+        </fieldset>
+      </div>
+    ),
+  },
+  {
+    label: "Details",
+    content: (
+      <div>
+        <p>Here are some detailed information items:</p>
+        <ul>
+          <li>Detail 1</li>
+          <li>Detail 2</li>
+          <li>Detail 3</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    label: "About",
+    content: (
+      <div>
+        <p>Application Version: 1.0.0</p>
+        <p>Author: Retro Dev</p>
+        <p>© 2025 XP-style UI Example</p>
+      </div>
+    ),
+  },
+];
 
 export default function Dashboard() {
   const user = getUserFromToken();
@@ -141,10 +186,14 @@ export default function Dashboard() {
       {/* Windows XP Window */}
       {isWindowOpen && (
         <Window
-          title="A Window With Tabs"
           onClose={() => setIsWindowOpen(false)}
+          defaultPosition={{ x: 150, y: 150 }}
+          defaultSize={{ width: 450, height: 350 }}
         >
-          <XP_Tabs tabs={xpTabs} />
+          <TitleBar>A Window With Tabs</TitleBar>
+          <WindowBody>
+            <XpTab tabs={xpTabs} />
+          </WindowBody>
         </Window>
       )}
 

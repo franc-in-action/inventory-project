@@ -473,6 +473,7 @@ export default {
         },
       },
     },
+
     FormLabel: {
       baseStyle: {
         fontWeight: "bold",
@@ -480,6 +481,124 @@ export default {
         _dark: { color: dark.xpText },
         fontFamily: "var(--sans-serif)",
         WebkitFontSmoothing: "antialiased",
+      },
+    },
+
+    Window: {
+      baseStyle: {
+        container: {
+          display: "flex",
+          flexDirection: "column",
+          border: "2px solid",
+          borderColor: "xpDark",
+          boxShadow: "4px 4px 10px rgba(0,0,0,0.5)",
+          bg: "xpGray",
+          borderRadius: "8px 7px 0 0",
+          _dark: { borderColor: "dark.xpDark", bg: "dark.xpGray" },
+        },
+        titleBar: {
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          fontFamily: "'Trebuchet MS', sans-serif",
+          fontSize: "13px",
+          fontWeight: 700,
+          cursor: "move",
+          userSelect: "none",
+          padding: "3px 5px 3px 3px",
+          height: "21px",
+          textShadow: "1px 1px #0f1089",
+          bg: "linear-gradient(180deg, #0997ff, #0053ee 8%, #0050ee 40%, #06f 88%, #06f 93%, #005bff 95%, #003dd7 96%, #003dd7)",
+          borderTop: "1px solid #0831d9",
+          borderLeft: "1px solid #0831d9",
+          borderRight: "1px solid #001ea0",
+          borderTopLeftRadius: "8px",
+          borderTopRightRadius: "7px",
+          _dark: {
+            bg: "linear-gradient(180deg, #0066ff, #003dd7 40%, #0050ee 88%)",
+          },
+        },
+        body: {
+          flex: 1,
+          margin: "8px",
+          padding: "5px",
+          bg: "linear-gradient(180deg,#fcfcfe,#f4f3ee)",
+          overflow: "auto",
+          _dark: { bg: "linear-gradient(180deg,#2a2a2a,#1f1f1f)" },
+        },
+        controls: {
+          display: "flex",
+          gap: "2px",
+        },
+        windowButton: {
+          minWidth: "21px",
+          minHeight: "21px",
+          width: "20px",
+          height: "20px",
+          marginLeft: "2px",
+          fontWeight: "bold",
+          cursor: "pointer",
+          bg: "#0050ee",
+          border: "none",
+          padding: 0,
+          boxShadow: "none",
+          transition: "background 0.1s",
+          _hover: { bg: "#0066ff" },
+        },
+      },
+      variants: {
+        default: {},
+      },
+    },
+
+    TitleBar: {
+      baseStyle: {
+        container: {
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          fontFamily: "'Trebuchet MS', sans-serif",
+          fontSize: "13px",
+          fontWeight: 700,
+          cursor: "move",
+          userSelect: "none",
+          padding: "3px 5px 3px 3px",
+          height: "21px",
+          textShadow: "1px 1px #0f1089",
+          bg: "linear-gradient(180deg, #0997ff, #0053ee 8%, #0050ee 40%, #06f 88%, #06f 93%, #005bff 95%, #003dd7 96%, #003dd7)",
+          borderTop: "1px solid #0831d9",
+          borderLeft: "1px solid #0831d9",
+          borderRight: "1px solid #001ea0",
+          borderTopLeftRadius: "8px",
+          borderTopRightRadius: "7px",
+          _dark: {
+            bg: "linear-gradient(180deg, #0066ff, #003dd7 40%, #0050ee 88%)",
+          },
+        },
+        text: {
+          paddingLeft: "3px",
+          fontWeight: 700,
+          color: "#fff",
+          letterSpacing: "0",
+          marginRight: "24px",
+        },
+        controls: {
+          display: "flex",
+          gap: 1,
+        },
+        windowButton: {
+          minWidth: "21px",
+          minHeight: "21px",
+          marginLeft: "2px",
+          bg: "#0050ee",
+          border: "none",
+          padding: 0,
+          display: "block",
+          fontWeight: "bold",
+          cursor: "pointer",
+          transition: "background 0.1s",
+          _hover: { bg: "#0066ff" },
+        },
       },
     },
 
@@ -564,6 +683,36 @@ export default {
           _focus: { borderColor: dark.xpBlue },
         },
         _selection: { bg: "var(--dialog-blue)", color: "white" },
+      },
+    },
+
+    XpTab: {
+      baseStyle: {
+        tabList: {
+          display: "flex",
+          borderBottom: "2px solid black",
+        },
+        tab: {
+          px: 3,
+          py: 1,
+          cursor: "pointer",
+          bg: "xpLight",
+          border: "1px solid xpDark",
+          _selected: { bg: "xpBlue", color: "white" },
+          _dark: {
+            bg: "dark.xpLight",
+            borderColor: "dark.xpDark",
+            _selected: { bg: "dark.xpBlue", color: "white" },
+          },
+        },
+        tabPanel: {
+          p: 2,
+          bg: "xpLight",
+          _dark: { bg: "dark.xpLight" },
+        },
+      },
+      variants: {
+        default: {},
       },
     },
 
