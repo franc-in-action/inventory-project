@@ -10,7 +10,7 @@ import {
   Text,
   Spinner,
 } from "@chakra-ui/react";
-import CloseBtn from "../../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../../components/Xp.jsx"; // import your custom CloseBtn
 
 import { useEffect, useState } from "react";
 import { adminApi } from "../adminApi.js";

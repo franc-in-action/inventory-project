@@ -27,11 +27,11 @@ import {
   ButtonGroup,
   Box,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
 
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
-import ComboBox from "../../components/ComboBox.jsx";
+import { ComboBox } from "../../components/Xp.jsx";
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";

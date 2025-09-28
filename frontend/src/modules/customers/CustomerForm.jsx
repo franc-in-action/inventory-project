@@ -15,7 +15,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useCustomers } from "./contexts/CustomersContext.jsx";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
 
 export default function CustomerForm({ customerId, isOpen, onClose }) {
   const toast = useToast();

@@ -17,9 +17,9 @@ import {
   useToast,
   ButtonGroup,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
 
-import ComboBox from "../../components/ComboBox.jsx";
+import { ComboBox } from "../../components/Xp.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { useLocations } from "../locations/contexts/LocationsContext.jsx";
 import { useProducts } from "./contexts/ProductsContext.jsx";

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Flex,
   Tabs,
@@ -12,6 +12,7 @@ import {
   Card,
   Box,
   Spacer,
+  Button,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -30,10 +31,13 @@ import {
 } from "react-icons/fa";
 
 import { getUserFromToken } from "../modules/auth/authApi.js";
-// import ReportsPage from "../modules/reports/ReportsPage.jsx";
 import StockReportsPage from "../modules/reports/models/StockReportsPage.jsx";
 import SalesReportsPage from "../modules/reports/models/SalesReportsPage.jsx";
 import CustomerReportsPage from "../modules/reports/models/CustomerReportsPage.jsx";
+
+// Import the Windows XP Window component
+import { Window } from "../components/Xp.jsx";
+import { XP_Tabs } from "../components/XP_Tabs.jsx";
 
 // Dashboard navigation links
 const dashboardLinks = [
@@ -74,6 +78,30 @@ export default function Dashboard() {
   const user = getUserFromToken();
   const navigate = useNavigate();
 
+  // State for showing/hiding the Windows XP Window
+  const [isWindowOpen, setIsWindowOpen] = useState(false);
+
+  const xpTabs = [
+    { label: "Music", content: <Text>Nicki Minaj, Bell Towers...</Text> },
+    {
+      label: "Dogs",
+      content: <img src="https://place-puppy.com/200x200" alt="Dog" />,
+    },
+    {
+      label: "Food",
+      content: (
+        <iframe
+          width="100%"
+          height="200"
+          src="https://www.youtube.com/embed/TODJBQ0tnow"
+          frameBorder="0"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
+      ),
+    },
+  ];
+
   return (
     <Flex direction="column" p={4}>
       <Flex>
@@ -102,6 +130,23 @@ export default function Dashboard() {
           />
         ))}
       </Flex>
+
+      {/* Button to open Windows XP Window */}
+      <Box mb={6}>
+        <Button colorScheme="blue" onClick={() => setIsWindowOpen(true)}>
+          Open XP Window
+        </Button>
+      </Box>
+
+      {/* Windows XP Window */}
+      {isWindowOpen && (
+        <Window
+          title="A Window With Tabs"
+          onClose={() => setIsWindowOpen(false)}
+        >
+          <XP_Tabs tabs={xpTabs} />
+        </Window>
+      )}
 
       {/* Reports Tabs Section */}
       <Box w="100%" maxW="1200px" mt={8}>

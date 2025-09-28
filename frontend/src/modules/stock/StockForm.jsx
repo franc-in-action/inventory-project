@@ -16,7 +16,7 @@ import {
   NumberInputField,
   ButtonGroup,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
 
 import { apiFetch } from "../../utils/commonApi.js";
 import { v4 as uuidv4 } from "uuid";

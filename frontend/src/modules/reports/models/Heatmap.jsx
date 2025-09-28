@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Text, Spinner } from "@chakra-ui/react";
 import CalendarHeatmap from "react-calendar-heatmap";
 import { useReports } from "../contexts/ReportsContext.jsx";
-import ComboBox from "../../../components/ComboBox.jsx"; // import your ComboBox
+import { ComboBox } from "../../../components/Xp.jsx"; // import your ComboBox
 import "react-calendar-heatmap/dist/styles.css";
 
 export default function Heatmap() {

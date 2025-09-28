@@ -9,7 +9,7 @@ import {
   Button,
   VStack,
 } from "@chakra-ui/react";
-import CloseBtn from "../../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../../components/Xp.jsx"; // import your custom CloseBtn
 
 import { adminApi } from "../adminApi.js";
 

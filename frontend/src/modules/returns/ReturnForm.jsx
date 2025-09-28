@@ -14,7 +14,7 @@ import {
   useToast,
   ButtonGroup,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
 
 import { useSales } from "../sales/contexts/SalesContext.jsx";
 

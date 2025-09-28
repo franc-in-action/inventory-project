@@ -8,7 +8,7 @@ import {
   Button,
   useDisclosure,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../../components/Xp.jsx"; // import your custom CloseBtn
 
 import Heatmap from "./Heatmap.jsx";
 

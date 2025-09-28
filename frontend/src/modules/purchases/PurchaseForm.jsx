@@ -17,7 +17,7 @@ import {
   IconButton,
   ButtonGroup,
 } from "@chakra-ui/react";
-import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+import { CloseBtn } from "../../components/Xp.jsx"; // import your custom CloseBtn
 
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
