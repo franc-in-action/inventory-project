@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Box,
   Table,
   Thead,
   Tbody,
