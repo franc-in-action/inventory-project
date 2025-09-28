@@ -103,14 +103,27 @@ router.put(
   }
 );
 
-// -------------------- GET ALL PAYMENTS --------------------
+// -------------------- GET ALL PAYMENTS (WITH PAGINATION) --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    const total = await prisma.receivedPayment.count();
     const payments = await prisma.receivedPayment.findMany({
       include: { customer: true, sale: true },
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
-    res.json(payments);
+
+    res.json({
+      payments,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

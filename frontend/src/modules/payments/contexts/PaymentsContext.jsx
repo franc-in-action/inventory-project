@@ -6,7 +6,7 @@ import {
   useCallback,
 } from "react";
 import {
-  getPayments,
+  getPayments as apiGetPayments,
   createPayment as apiCreatePayment,
   updatePayment as apiUpdatePayment,
   getPaymentById,
@@ -27,20 +27,31 @@ export function PaymentsProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+
+  // Load payments with pagination
   const loadPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setPayments((await getPayments()) || []);
+      const params = new URLSearchParams({ page, pageSize });
+      const res = await apiGetPayments(params.toString()); // expects { payments, total }
+      setPayments(res.payments || []);
+      setTotal(res.total || 0);
     } catch (err) {
       console.error("[PaymentsContext] Failed to fetch payments", err);
       setError(err);
       setPayments([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize]);
 
+  // Load adjustments
   const loadAdjustments = useCallback(async () => {
     try {
       setAdjustments((await apiGetAdjustments()) || []);
@@ -55,44 +66,50 @@ export function PaymentsProvider({ children }) {
     loadAdjustments();
   }, [loadPayments, loadAdjustments]);
 
-  // PAYMENTS
+  // -------------------- PAYMENTS --------------------
   const createPayment = async (data) => {
     const result = await apiCreatePayment(data);
-    setPayments((prev) => [...prev, result.payment]);
+    await loadPayments();
     if (data.customerId) await getCustomerById(data.customerId);
     return result;
   };
+
   const updatePayment = async (id, data) => {
     const result = await apiUpdatePayment(id, data);
-    setPayments((prev) => prev.map((p) => (p.id === id ? result.payment : p)));
+    await loadPayments();
     if (data.customerId) await getCustomerById(data.customerId);
     return result;
   };
+
   const deletePayment = async (id) => {
     const payment = payments.find((p) => p.id === id);
     await apiDeletePayment(id);
-    setPayments((prev) => prev.filter((p) => p.id !== id));
+    await loadPayments();
     if (payment?.customerId) await getCustomerById(payment.customerId);
   };
+
   const getPayment = async (id) => getPaymentById(id);
 
-  // ADJUSTMENTS
+  // -------------------- ADJUSTMENTS --------------------
   const createAdjustment = async (data) => {
     await apiCreateAdjustment(data);
     await loadAdjustments();
     if (data.customerId) await getCustomerById(data.customerId);
   };
+
   const updateAdjustment = async (id, data) => {
     await apiUpdateAdjustment(id, data);
     await loadAdjustments();
     if (data.customerId) await getCustomerById(data.customerId);
   };
+
   const deleteAdjustment = async (id) => {
     const adjustment = adjustments.find((a) => a.id === id);
     await apiDeleteAdjustment(id);
     await loadAdjustments();
     if (adjustment?.customerId) await getCustomerById(adjustment.customerId);
   };
+
   const getAdjustment = async (id) => apiGetAdjustmentById(id);
 
   return (
@@ -102,6 +119,11 @@ export function PaymentsProvider({ children }) {
         adjustments,
         loading,
         error,
+        page,
+        setPage,
+        pageSize,
+        setPageSize,
+        total,
         reloadPayments: loadPayments,
         reloadAdjustments: loadAdjustments,
         createPayment,
