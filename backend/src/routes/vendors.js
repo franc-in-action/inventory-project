@@ -1,5 +1,3 @@
-// backend/src/routes/vendors.js
-
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
@@ -27,29 +25,38 @@ router.post(
   }
 );
 
-// -------------------- READ ALL --------------------
+// -------------------- READ PAGINATED VENDORS --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const skip = (page - 1) * pageSize;
     const includeBalance = req.query.includeBalance === "true";
 
-    const vendors = await prisma.vendor.findMany();
+    const [total, vendors] = await prisma.$transaction([
+      prisma.vendor.count(),
+      prisma.vendor.findMany({
+        skip,
+        take: pageSize,
+        orderBy: { name: "asc" },
+      }),
+    ]);
 
-    if (!includeBalance) return res.json(vendors);
+    if (includeBalance) {
+      const balances = await computeVendorBalances(vendors.map((v) => v.id));
+      vendors.forEach((v) => (v.balance = balances[v.id] || 0));
+    }
 
-    const balances = await computeVendorBalances(vendors.map((v) => v.id));
-
-    const vendorsWithBalance = vendors.map((v) => ({
-      ...v,
-      balance: balances[v.id] || 0,
-    }));
-
-    res.json(vendorsWithBalance);
+    res.json({
+      data: vendors,
+      meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// -------------------- READ ONE --------------------
+// -------------------- READ SINGLE VENDOR --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
   const id = req.params.id;
   const includeBalance = req.query.includeBalance === "true";
@@ -62,10 +69,12 @@ router.get("/:id", authMiddleware, async (req, res) => {
 
     if (!vendor) return res.status(404).json({ error: "Vendor not found" });
 
-    if (!includeBalance) return res.json(vendor);
+    if (includeBalance) {
+      const balances = await computeVendorBalances([id]);
+      vendor.balance = balances[id] || 0;
+    }
 
-    const balances = await computeVendorBalances(id);
-    res.json({ ...vendor, balance: balances[id] || 0 });
+    res.json(vendor);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

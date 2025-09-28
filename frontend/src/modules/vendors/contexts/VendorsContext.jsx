@@ -19,8 +19,10 @@ const VendorsContext = createContext();
 export function VendorsProvider({ children }) {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Map for quick lookups
   const vendorsMap = vendors.reduce((map, v) => {
     map[v.id] = v.name;
     return map;
@@ -29,39 +31,33 @@ export function VendorsProvider({ children }) {
   const loadVendors = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchVendors(true); // include balances
-      setVendors(data || []);
+      const res = await fetchVendors({ page, pageSize, includeBalance: true });
+      setVendors(res.data || []);
+      setTotalPages(res.meta.totalPages || 1);
     } catch (err) {
       console.error("[VendorsContext] Failed to fetch vendors", err);
       setVendors([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize]);
 
   const addVendor = async (vendorData) => {
     await createVendor(vendorData);
     await loadVendors();
   };
-
   const editVendor = async (id, vendorData) => {
     await updateVendor(id, vendorData);
     await loadVendors();
   };
-
   const removeVendor = async (id) => {
     await deleteVendor(id);
     await loadVendors();
   };
-
-  const getVendorById = async (id) => {
-    return fetchVendorById(id, true); // include balance
-  };
-
+  const getVendorById = async (id) => fetchVendorById(id, true);
   const fetchProductsForVendor = async (vendorId) => {
     try {
-      const products = await apiFetchVendorProducts(vendorId);
-      return products;
+      return await apiFetchVendorProducts(vendorId);
     } catch (err) {
       console.error(
         `[VendorsContext] Failed to fetch products for vendor ${vendorId}`,
@@ -81,6 +77,11 @@ export function VendorsProvider({ children }) {
         vendors,
         vendorsMap,
         loading,
+        page,
+        setPage,
+        pageSize,
+        setPageSize,
+        totalPages,
         reloadVendors: loadVendors,
         addVendor,
         editVendor,

@@ -1,6 +1,6 @@
 import { apiFetch } from "../../utils/commonApi.js";
 
-// Create a new vendor
+// Create a vendor
 export async function createVendor(vendorData) {
   return apiFetch("/vendors", {
     method: "POST",
@@ -8,21 +8,24 @@ export async function createVendor(vendorData) {
   });
 }
 
-// Get all vendors with optional ledger balances
-export async function fetchVendors(includeBalance = true) {
-  return apiFetch(`/vendors${includeBalance ? "?includeBalance=true" : ""}`);
+// Get vendors (paginated) with optional balances
+export async function fetchVendors({
+  page = 1,
+  pageSize = 10,
+  includeBalance = true,
+} = {}) {
+  return apiFetch(
+    `/vendors?page=${page}&pageSize=${pageSize}${
+      includeBalance ? "&includeBalance=true" : ""
+    }`
+  );
 }
 
-// Get single vendor by ID with optional ledger balance
+// Get vendor by ID
 export async function fetchVendorById(id, includeBalance = true) {
   return apiFetch(
     `/vendors/${id}${includeBalance ? "?includeBalance=true" : ""}`
   );
-}
-
-// Get products supplied by a vendor
-export async function fetchVendorProducts(id) {
-  return apiFetch(`/vendors/${id}/products`);
 }
 
 // Update vendor
@@ -36,4 +39,9 @@ export async function updateVendor(id, vendorData) {
 // Delete vendor
 export async function deleteVendor(id) {
   return apiFetch(`/vendors/${id}`, { method: "DELETE" });
+}
+
+// Get products for a vendor
+export async function fetchVendorProducts(id) {
+  return apiFetch(`/vendors/${id}/products`);
 }

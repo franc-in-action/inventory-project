@@ -5,8 +5,9 @@ import {
   Button,
   Flex,
   Input,
-  useToast,
   Spacer,
+  Select,
+  useToast,
   ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
@@ -15,7 +16,15 @@ import VendorForm from "./VendorsForm.jsx";
 import VendorList from "./VendorsList.jsx";
 
 export default function VendorsPage() {
-  const { vendors, removeVendor } = useVendors();
+  const {
+    vendors,
+    removeVendor,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+  } = useVendors();
   const [filter, setFilter] = useState("");
   const [editingVendorId, setEditingVendorId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +35,7 @@ export default function VendorsPage() {
     try {
       await removeVendor(id);
       toast({ title: "Vendor deleted", status: "success" });
-    } catch (err) {
+    } catch {
       toast({ title: "Error deleting vendor", status: "error" });
     }
   };
@@ -35,7 +44,6 @@ export default function VendorsPage() {
     setEditingVendorId(null);
     setIsModalOpen(true);
   };
-
   const openEditModal = (id) => {
     setEditingVendorId(id);
     setIsModalOpen(true);
@@ -67,12 +75,38 @@ export default function VendorsPage() {
         </Flex>
       </Flex>
 
-      <Flex mb={4} w="100%">
+      <Flex mb={4} w="100%" align="center" gap={2}>
         <Input
           placeholder="Search vendors..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
+        <Select
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          w="120px"
+        >
+          {[10, 20, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </Select>
+        <Button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          disabled={page <= 1}
+        >
+          Prev
+        </Button>
+        <Button
+          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={page >= totalPages}
+        >
+          Next
+        </Button>
+        <Box>
+          Page {page} of {totalPages}
+        </Box>
       </Flex>
 
       <VendorList
