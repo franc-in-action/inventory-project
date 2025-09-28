@@ -1,5 +1,16 @@
-import { Box, Input, VStack, Text } from "@chakra-ui/react";
+import {
+  Input,
+  Text,
+  useTheme,
+  useColorModeValue,
+  chakra,
+} from "@chakra-ui/react";
 import { useCombobox } from "downshift";
+
+// Theme-aware wrappers
+const ComboBoxWrapper = chakra("div");
+const ComboBoxMenu = chakra("div");
+const ComboBoxItem = chakra("div");
 
 export default function ComboBox({
   items = [],
@@ -9,6 +20,8 @@ export default function ComboBox({
   createNewItem,
   itemToString = (item) => (item ? item.name : ""),
 }) {
+  const theme = useTheme();
+
   const sortedItems = [...items].sort((a, b) =>
     itemToString(a).localeCompare(itemToString(b))
   );
@@ -39,9 +52,7 @@ export default function ComboBox({
         onSelect(selectedItem);
       }
     },
-    onInputValueChange: ({ inputValue }) => {
-      setInputValue(inputValue || "");
-    },
+    onInputValueChange: ({ inputValue }) => setInputValue(inputValue || ""),
   });
 
   const filtered = sortedItems.filter((item) =>
@@ -57,80 +68,56 @@ export default function ComboBox({
       (item) => itemToString(item).toLowerCase() === inputValue.toLowerCase()
     );
 
+  const menuBg = useColorModeValue(
+    theme.components.ComboBox.baseStyle.menu.bg,
+    theme.components.ComboBox.baseStyle.menu._dark?.bg
+  );
+
+  const menuBorder = useColorModeValue(
+    theme.components.ComboBox.baseStyle.menu.borderColor,
+    theme.components.ComboBox.baseStyle.menu._dark?.borderColor
+  );
+
   return (
-    <Box position="relative" w="100%" fontFamily="Tahoma, Arial, sans-serif">
-      {/* Input box with Windows XP-style inset */}
+    <ComboBoxWrapper __css={theme.components.ComboBox.baseStyle.wrapper}>
       <Input
         placeholder={placeholder}
         value={inputValue || ""}
         onChange={(e) => setInputValue(e.target.value)}
         {...getInputProps({})}
-        borderRadius="sm"
-        borderWidth="2px"
-        borderColor="gray.300"
-        boxShadow="inset 1px 1px 2px rgba(255,255,255,0.7), inset -1px -1px 2px rgba(0,0,0,0.1)"
-        bg="gray.100"
-        _focus={{
-          borderColor: "blue.400",
-          boxShadow:
-            "inset 1px 1px 2px rgba(255,255,255,0.7), inset -1px -1px 2px rgba(0,0,0,0.1), 0 0 0 1px var(--chakra-colors-blue-400)",
-        }}
-        _hover={{
-          borderColor: "blue.200",
-        }}
-        py={2}
+        __css={theme.components.ComboBox.baseStyle.input}
       />
 
-      {/* Dropdown menu */}
-      <Box
+      <ComboBoxMenu
         {...getMenuProps()}
-        position="absolute"
-        mt={1}
-        w="100%"
-        bg="white"
-        border="1px solid"
-        borderColor="gray.400"
-        borderRadius="sm"
-        boxShadow="2px 2px 5px rgba(0,0,0,0.25)"
-        zIndex={10}
-        maxH="200px"
-        overflowY="auto"
+        bg={menuBg}
+        borderColor={menuBorder}
+        __css={theme.components.ComboBox.baseStyle.menu}
       >
-        {isOpen && (
-          <VStack align="start" spacing={0}>
-            {filtered.map((item, index) => (
-              <Box
-                key={item.id}
-                {...getItemProps({ item, index })}
-                px={3}
-                py={1.5}
-                w="100%"
-                bg={highlightedIndex === index ? "blue.200" : "transparent"}
-                color={highlightedIndex === index ? "black" : "inherit"}
-                _hover={{ bg: "blue.100" }}
-                cursor="pointer"
-              >
-                <Text fontSize="sm">{itemToString(item)}</Text>
-              </Box>
-            ))}
-            {canCreate && (
-              <Box
-                onClick={() => selectItem(inputValue)}
-                px={3}
-                py={1.5}
-                w="100%"
-                bg="gray.100"
-                _hover={{ bg: "blue.100" }}
-                cursor="pointer"
-              >
-                <Text fontSize="sm" color="gray.700">
-                  + Create "{inputValue}"
-                </Text>
-              </Box>
-            )}
-          </VStack>
+        {isOpen &&
+          filtered.map((item, index) => (
+            <ComboBoxItem
+              key={item.id}
+              {...getItemProps({ item, index })}
+              __css={{
+                ...theme.components.ComboBox.baseStyle.item,
+                ...(highlightedIndex === index
+                  ? theme.components.ComboBox.baseStyle.item._selected
+                  : {}),
+              }}
+            >
+              <Text fontSize="sm">{itemToString(item)}</Text>
+            </ComboBoxItem>
+          ))}
+        {isOpen && canCreate && (
+          <ComboBoxItem
+            onClick={() => selectItem(inputValue)}
+            __css={theme.components.ComboBox.baseStyle.item}
+          >
+            <Text fontSize="sm">+ Create "{inputValue}"</Text>
+          </ComboBoxItem>
         )}
-      </Box>
-    </Box>
+      </ComboBoxMenu>
+    </ComboBoxWrapper>
   );
 }

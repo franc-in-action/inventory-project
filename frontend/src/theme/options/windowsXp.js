@@ -540,6 +540,106 @@ export default {
         },
       },
     },
+
+    // Inside your theme file, under components
+    ComboBox: {
+      parts: ["wrapper", "input", "menu", "item"],
+
+      baseStyle: {
+        wrapper: {
+          width: "100%",
+          fontFamily: "var(--sans-serif)",
+          position: "relative",
+        },
+        input: {
+          borderRadius: "2px",
+          border: "2px solid",
+          borderColor: "xpDark",
+          bg: "xpLight",
+          boxShadow: "inset 2px 2px #ffffff, inset -2px -2px #808080",
+          py: 2,
+          _hover: {
+            bg: "xpBlue",
+            boxShadow: "inset 1px 1px #ffffff, inset -1px -1px #606060",
+            cursor: "pointer",
+          },
+          _focus: {
+            borderColor: "xpBlue",
+            boxShadow:
+              "inset 1px 1px #ffffff, inset -1px -1px #606060, 0 0 0 1px var(--dialog-blue)",
+            outline: "none",
+          },
+          _dark: {
+            bg: "dark.xpLight",
+            borderColor: "dark.xpDark",
+            boxShadow: "inset 2px 2px #2a2a2a, inset -2px -2px #000000",
+            _hover: {
+              bg: "dark.xpBlue",
+              boxShadow: "inset 1px 1px #3a3a3a, inset -1px -1px #000000",
+            },
+            _focus: {
+              borderColor: "dark.xpBlue",
+              boxShadow:
+                "inset 1px 1px #3a3a3a, inset -1px -1px #000000, 0 0 0 1px #3A6EA5",
+            },
+          },
+        },
+        menu: {
+          position: "absolute",
+          mt: "4px",
+          width: "100%",
+          border: "1px solid",
+          borderColor: "xpDark",
+          borderRadius: "2px",
+          boxShadow: "2px 2px 5px rgba(0,0,0,0.25)",
+          maxH: "200px",
+          overflowY: "auto",
+          bg: "xpLight",
+          _dark: {
+            bg: "dark.xpLight",
+            borderColor: "dark.xpDark",
+          },
+          zIndex: 10,
+        },
+        item: {
+          px: 3,
+          py: 1,
+          width: "100%",
+          cursor: "pointer",
+          fontSize: "sm",
+          _hover: {
+            bg: "xpBlue",
+            color: "white",
+          },
+          _selected: {
+            bg: "xpBlue",
+            color: "white",
+            boxShadow: "inset 1px 1px #ffffff, inset -1px -1px #606060",
+          },
+          _dark: {
+            _hover: {
+              bg: "dark.xpBlue",
+              color: "white",
+            },
+            _selected: {
+              bg: "dark.xpBlue",
+              color: "white",
+              boxShadow: "inset 1px 1px #3a3a3a, inset -1px -1px #000000",
+            },
+          },
+        },
+      },
+
+      variants: {
+        default: {
+          wrapper: {},
+          input: {},
+          menu: {},
+          item: {},
+        },
+      },
+    },
+
     Textarea: {
       baseStyle: {
         border: "2px inset",
