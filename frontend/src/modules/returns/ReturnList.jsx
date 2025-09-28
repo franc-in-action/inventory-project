@@ -9,14 +9,26 @@ import {
   IconButton,
   Link,
   ButtonGroup,
+  Flex,
+  Button,
+  Text,
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, ViewIcon } from "@chakra-ui/icons";
+import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
 import { FiPrinter } from "react-icons/fi";
+
 import ReturnDetail from "./ReturnDetail.jsx";
 import { useSales } from "../sales/contexts/SalesContext.jsx";
 import { formatReceipt } from "../sales/salesApi.js";
 
-export default function ReturnList({ returns, onEdit, onDelete }) {
+export default function ReturnList({
+  returns,
+  onEdit,
+  onDelete,
+  page,
+  pageSize,
+  total,
+  onPageChange,
+}) {
   const [selectedReturnId, setSelectedReturnId] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const { getReturnById } = useSales();
@@ -42,36 +54,25 @@ export default function ReturnList({ returns, onEdit, onDelete }) {
       true
     );
 
-    // Open in a new window for printing
     const printWindow = window.open("", "_blank");
     printWindow.document.write("<pre>" + receiptText + "</pre>");
     printWindow.document.close();
     printWindow.print();
   };
 
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <>
       <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-              ID
-            </Th>
-            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-              Customer
-            </Th>
-            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-              Items
-            </Th>
-            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-              Total
-            </Th>
-            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-              Created At
-            </Th>
-            <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
-              Actions
-            </Th>
+            <Th>ID</Th>
+            <Th>Customer</Th>
+            <Th>Items</Th>
+            <Th>Total</Th>
+            <Th>Created At</Th>
+            <Th>Actions</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -99,7 +100,7 @@ export default function ReturnList({ returns, onEdit, onDelete }) {
                     icon={<DeleteIcon />}
                     variant="danger"
                     aria-label="Delete"
-                    onClick={async () => await onDelete(r.id)}
+                    onClick={() => onDelete(r.id)}
                   />
                   <IconButton
                     icon={<FiPrinter />}
@@ -112,6 +113,26 @@ export default function ReturnList({ returns, onEdit, onDelete }) {
           ))}
         </Tbody>
       </Table>
+
+      {totalPages > 1 && (
+        <Flex mt={2} justify="space-between" align="center">
+          <Button
+            onClick={() => onPageChange(Math.max(page - 1, 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <Text>
+            Page {page} of {totalPages}
+          </Text>
+          <Button
+            onClick={() => onPageChange(Math.min(page + 1, totalPages))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </Flex>
+      )}
 
       {selectedReturnId && (
         <ReturnDetail

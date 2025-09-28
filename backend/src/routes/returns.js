@@ -127,14 +127,46 @@ router.post(
   }
 );
 
-// -------------------- GET ALL RETURNS --------------------
+// -------------------- GET ALL RETURNS (paginated + search) --------------------
 router.get("/", authMiddleware, async (req, res) => {
+  const { page = 1, pageSize = 10, search = "" } = req.query;
+  const pageNum = parseInt(page, 10);
+  const size = parseInt(pageSize, 10);
+
   try {
+    // Build search filter
+    const where = search
+      ? {
+          customer: {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { phone: { contains: search, mode: "insensitive" } },
+            ],
+          },
+        }
+      : {};
+
+    // Count total matching returns
+    const total = await prisma.return.count({ where });
+
+    // Fetch paginated returns
     const returns = await prisma.return.findMany({
+      where,
       include: { items: true, customer: true },
+      skip: (pageNum - 1) * size,
+      take: size,
+      orderBy: { createdAt: "desc" },
     });
-    res.json(returns);
+
+    res.json({
+      items: returns,
+      total,
+      page: pageNum,
+      pageSize: size,
+      hasMore: pageNum * size < total,
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });

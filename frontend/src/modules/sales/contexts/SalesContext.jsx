@@ -23,7 +23,13 @@ export function SalesProvider({ children }) {
   const [sales, setSales] = useState([]); // recent sales (last 3 months)
   const [drafts, setDrafts] = useState([]);
   const [deleted, setDeleted] = useState([]);
+
   const [returns, setReturns] = useState([]);
+  const [returnsTotal, setReturnsTotal] = useState(0);
+  const [returnsPage, setReturnsPage] = useState(1);
+  const [returnsPageSize, setReturnsPageSize] = useState(10);
+  const [returnsLoading, setReturnsLoading] = useState(true);
+
   const [loading, setLoading] = useState(true);
 
   const [previewSaleData, setPreviewSaleData] = useState(null);
@@ -73,15 +79,34 @@ export function SalesProvider({ children }) {
     }
   }, []);
 
-  const loadReturns = useCallback(async () => {
-    try {
-      const result = await apiFetchReturns();
-      setReturns(result || []);
-    } catch (err) {
-      console.error(err);
-      setReturns([]);
-    }
-  }, []);
+  const loadReturns = useCallback(
+    async (page = returnsPage, pageSize = returnsPageSize, search = "") => {
+      setReturnsLoading(true);
+      try {
+        const result = await apiFetchReturns({ page, pageSize, search });
+        setReturns(result.items);
+        setReturnsTotal(result.total);
+        setReturnsPage(result.page);
+        setReturnsPageSize(result.pageSize);
+        return result; // <-- return this
+      } catch (err) {
+        console.error(err);
+        setReturns([]);
+        setReturnsTotal(0);
+        return { items: [], total: 0, page, pageSize };
+      } finally {
+        setReturnsLoading(false);
+      }
+    },
+    [returnsPage, returnsPageSize]
+  );
+
+  useEffect(() => {
+    loadSales();
+    loadDrafts();
+    loadDeleted();
+    loadReturns();
+  }, [loadSales, loadDrafts, loadDeleted, loadReturns]);
 
   // ---------------- HISTORICAL SALES ----------------
   /**
@@ -108,13 +133,6 @@ export function SalesProvider({ children }) {
     },
     []
   );
-
-  useEffect(() => {
-    loadSales();
-    loadDrafts();
-    loadDeleted();
-    loadReturns();
-  }, [loadSales, loadDrafts, loadDeleted, loadReturns]);
 
   // ---------------- SALE OPERATIONS ----------------
   const previewSale = useCallback((saleData) => {
@@ -180,6 +198,14 @@ export function SalesProvider({ children }) {
     return { return: newReturn, receipt };
   }, []);
 
+  const removeReturn = useCallback(
+    async (id) => {
+      await apiCreateReturn.delete(id);
+      loadReturns();
+    },
+    [loadReturns]
+  );
+
   // ---------------- HELPERS ----------------
   const getSaleById = useCallback(
     (id) =>
@@ -222,16 +248,23 @@ export function SalesProvider({ children }) {
         drafts,
         deleted,
         returns,
+        returnsTotal,
+        returnsPage,
+        returnsPageSize,
+        returnsLoading,
         loading,
         reloadSales: loadSales,
         reloadDrafts: loadDrafts,
         reloadDeleted: loadDeleted,
         reloadReturns: loadReturns,
+        setReturnsPage,
+        setReturnsPageSize,
         fetchHistoricalSales,
         addSale,
         finalizeDraft,
         removeDraft,
         addReturn,
+        removeReturn,
         getSaleById,
         getSaleForEdit,
         getReturnById,

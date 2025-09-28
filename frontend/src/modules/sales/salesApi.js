@@ -82,13 +82,31 @@ export async function getSaleById(saleId) {
   return apiFetch(`/sales/${saleId}`);
 }
 
-// -------------------- RETURNS API --------------------
-export async function fetchReturns(params = {}) {
-  const query = new URLSearchParams(params).toString();
+/**
+ * Fetch paginated returns from backend
+ * @param {Object} params - { page, pageSize, search }
+ * @returns {Object} { items: [], total: number, page, pageSize, hasMore }
+ */
+export async function fetchReturns({
+  page = 1,
+  pageSize = 10,
+  search = "",
+} = {}) {
+  const query = new URLSearchParams({ page, pageSize, search }).toString();
   const result = await apiFetch(`/returns?${query}`);
-  return Array.isArray(result) ? result : [];
+  return {
+    items: Array.isArray(result.items) ? result.items : [],
+    total: result.total || 0,
+    page: result.page || page,
+    pageSize: result.pageSize || pageSize,
+    hasMore: result.page * result.pageSize < (result.total || 0),
+  };
 }
 
+/**
+ * Create a new return
+ * @param {Object} returnData
+ */
 export async function createReturn(returnData) {
   return apiFetch("/returns", {
     method: "POST",
@@ -96,6 +114,11 @@ export async function createReturn(returnData) {
   });
 }
 
+/**
+ * Update an existing return
+ * @param {string} returnId
+ * @param {Object} returnData
+ */
 export async function updateReturn(returnId, returnData) {
   return apiFetch(`/returns/${returnId}`, {
     method: "PUT",
@@ -103,10 +126,18 @@ export async function updateReturn(returnId, returnData) {
   });
 }
 
+/**
+ * Delete a return
+ * @param {string} returnId
+ */
 export async function deleteReturn(returnId) {
   return apiFetch(`/returns/${returnId}`, { method: "DELETE" });
 }
 
+/**
+ * Get a return by ID
+ * @param {string} returnId
+ */
 export async function getReturnById(returnId) {
   return apiFetch(`/returns/${returnId}`);
 }
