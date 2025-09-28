@@ -7,10 +7,10 @@ import {
 } from "react";
 import {
   getCustomers,
-  getCustomerById,
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  getCustomerById,
 } from "../customersApi.js";
 
 const CustomersContext = createContext();
@@ -18,24 +18,23 @@ const CustomersContext = createContext();
 export function CustomersProvider({ children }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const customersMap = customers.reduce((map, c) => {
-    map[c.id] = c.name;
-    return map;
-  }, {});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   const reloadCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getCustomers();
-      setCustomers(data || []);
+      const res = await getCustomers({ page, pageSize });
+      setCustomers(res.data || []);
+      setTotalPages(res.meta?.totalPages || 1);
     } catch (err) {
       console.error("[CustomersContext] Failed to fetch customers", err);
       setCustomers([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize]);
 
   const addCustomer = async (data) => {
     await createCustomer(data);
@@ -52,7 +51,7 @@ export function CustomersProvider({ children }) {
     await reloadCustomers();
   };
 
-  const fetchCustomerById = async (id) => getCustomerById(id); // now returns receivedPayments
+  const fetchCustomerById = async (id) => getCustomerById(id);
 
   useEffect(() => {
     reloadCustomers();
@@ -62,13 +61,17 @@ export function CustomersProvider({ children }) {
     <CustomersContext.Provider
       value={{
         customers,
-        customersMap,
         loading,
         reloadCustomers,
         addCustomer,
         editCustomer,
         removeCustomer,
         fetchCustomerById,
+        page,
+        setPage,
+        pageSize,
+        setPageSize,
+        totalPages,
       }}
     >
       {children}

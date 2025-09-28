@@ -9,8 +9,14 @@ export async function createCustomer(customerData) {
 }
 
 // Get all customers, include ledger balance
-export async function getCustomers() {
-  return apiFetch("/customers?includeBalance=true");
+export async function getCustomers({
+  page = 1,
+  pageSize = 10,
+  includeBalance = true,
+} = {}) {
+  return apiFetch(
+    `/customers?page=${page}&pageSize=${pageSize}&includeBalance=${includeBalance}`
+  );
 }
 
 // Get single customer by ID, include ledger balance

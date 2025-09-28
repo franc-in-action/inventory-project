@@ -22,6 +22,7 @@ export default function CustomerList({ customers, onEdit, onDelete }) {
     setSelectedId(id);
     setDetailsOpen(true);
   };
+
   const handleCloseDetails = () => {
     setSelectedId(null);
     setDetailsOpen(false);
@@ -43,6 +44,9 @@ export default function CustomerList({ customers, onEdit, onDelete }) {
                 Phone
               </Th>
               <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
+                Balance
+              </Th>
+              <Th position="sticky" top={0} bg="gray.100" zIndex={1}>
                 Actions
               </Th>
             </Tr>
@@ -55,6 +59,7 @@ export default function CustomerList({ customers, onEdit, onDelete }) {
                 </Td>
                 <Td>{c.email}</Td>
                 <Td>{c.phone}</Td>
+                <Td>${c.balance?.toFixed(2) ?? "0.00"}</Td>
                 <Td>
                   <ButtonGroup>
                     <IconButton

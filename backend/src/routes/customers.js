@@ -25,14 +25,31 @@ router.post(
   }
 );
 
-// -------------------- READ ALL CUSTOMERS --------------------
+// -------------------- READ ALL CUSTOMERS WITH PAGINATION --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
     const includeBalance = req.query.includeBalance === "true";
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
 
-    const customers = await prisma.customer.findMany();
+    const totalCustomers = await prisma.customer.count();
+    const customers = await prisma.customer.findMany({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: { name: "asc" },
+    });
 
-    if (!includeBalance) return res.json(customers);
+    if (!includeBalance) {
+      return res.json({
+        data: customers,
+        meta: {
+          total: totalCustomers,
+          page,
+          pageSize,
+          totalPages: Math.ceil(totalCustomers / pageSize),
+        },
+      });
+    }
 
     // Compute balances dynamically from ledger
     const balanceMap = await computeCustomerBalances(
@@ -43,7 +60,15 @@ router.get("/", authMiddleware, async (req, res) => {
       balance: balanceMap[c.id] || 0,
     }));
 
-    res.json(customersWithBalance);
+    res.json({
+      data: customersWithBalance,
+      meta: {
+        total: totalCustomers,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCustomers / pageSize),
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
