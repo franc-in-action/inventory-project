@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -20,6 +19,7 @@ import {
   useOutsideClick,
   ButtonGroup,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
 
 import { useSales } from "../sales/contexts/SalesContext.jsx";
 import { usePayments } from "./contexts/PaymentsContext.jsx";
@@ -142,7 +142,7 @@ export default function PaymentForm({ paymentId, isOpen, onClose, onSaved }) {
             : "Add Payment"}
         </ModalHeader>
 
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading || customersLoading ? (
             <Spinner />

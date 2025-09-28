@@ -6,12 +6,13 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   Input,
   VStack,
   useToast,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { adminApi } from "../adminApi.js";
 
 export default function BackupModal({ isOpen, onClose }) {
@@ -65,7 +66,7 @@ export default function BackupModal({ isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Backup & Restore</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           <VStack>
             <Button onClick={handleBackup} isLoading={loading}>

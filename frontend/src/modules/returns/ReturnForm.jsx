@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -15,6 +14,8 @@ import {
   useToast,
   ButtonGroup,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useSales } from "../sales/contexts/SalesContext.jsx";
 
 export default function ReturnForm({ returnId, isOpen, onClose, onSaved }) {
@@ -74,7 +75,7 @@ export default function ReturnForm({ returnId, isOpen, onClose, onSaved }) {
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>{returnId ? "Edit Return" : "New Return"}</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <p>Loading...</p>

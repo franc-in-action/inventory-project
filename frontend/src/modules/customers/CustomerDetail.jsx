@@ -5,7 +5,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalCloseButton,
   VStack,
   Text,
   Spinner,
@@ -24,6 +23,8 @@ import {
   Link,
   Box,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 import { useSales } from "../sales/contexts/SalesContext.jsx";
 import InvoiceDetails from "../sales/InvoiceDetails.jsx";
@@ -60,7 +61,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Customer Details</ModalHeader>
-          <ModalCloseButton />
+          <CloseBtn onClick={onClose} />
           <ModalBody display="flex" justifyContent="center" alignItems="center">
             <Spinner />
           </ModalBody>
@@ -131,7 +132,7 @@ export default function CustomerDetail({ customerId, isOpen, onClose }) {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Customer Details</ModalHeader>
-          <ModalCloseButton />
+          <CloseBtn onClick={onClose} />
           <ModalBody>
             <VStack align="start" spacing={2} mb={4}>
               <Text>

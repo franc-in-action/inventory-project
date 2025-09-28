@@ -6,10 +6,11 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { adminApi } from "../adminApi.js";
 
 export default function ExportModal({ isOpen, onClose }) {
@@ -34,7 +35,7 @@ export default function ExportModal({ isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Export Data</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           <VStack>
             <Button

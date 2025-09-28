@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -16,6 +15,8 @@ import {
   Spinner,
   ButtonGroup,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useVendors } from "./contexts/VendorsContext.jsx";
 
 export default function VendorForm({ vendorId, isOpen, onClose }) {
@@ -75,7 +76,7 @@ export default function VendorForm({ vendorId, isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>{vendorId ? "Edit Vendor" : "Add Vendor"}</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <Spinner />

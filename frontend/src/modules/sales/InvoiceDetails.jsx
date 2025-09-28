@@ -4,7 +4,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
   Button,
@@ -20,6 +19,8 @@ import {
   ButtonGroup,
   Badge,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
 import InvoiceForm from "./InvoiceForm.jsx";
@@ -86,7 +87,7 @@ export default function InvoiceDetails({ saleId, isOpen, onClose }) {
               Invoice #: {sale.saleUuid}
             </span>
           </ModalHeader>
-          <ModalCloseButton />
+          <CloseBtn onClick={onClose} />
           <ModalBody>
             <VStack
               spacing={1}

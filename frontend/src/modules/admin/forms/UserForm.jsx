@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -16,6 +15,8 @@ import {
   FormLabel,
   Spinner,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { adminApi } from "../adminApi.js";
 
 export default function UserForm({ userId, isOpen, onClose, onSaved }) {
@@ -81,7 +82,7 @@ export default function UserForm({ userId, isOpen, onClose, onSaved }) {
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>{userId ? "Edit User" : "Create User"}</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <Spinner />

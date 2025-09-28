@@ -3,7 +3,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
   Button,
@@ -69,7 +68,7 @@ export default function PurchaseDetails({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Purchase #{purchase?.purchaseUuid}</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           <VStack>
             <Text>

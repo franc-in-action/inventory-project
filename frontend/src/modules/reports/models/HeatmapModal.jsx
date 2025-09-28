@@ -4,11 +4,12 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   Button,
   useDisclosure,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import Heatmap from "./Heatmap.jsx";
 
 export default function HeatmapModal() {
@@ -24,7 +25,7 @@ export default function HeatmapModal() {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Customer Activity Heatmap (1 Year)</ModalHeader>
-          <ModalCloseButton />
+          <CloseBtn onClick={onClose} />
           <ModalBody>
             <Heatmap />
           </ModalBody>

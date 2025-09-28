@@ -6,11 +6,12 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalCloseButton,
   VStack,
   Text,
   Spinner,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useLocations } from "./contexts/LocationsContext.jsx";
 
 export default function LocationDetails({ locationId, isOpen, onClose }) {
@@ -30,7 +31,7 @@ export default function LocationDetails({ locationId, isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Location Details</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {locationsLoading ? (
             <Spinner />

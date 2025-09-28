@@ -4,7 +4,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
   Button,
@@ -12,6 +11,8 @@ import {
   ButtonGroup,
   Text,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useSales } from "./contexts/SalesContext.jsx";
 import { formatReceipt } from "./salesApi.js";
@@ -61,7 +62,7 @@ export default function SaleInvoiceThermal({ saleId, isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Invoice - {sale.saleUuid}</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           <VStack>
             <Text whiteSpace="pre-wrap">{receiptText}</Text>

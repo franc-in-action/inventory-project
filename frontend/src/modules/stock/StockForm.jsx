@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -17,6 +16,8 @@ import {
   NumberInputField,
   ButtonGroup,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { apiFetch } from "../../utils/commonApi.js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -66,7 +67,7 @@ export default function StockForm({
       <ModalOverlay />
       <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>Update Stock</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           <VStack>
             <FormControl isRequired>

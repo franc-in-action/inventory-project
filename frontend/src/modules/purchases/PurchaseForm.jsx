@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   HStack,
@@ -18,6 +17,8 @@ import {
   IconButton,
   ButtonGroup,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
@@ -184,7 +185,7 @@ export default function PurchaseForm({
             : "Create Purchase"}
         </ModalHeader>
 
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
 
         <ModalBody>
           {isReadOnly && (

@@ -4,7 +4,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalCloseButton,
   ModalBody,
   ModalFooter,
   Table,
@@ -28,6 +27,8 @@ import {
   ButtonGroup,
   Box,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
 import ComboBox from "../../components/ComboBox.jsx";
@@ -230,7 +231,7 @@ export default function InvoiceForm({ isOpen, onClose, saleData = null }) {
           <ModalHeader>
             {editingSale ? "Editing Sale: " : "New Invoice #: "} {saleUuid}
           </ModalHeader>
-          <ModalCloseButton />
+          <CloseBtn onClick={onClose} />
           <ModalBody>
             {editingSale && (
               <Text fontWeight="bold" mb={2}>

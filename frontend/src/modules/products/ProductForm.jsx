@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -18,6 +17,8 @@ import {
   useToast,
   ButtonGroup,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import ComboBox from "../../components/ComboBox.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { useLocations } from "../locations/contexts/LocationsContext.jsx";
@@ -141,7 +142,7 @@ export default function ProductForm({ productId, isOpen, onClose, onSaved }) {
         <ModalHeader>
           {productId ? "Edit Product" : "Create Product"}
         </ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading || locationsLoading ? (
             <Spinner />

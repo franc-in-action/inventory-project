@@ -5,7 +5,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalCloseButton,
   VStack,
   Text,
   Box,
@@ -22,6 +21,7 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
 
 import { useVendors } from "./contexts/VendorsContext.jsx";
 import { useIssuedPayments } from "../issuedpayments/contexts/IssuedPaymentsContext.jsx";
@@ -67,7 +67,7 @@ export default function VendorDetails({ vendorId, isOpen, onClose }) {
             : "No data"}
         </ModalHeader>
 
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <Spinner />

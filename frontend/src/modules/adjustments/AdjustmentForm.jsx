@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Input,
@@ -17,6 +16,8 @@ import {
   Spinner,
   Text,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { usePayments } from "../payments/contexts/PaymentsContext.jsx";
 import { useCustomers } from "../customers/contexts/CustomersContext.jsx";
 
@@ -101,7 +102,7 @@ export default function AdjustmentForm({
         <ModalHeader>
           {adjustmentId ? "Edit Adjustment" : "Add Adjustment"}
         </ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <Spinner />

@@ -5,11 +5,12 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalCloseButton,
   VStack,
   Text,
   Spinner,
 } from "@chakra-ui/react";
+import CloseBtn from "../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { usePayments } from "../payments/contexts/PaymentsContext.jsx";
 
 export default function AdjustmentDetail({ adjustmentId, isOpen, onClose }) {
@@ -38,7 +39,7 @@ export default function AdjustmentDetail({ adjustmentId, isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Adjustment Details</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <Spinner />

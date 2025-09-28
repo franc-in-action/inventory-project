@@ -5,12 +5,13 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton,
   Button,
   VStack,
   Text,
   Spinner,
 } from "@chakra-ui/react";
+import CloseBtn from "../../../components/CloseBtn.jsx"; // import your custom CloseBtn
+
 import { useEffect, useState } from "react";
 import { adminApi } from "../adminApi.js";
 
@@ -38,7 +39,7 @@ export default function LogDetailModal({ logId, isOpen, onClose }) {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Log Details</ModalHeader>
-        <ModalCloseButton />
+        <CloseBtn onClick={onClose} />
         <ModalBody>
           {loading ? (
             <Spinner />
