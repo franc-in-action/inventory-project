@@ -357,13 +357,14 @@ router.get(
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
       const results = await prisma.$queryRaw`
-          SELECT DISTINCT c.id AS customer_id, c.name AS customer_name
-          FROM "Customer" c
-          JOIN "Sale" s ON s."customerId" = c.id
-          WHERE s."createdAt" >= ${ninetyDaysAgo}
-            AND s."createdAt" <  ${monthStart}
-          ORDER BY c.name;
-        `;
+        SELECT c.id AS customer_id, c.name AS customer_name,
+               MAX(s."createdAt") AS last_sale_date
+        FROM "Customer" c
+        JOIN "Sale" s ON s."customerId" = c.id
+        WHERE s."createdAt" >= ${ninetyDaysAgo} AND s."createdAt" < ${monthStart}
+        GROUP BY c.id, c.name
+        ORDER BY c.name;
+      `;
 
       res.json({
         type: "customers-qualified",
@@ -372,6 +373,7 @@ router.get(
         data: results.map((r) => ({
           customer_id: r.customer_id,
           customer_name: r.customer_name,
+          last_sale_date: r.last_sale_date.toISOString(),
         })),
       });
     } catch (err) {
@@ -399,18 +401,20 @@ router.get(
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
       const results = await prisma.$queryRaw`
-          SELECT DISTINCT c.id AS customer_id, c.name AS customer_name
-          FROM "Customer" c
-          JOIN "Sale" s ON s."customerId" = c.id
-          WHERE s."createdAt" >= ${monthStart}
-            AND c.id NOT IN (
-                SELECT DISTINCT s2."customerId"
-                FROM "Sale" s2
-                WHERE s2."createdAt" >= ${ninetyDaysAgo}
-                  AND s2."createdAt" <  ${monthStart}
-            )
-          ORDER BY c.name;
-        `;
+        SELECT c.id AS customer_id, c.name AS customer_name,
+               MIN(s."createdAt") AS purchase_date
+        FROM "Customer" c
+        JOIN "Sale" s ON s."customerId" = c.id
+        WHERE s."createdAt" >= ${monthStart}
+          AND c.id NOT IN (
+            SELECT DISTINCT s2."customerId"
+            FROM "Sale" s2
+            WHERE s2."createdAt" >= ${ninetyDaysAgo}
+              AND s2."createdAt" < ${monthStart}
+          )
+        GROUP BY c.id, c.name
+        ORDER BY c.name;
+      `;
 
       res.json({
         type: "customers-recalled",
@@ -418,6 +422,7 @@ router.get(
         data: results.map((r) => ({
           customer_id: r.customer_id,
           customer_name: r.customer_name,
+          purchase_date: r.purchase_date.toISOString(),
         })),
       });
     } catch (err) {
