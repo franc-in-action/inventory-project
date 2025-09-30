@@ -1,3 +1,4 @@
+// contexts/StockContext.jsx
 import {
   createContext,
   useContext,
@@ -5,51 +6,75 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { fetchStockMovements } from "../stockApi.js";
+import { fetchStocks, fetchStockMovements } from "../stockApi.js";
 
 const StockContext = createContext();
 
 export function StockProvider({ children }) {
-  const [movements, setMovements] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // === Stock Levels ===
+  const [stocks, setStocks] = useState([]);
+  const [loadingStocks, setLoadingStocks] = useState(true);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const loadMovements = useCallback(async () => {
-    setLoading(true);
+  const loadStocks = useCallback(async () => {
+    setLoadingStocks(true);
     try {
-      const res = await fetchStockMovements({ page, pageSize });
-      setMovements(res.data || []);
+      const res = await fetchStocks({ page, pageSize });
+      setStocks(res.data || []);
       setTotalPages(res.meta?.totalPages || 1);
       setTotalCount(res.meta?.total || 0);
     } catch (err) {
-      console.error("[StockContext] Failed to fetch movements:", err);
-      setMovements([]);
+      console.error("[StockContext] Failed to fetch stocks:", err);
+      setStocks([]);
       setTotalPages(1);
       setTotalCount(0);
     } finally {
-      setLoading(false);
+      setLoadingStocks(false);
     }
   }, [page, pageSize]);
 
   useEffect(() => {
-    loadMovements();
-  }, [loadMovements]);
+    loadStocks();
+  }, [loadStocks]);
+
+  // === Stock Movements ===
+  const [movements, setMovements] = useState([]);
+  const [loadingMovements, setLoadingMovements] = useState(false);
+
+  const loadMovements = useCallback(async (params = {}) => {
+    setLoadingMovements(true);
+    try {
+      const res = await fetchStockMovements(params);
+      setMovements(res.data || []);
+    } catch (err) {
+      console.error("[StockContext] Failed to fetch movements:", err);
+      setMovements([]);
+    } finally {
+      setLoadingMovements(false);
+    }
+  }, []);
 
   return (
     <StockContext.Provider
       value={{
-        movements,
-        loading,
+        // stocks
+        stocks,
+        loadingStocks,
         page,
         setPage,
         pageSize,
         setPageSize,
         totalPages,
         totalCount,
+        reloadStocks: loadStocks,
+
+        // movements
+        movements,
+        loadingMovements,
         reloadMovements: loadMovements,
       }}
     >
