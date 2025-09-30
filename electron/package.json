@@ -4,10 +4,13 @@
   "main": "main.js",
   "scripts": {
     "dev": "cross-env ELECTRON_START_URL=http://localhost:5144 electron .",
-    "start": "electron .",
+    "start": "npx npm-run-all check:frontend electron:start",
+    "electron:start": "electron .",
+    "check:frontend": "node -e \"const fs=require('fs'); if(!fs.existsSync('../frontend/dist')){console.log('⚡ No frontend build found, running build:frontend...'); process.exit(1);}\" || npm run build:frontend",
+    "build:frontend": "npm --prefix ../frontend install && npm --prefix ../frontend run build",
+    "dist": "npx npm-run-all build:frontend dist:electron",
+    "dist:electron": "electron-builder --win",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
-    "build:frontend": "cd ../frontend && npm install && npm run build",
-    "dist": "npm run build:frontend && electron-builder --win",
     "postinstall": "electron-rebuild"
   },
   "build": {
@@ -32,7 +35,8 @@
     "electron": "^25.0.0",
     "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9",
-    "jest": "^29.0.0"
+    "jest": "^29.0.0",
+    "npm-run-all": "^4.1.5"
   },
   "dependencies": {
     "axios": "^1.12.2",
