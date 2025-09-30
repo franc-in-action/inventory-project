@@ -58,6 +58,49 @@ function registerIpcHandlers() {
         return { local_uuid };
     });
 
+    // =========================
+    // Adjustments
+    // =========================
+
+    // CREATE adjustment
+    ipcMain.handle("adjustments:create", async (_event, data) => {
+        const local_uuid = crypto.randomUUID();
+
+        const adjustment = db.createAdjustment({
+            local_uuid,
+            customerId: data.customerId,
+            amount: data.amount,
+            method: data.method,
+            description: data.description || `Manual adjustment of ${data.amount}`,
+        });
+
+        // queue sync
+        db.enqueueSync({
+            entityType: "adjustment",
+            entityUuid: local_uuid,
+            payload: adjustment,
+        });
+
+        return adjustment;
+    });
+
+    ipcMain.handle("adjustments:list", async () => {
+        return db.listAdjustments();
+    });
+
+    ipcMain.handle("adjustments:get", async (_event, id) => {
+        return db.getAdjustmentById(id);
+    });
+
+    ipcMain.handle("adjustments:update", async (_event, id, data) => {
+        return db.updateAdjustment(id, data);
+    });
+
+    ipcMain.handle("adjustments:delete", async (_event, id) => {
+        db.deleteAdjustment(id);
+        return { success: true };
+    });
+
     // Sync queue
     ipcMain.handle("sync:enqueue", async (event, item) => {
         return db.enqueueSync(item);

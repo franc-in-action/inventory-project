@@ -43,7 +43,19 @@ CREATE TABLE IF NOT EXISTS sync_queue (
     retry_count INTEGER NOT NULL DEFAULT 0
 );
 
+-- NEW: adjustments + ledger entries
+CREATE TABLE IF NOT EXISTS ledger_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    local_uuid TEXT UNIQUE,
+    customer_id TEXT NOT NULL,
+    amount REAL NOT NULL,
+    method TEXT,
+    type TEXT NOT NULL, -- e.g. 'ADJUSTMENT'
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- indexes
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON stock_movements (product_id);
-
 CREATE INDEX IF NOT EXISTS idx_sync_queue_entity_uuid ON sync_queue (entity_uuid);
+CREATE INDEX IF NOT EXISTS idx_ledger_entries_type ON ledger_entries (type);

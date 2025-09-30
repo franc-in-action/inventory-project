@@ -4,12 +4,10 @@ const Database = require("better-sqlite3");
 const fs = require("fs");
 const path = require("path");
 
-// --- Singleton DB ---
 let db;
 
-// Allow optional custom path (for tests)
 function initDb(userDataPath = null) {
-    if (db) return db; // already initialized
+    if (db) return db;
 
     const basePath = userDataPath || path.join(process.cwd(), "electron-data");
     fs.mkdirSync(basePath, { recursive: true });
@@ -18,7 +16,7 @@ function initDb(userDataPath = null) {
     const firstTime = !fs.existsSync(dbPath);
 
     db = new Database(dbPath);
-    db.pragma("journal_mode = WAL"); // enable WAL
+    db.pragma("journal_mode = WAL");
 
     runMigrations(firstTime);
 
@@ -31,7 +29,6 @@ function runMigrations(firstTime) {
     db.exec(schemaSql);
 }
 
-// auto-init singleton with default folder
 initDb();
 
 // ---- Products CRUD ----
@@ -133,12 +130,45 @@ function setDeviceMeta(key, value) {
     }
 }
 
+// --- Adjustments CRUD ----
+function createAdjustment({ local_uuid, customerId, amount, method, description }) {
+    db.prepare(`
+        INSERT INTO ledger_entries(local_uuid, customer_id, amount, method, type, description)
+        VALUES (?, ?, ?, ?, 'ADJUSTMENT', ?)
+    `).run(local_uuid, customerId, amount, method, description);
+    return getAdjustmentByUuid(local_uuid);
+}
+
+function listAdjustments() {
+    return db.prepare(`SELECT * FROM ledger_entries WHERE type = 'ADJUSTMENT' ORDER BY created_at DESC`).all();
+}
+
+function getAdjustmentById(id) {
+    return db.prepare(`SELECT * FROM ledger_entries WHERE id = ? AND type = 'ADJUSTMENT'`).get(id);
+}
+
+function getAdjustmentByUuid(local_uuid) {
+    return db.prepare(`SELECT * FROM ledger_entries WHERE local_uuid = ?`).get(local_uuid);
+}
+
+function updateAdjustment(id, { customerId, amount, method, description }) {
+    db.prepare(`
+        UPDATE ledger_entries
+        SET customer_id = ?, amount = ?, method = ?, description = ?
+        WHERE id = ? AND type = 'ADJUSTMENT'
+    `).run(customerId, amount, method, description, id);
+    return getAdjustmentById(id);
+}
+
+function deleteAdjustment(id) {
+    return db.prepare(`DELETE FROM ledger_entries WHERE id = ? AND type = 'ADJUSTMENT'`).run(id);
+}
+
 // --- Helper ---
 function generateId() {
     return `local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// --- Export everything ---
 module.exports = {
     initDb,
     listProducts,
@@ -152,5 +182,10 @@ module.exports = {
     dequeueSync,
     getDeviceMeta,
     setDeviceMeta,
+    createAdjustment,
+    listAdjustments,
+    getAdjustmentById,
+    updateAdjustment,
+    deleteAdjustment,
     db
 };

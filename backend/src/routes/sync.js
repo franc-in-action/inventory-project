@@ -1,3 +1,4 @@
+// backend/routes/sync.js
 import express from "express";
 import { prisma } from "../prisma.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
@@ -28,8 +29,9 @@ router.post("/push", authMiddleware, async (req, res) => {
     for (const change of changes) {
       const { entityType, entityUuid, payload } = change;
 
-      // Append-only entities
-      if (["Sale", "StockMovement", "Purchase"].includes(entityType)) {
+      // ---------------- APPEND-ONLY ENTITIES ----------------
+      if (["Sale", "StockMovement", "Purchase", "Adjustment"].includes(entityType)) {
+        // Avoid double-insert by checking for same UUID in serverChange
         const existing = await prisma.serverChange.findFirst({
           where: { payload: { path: ["uuid"], equals: entityUuid } },
         });
@@ -42,6 +44,58 @@ router.post("/push", authMiddleware, async (req, res) => {
           continue;
         }
 
+        // Apply change to live domain tables
+        if (entityType === "Sale") {
+          await prisma.sale.create({
+            data: {
+              id: payload.id,
+              productId: payload.productId,
+              quantity: payload.quantity,
+              createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
+            },
+          });
+        }
+
+        if (entityType === "StockMovement") {
+          await prisma.stockMovement.create({
+            data: {
+              id: payload.id,
+              productId: payload.productId,
+              locationId: payload.locationId,
+              delta: payload.delta,
+              reason: payload.reason,
+              refId: payload.refId,
+              createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
+            },
+          });
+        }
+
+        if (entityType === "Purchase") {
+          await prisma.purchase.create({
+            data: {
+              id: payload.id,
+              productId: payload.productId,
+              quantity: payload.quantity,
+              supplierId: payload.supplierId,
+              createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
+            },
+          });
+        }
+
+        if (entityType === "Adjustment") {
+          await prisma.ledgerEntry.create({
+            data: {
+              customerId: payload.customerId,
+              amount: payload.amount,
+              method: payload.method,
+              type: "ADJUSTMENT",
+              description: payload.description,
+              createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
+            },
+          });
+        }
+
+        // Always also log in serverChange
         const newChange = await prisma.serverChange.create({
           data: {
             entityType,
@@ -49,6 +103,7 @@ router.post("/push", authMiddleware, async (req, res) => {
             payload,
           },
         });
+
         results.push({
           clientUuid: entityUuid,
           serverId: newChange.id.toString(),
@@ -57,8 +112,8 @@ router.post("/push", authMiddleware, async (req, res) => {
         continue;
       }
 
-      // Mutable entities
-      if (["Product"].includes(entityType)) {
+      // ---------------- MUTABLE ENTITIES ----------------
+      if (entityType === "Product") {
         const existingEntity = await prisma.product.findUnique({
           where: { id: payload.id },
         });
@@ -91,7 +146,6 @@ router.post("/push", authMiddleware, async (req, res) => {
             serverId: newChange.id.toString(),
           });
           serverSeq = Number(newChange.id);
-          continue;
         } else {
           const created = await prisma.product.create({ data: payload });
           const newChange = await prisma.serverChange.create({
@@ -106,7 +160,6 @@ router.post("/push", authMiddleware, async (req, res) => {
             serverId: newChange.id.toString(),
           });
           serverSeq = Number(newChange.id);
-          continue;
         }
       }
     }
@@ -133,7 +186,7 @@ router.get("/pull", authMiddleware, async (req, res) => {
 
     res.json({
       changes: changes.map(serializeChange),
-      serverSeq, // stays number
+      serverSeq,
     });
   } catch (err) {
     console.error(err);
