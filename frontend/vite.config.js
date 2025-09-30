@@ -7,11 +7,13 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: "0.0.0.0",
     port: 5144,
+    allowedHosts: ["erp.francisshirima.me"],
   },
   test: {
-    globals: true, // ✅ allows using `test()` and `expect()` like in Jest
-    environment: "jsdom", // ✅ simulates browser environment
-    setupFiles: "./tests/setupTests.js", // optional, if you have test setup
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./tests/setupTests.js",
   },
 });
