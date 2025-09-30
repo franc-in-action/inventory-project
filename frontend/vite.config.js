@@ -9,6 +9,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5144,
+    strictPort: true,
     allowedHosts: ["erp.francisshirima.me"],
   },
   test: {
