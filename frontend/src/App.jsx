@@ -77,7 +77,7 @@ export function ProtectedLayout({ children }) {
   );
 
   return (
-    <Box minH="100vh" display="flex">
+    <Box h="100vh" display="flex">
       <Sidebar isOpen={isOpen} onOpen={onOpen} onClose={onClose} />
       <Box
         flex="1"
@@ -89,8 +89,8 @@ export function ProtectedLayout({ children }) {
         gap={2}
         transition="margin-left 0.2s ease"
       >
-        <Header onOpenSidebar={onOpen} onRefresh={handleRefresh} />
-        <Box key={refreshKey} flex="1">
+        <Header onOpenSidebar={onOpen} onRefresh={handleRefresh} maxH={"20vh"} />
+        <Box key={refreshKey} flex="1" maxH={"80vh"} overflowX={"auto"}>
           {children}
         </Box>
       </Box>
