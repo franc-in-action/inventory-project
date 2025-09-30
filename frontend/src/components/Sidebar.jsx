@@ -9,6 +9,9 @@ import {
   Divider,
   Collapse,
   Button,
+  IconButton,
+  Flex,
+  Tooltip,
 } from "@chakra-ui/react";
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
@@ -20,21 +23,40 @@ import {
   FaBox,
   FaCashRegister,
   FaShoppingCart,
-  FaMapMarkerAlt,
   FaTools,
-  FaTruck,
-  FaMoneyBillWave,
-  FaWarehouse,
   FaChartBar,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 
 export default function Sidebar({ isOpen, onClose }) {
   const user = getUserFromToken();
   const [openMenu, setOpenMenu] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleMenu = (menu) => {
     setOpenMenu((prev) => (prev === menu ? null : menu));
   };
+
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+
+  const handleMenuClick = (link) => {
+    if (isCollapsed) {
+      // Expand first
+      setIsCollapsed(false);
+
+      // After expansion, open submenu (if it exists)
+      if (link.submenu) {
+        setTimeout(() => {
+          setOpenMenu(link.label);
+        }, 200); // wait for expand animation
+      }
+    } else if (link.submenu) {
+      // Normal toggle
+      toggleMenu(link.label);
+    }
+  };
+
 
   const links = [
     {
@@ -148,73 +170,106 @@ export default function Sidebar({ isOpen, onClose }) {
   const SidebarContent = (
     <Box
       as="nav"
-      w={{ base: "full", md: 60 }}
+      w={{ base: "full", md: isCollapsed ? "60px" : "220px" }}
       pos="fixed"
       h="full"
-      p={4}
+      p={2}
       zIndex={20}
       overflowY="auto"
+      transition="width 0.2s"
+      bg="white"
+      borderRight="1px solid"
+      borderColor="gray.200"
     >
-      {user && (
-        <Box mb={6} p={4}>
+      {/* Collapse / Expand button */}
+      <Flex justify="flex-end" mb={4}>
+        <IconButton
+          aria-label="Toggle sidebar"
+          size="sm"
+          icon={isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+          onClick={toggleCollapse}
+        />
+      </Flex>
+
+      {user && !isCollapsed && (
+        <Box mb={6} p={2}>
           {user.location && <Text fontSize="sm">{user.location}</Text>}
           <Text fontWeight="bold">{user.name}</Text>
           <Text fontSize="sm">{user.role}</Text>
         </Box>
       )}
+
       <Divider mb={4} />
+
       <VStack spacing={2} align="stretch">
         {links.map((link) => (
           <Box key={link.label}>
             {!link.submenu ? (
-              <NavLink
-                to={link.to}
-                style={({ isActive }) => ({
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  fontWeight: isActive ? "bold" : "normal",
-                })}
-                onClick={onClose}
-              >
-                <Icon as={link.icon} w={5} h={5} />
-                {link.label}
-              </NavLink>
+              <Tooltip label={isCollapsed ? link.label : ""} placement="right">
+                <NavLink
+                  to={link.to}
+                  style={({ isActive }) => ({
+                    display: "flex",
+                    alignItems: "center",
+                    gap: isCollapsed ? "0" : "10px",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    fontWeight: isActive ? "bold" : "normal",
+                    justifyContent: isCollapsed ? "center" : "flex-start",
+                  })}
+                  onClick={() => {
+                    if (isCollapsed) {
+                      setIsCollapsed(false);
+                    }
+                    onClose?.();
+                  }}
+                >
+                  <Icon as={link.icon} w={5} h={5} />
+                  {!isCollapsed && link.label}
+                </NavLink>
+              </Tooltip>
             ) : (
               <Box>
-                <Button
-                  justifyContent="space-between"
-                  w="full"
-                  onClick={() => toggleMenu(link.label)}
-                  leftIcon={<Icon as={link.icon} w={5} h={5} />}
-                >
-                  <Text flex="1" textAlign="left">
-                    {link.label}
-                  </Text>
-                  <Text>{openMenu === link.label ? "▲" : "▼"}</Text>
-                </Button>
+                <Tooltip label={isCollapsed ? link.label : ""} placement="right">
+                  <Button
+                    justifyContent={isCollapsed ? "center" : "space-between"}
+                    w="full"
+                    onClick={() => handleMenuClick(link)}
+                    leftIcon={<Icon as={link.icon} w={5} h={5} />}
+                    px={isCollapsed ? 0 : 4}
+                  >
+                    {!isCollapsed && (
+                      <>
+                        <Text flex="1" textAlign="left">
+                          {link.label}
+                        </Text>
+                        <Text>{openMenu === link.label ? "▲" : "▼"}</Text>
+                      </>
+                    )}
+                  </Button>
+                </Tooltip>
 
-                <Collapse in={openMenu === link.label} animateOpacity>
-                  <VStack pl={6} align="stretch" spacing={1}>
-                    {link.submenu.map((sub) => (
-                      <NavLink
-                        key={sub.to}
-                        to={sub.to}
-                        style={({ isActive }) => ({
-                          display: "block",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          fontWeight: isActive ? "bold" : "normal",
-                        })}
-                        onClick={onClose}
-                      >
-                        {sub.label}
-                      </NavLink>
-                    ))}
-                  </VStack>
-                </Collapse>
+                {!isCollapsed && (
+                  <Collapse in={openMenu === link.label} animateOpacity>
+                    <VStack pl={6} align="stretch" spacing={1}>
+                      {link.submenu.map((sub) => (
+                        <NavLink
+                          key={sub.to}
+                          to={sub.to}
+                          style={({ isActive }) => ({
+                            display: "block",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            fontWeight: isActive ? "bold" : "normal",
+                          })}
+                          onClick={onClose}
+                        >
+                          {sub.label}
+                        </NavLink>
+                      ))}
+                    </VStack>
+                  </Collapse>
+                )}
               </Box>
             )}
           </Box>
@@ -225,7 +280,10 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
+      {/* Desktop Sidebar */}
       <Box display={{ base: "none", md: "block" }}>{SidebarContent}</Box>
+
+      {/* Mobile Drawer */}
       <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>{SidebarContent}</DrawerContent>
