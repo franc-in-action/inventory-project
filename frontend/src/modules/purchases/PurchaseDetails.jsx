@@ -21,6 +21,7 @@ import {
 import { useProducts } from "../products/contexts/ProductsContext.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { usePurchases } from "./contexts/PurchasesContext.jsx";
+import { CloseBtn } from "../../components/Xp.jsx";
 
 export default function PurchaseDetails({
   purchase,

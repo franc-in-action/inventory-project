@@ -25,7 +25,7 @@ import SaleInvoiceThermal from "./SaleInvoiceThermal.jsx";
 import InvoiceForm from "./InvoiceForm.jsx";
 
 export default function SalesPage() {
-  const { sales, drafts, deleted, loading, reloadSales } = useSales(); // ✅ include deleted
+  const { sales, drafts, deleted, loading, reloadSales } = useSales();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;

@@ -20,14 +20,15 @@ import {
   TabPanel,
   Link,
   Select,
+  Input,
 } from "@chakra-ui/react";
 import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useState } from "react";
-import PurchaseForm from "./PurchaseForm.jsx";
-import PurchaseDetails from "./PurchaseDetails.jsx";
 import { useVendors } from "../vendors/contexts/VendorsContext.jsx";
 import { usePurchases } from "./contexts/PurchasesContext.jsx";
 import { useLocations } from "../locations/contexts/LocationsContext.jsx";
+import PurchaseForm from "./PurchaseForm.jsx";
+import PurchaseDetails from "./PurchaseDetails.jsx";
 
 export default function PurchasesPage() {
   const toast = useToast();
@@ -113,8 +114,8 @@ export default function PurchasesPage() {
                 {p.receivedByUser
                   ? p.receivedByUser.name
                   : p.receivedBy
-                  ? "Unknown User"
-                  : "-"}
+                    ? "Unknown User"
+                    : "-"}
               </Td>
               <Td>
                 {showReceiveButton && (
@@ -138,8 +139,7 @@ export default function PurchasesPage() {
 
   return (
     <Flex direction="column" p={4}>
-      {/* Header */}
-      <Flex mb={4}>
+      <Flex>
         <Box p="2">
           <Heading size={"md"} mb={2}>
             Manage product purchases
@@ -159,7 +159,23 @@ export default function PurchasesPage() {
         </Flex>
       </Flex>
 
-      {/* Tabs for Pending / Received */}
+      <Flex mb={4} w="100%" align="center" gap={2}>
+        <Input
+          placeholder="Search purchases..."
+        />
+        <Select
+          value={pageSize}
+          onChange={(e) => setPageSize(parseInt(e.target.value))}
+          w="120px"
+        >
+          {[10, 20, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size} / page
+            </option>
+          ))}
+        </Select>
+      </Flex>
+
       <Tabs>
         <TabList>
           <Tab
@@ -177,7 +193,7 @@ export default function PurchasesPage() {
       </Tabs>
 
       {/* Pagination Controls */}
-      <Flex mt={4} justify="space-between" align="center">
+      <Flex mb={4} w="100%" justify={"center"} align="center" gap={2}>
         <Button
           leftIcon={<ChevronLeftIcon />}
           onClick={() => setPage(Math.max(1, page - 1))}
@@ -197,18 +213,6 @@ export default function PurchasesPage() {
         >
           Next
         </Button>
-
-        <Select
-          value={pageSize}
-          onChange={(e) => setPageSize(parseInt(e.target.value))}
-          w="120px"
-        >
-          {[10, 20, 50, 100].map((size) => (
-            <option key={size} value={size}>
-              {size} / page
-            </option>
-          ))}
-        </Select>
       </Flex>
 
       {/* Purchase Form Modal */}

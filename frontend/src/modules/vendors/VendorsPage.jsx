@@ -69,7 +69,7 @@ export default function VendorsPage() {
               leftIcon={<AddIcon />}
               onClick={openCreateModal}
             >
-              Vendor
+              New Vendor
             </Button>
           </ButtonGroup>
         </Flex>
@@ -88,25 +88,11 @@ export default function VendorsPage() {
         >
           {[10, 20, 50, 100].map((size) => (
             <option key={size} value={size}>
-              {size}
+              {size} / page
             </option>
           ))}
         </Select>
-        <Button
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page <= 1}
-        >
-          Prev
-        </Button>
-        <Button
-          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={page >= totalPages}
-        >
-          Next
-        </Button>
-        <Box>
-          Page {page} of {totalPages}
-        </Box>
+
       </Flex>
 
       <VendorList
@@ -114,6 +100,26 @@ export default function VendorsPage() {
         onEdit={openEditModal}
         onDelete={handleDelete}
       />
+
+      <Flex mb={4} w="100%" justify={"center"} align="center" gap={2}>
+        <Button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          disabled={page <= 1}
+        >
+          Prev
+        </Button>
+
+        <Box>
+          Page {page} of {totalPages}
+        </Box>
+
+        <Button
+          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={page >= totalPages}
+        >
+          Next
+        </Button>
+      </Flex>
 
       <VendorForm
         vendorId={editingVendorId}
