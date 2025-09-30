@@ -1,12 +1,13 @@
-// main.js (CommonJS version)
-import 'dotenv/config'; // instead of require("dotenv").config()
-import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'path';
-import url from 'url';
-import { registerIpcHandlers } from './ipcHandlers.js';
-import { initDb } from './db/index.js';
-import { startSyncWorker, setAuthToken } from './syncWorker.js';
+// main.js (CommonJS)
 
+require("dotenv").config();
+const { app, BrowserWindow, ipcMain } = require("electron");
+const path = require("path");
+const url = require("url");
+
+const { registerIpcHandlers } = require("./ipcHandlers");
+const { initDb } = require("./db/index");
+const { startSyncWorker, setAuthToken } = require("./syncWorker");
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -27,11 +28,14 @@ async function createWindow() {
     });
 
     if (process.env.ELECTRON_START_URL) {
+        // Dev server URL (Vite/CRA)
         await mainWindow.loadURL(process.env.ELECTRON_START_URL);
     } else if (isDev) {
+        // Fallback for dev
         await mainWindow.loadURL("http://localhost:5144");
     } else {
-        const indexPath = path.join(process.cwd(), "frontend", "dist", "index.html");
+        // ✅ Correct production path: ../frontend/dist/index.html
+        const indexPath = path.join(__dirname, "..", "frontend", "dist", "index.html");
         await mainWindow.loadURL(url.pathToFileURL(indexPath).toString());
     }
 

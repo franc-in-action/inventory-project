@@ -2,12 +2,13 @@
   "name": "electron",
   "version": "1.0.0",
   "main": "main.js",
-  "type": "module",
   "scripts": {
     "dev": "cross-env ELECTRON_START_URL=http://localhost:5144 electron .",
     "start": "electron .",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
-    "dist": "electron-builder --win"
+    "build:frontend": "cd ../frontend && npm install && npm run build",
+    "dist": "npm run build:frontend && electron-builder --win",
+    "postinstall": "electron-rebuild"
   },
   "build": {
     "appId": "com.affluentlife.inventory",

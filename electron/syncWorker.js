@@ -1,5 +1,6 @@
-// electron/syncWorker.js
-import axios from "axios";
+// electron/syncWorker.js (CommonJS)
+
+const axios = require("axios");
 
 const SYNC_INTERVAL = 30 * 1000; // 30 seconds
 const API_BASE = process.env.BACKEND_URL || "http://localhost:4044/api";
@@ -11,7 +12,7 @@ let dbInstance = null; // inject DB here
 /**
  * Set the bearer token used for authenticated sync calls.
  */
-export function setAuthToken(t) {
+function setAuthToken(t) {
     token = t;
 }
 
@@ -19,7 +20,7 @@ export function setAuthToken(t) {
  * Inject a database instance for use in syncWorker.
  * If not injected, the module must use the default DB import.
  */
-export function setDb(db) {
+function setDb(db) {
     dbInstance = db;
 }
 
@@ -27,7 +28,7 @@ export function setDb(db) {
  * Push all pending changes in the local sync_queue to the server.
  * On success, marks queue items as 'synced' and updates related entities.
  */
-export async function pushQueue(maxRetries = 5) {
+async function pushQueue(maxRetries = 5) {
     if (!token) return;
     if (!dbInstance) throw new Error("Database not initialized for syncWorker");
 
@@ -83,11 +84,10 @@ export async function pushQueue(maxRetries = 5) {
     }
 }
 
-
 /**
  * Convenience function to trigger a single sync attempt immediately.
  */
-export async function runSyncOnce() {
+async function runSyncOnce() {
     await pushQueue();
 }
 
@@ -95,7 +95,7 @@ export async function runSyncOnce() {
  * Start the background sync worker.
  * @param {boolean} runNow - if true, performs an immediate sync attempt.
  */
-export function startSyncWorker(runNow = false) {
+function startSyncWorker(runNow = false) {
     if (syncTimer) clearInterval(syncTimer);
     if (runNow) pushQueue();
     syncTimer = setInterval(pushQueue, SYNC_INTERVAL);
@@ -104,9 +104,18 @@ export function startSyncWorker(runNow = false) {
 /**
  * Stop the background sync worker.
  */
-export function stopSyncWorker() {
+function stopSyncWorker() {
     if (syncTimer) {
         clearInterval(syncTimer);
         syncTimer = null;
     }
 }
+
+module.exports = {
+    setAuthToken,
+    setDb,
+    pushQueue,
+    runSyncOnce,
+    startSyncWorker,
+    stopSyncWorker
+};

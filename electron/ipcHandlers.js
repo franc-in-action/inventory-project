@@ -1,9 +1,11 @@
-// ipcHandlers.js
-import { ipcMain } from "electron";
-import { startSyncWorker } from "./syncWorker.js";
-import * as db from "./db/index.js";
+// ipcHandlers.js (CommonJS)
 
-export function registerIpcHandlers() {
+const { ipcMain } = require("electron");
+const crypto = require("crypto");
+const { startSyncWorker } = require("./syncWorker.js");
+const db = require("./db/index.js");
+
+function registerIpcHandlers() {
     // Products
     ipcMain.handle("products:list", async () => {
         return db.listProducts();
@@ -38,18 +40,20 @@ export function registerIpcHandlers() {
         return db.listStockMovements();
     });
 
+    // Sales
     ipcMain.handle("sales:create", async (_event, sale) => {
         const local_uuid = crypto.randomUUID();
-        db.prepare(`
-    INSERT INTO local_sales(local_uuid, product_id, quantity)
-    VALUES (?, ?, ?)
-  `).run(local_uuid, sale.product_id, sale.quantity);
+
+        db.db.prepare(`
+            INSERT INTO local_sales(local_uuid, product_id, quantity)
+            VALUES (?, ?, ?)
+        `).run(local_uuid, sale.product_id, sale.quantity);
 
         // queue a payload for push
-        db.prepare(`
-    INSERT INTO sync_queue(payload, status)
-    VALUES (?, 'pending')
-  `).run(JSON.stringify({ type: "sale", local_uuid }));
+        db.db.prepare(`
+            INSERT INTO sync_queue(payload, status)
+            VALUES (?, 'pending')
+        `).run(JSON.stringify({ type: "sale", local_uuid }));
 
         return { local_uuid };
     });
@@ -67,7 +71,7 @@ export function registerIpcHandlers() {
         return db.dequeueSync(id);
     });
 
-    // device meta
+    // Device meta
     ipcMain.handle("deviceMeta:get", async (event, key) => {
         return db.getDeviceMeta(key);
     });
@@ -76,7 +80,10 @@ export function registerIpcHandlers() {
         return db.setDeviceMeta(key, value);
     });
 
+    // Trigger sync immediately
     ipcMain.handle("sync:now", async () => {
-        await startSyncWorker(true); // add a “run once now” option
+        await startSyncWorker(true);
     });
 }
+
+module.exports = { registerIpcHandlers };

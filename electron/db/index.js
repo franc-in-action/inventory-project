@@ -1,18 +1,14 @@
-// db/index.js
-import Database from "better-sqlite3";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+// db/index.js (CommonJS)
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const Database = require("better-sqlite3");
+const fs = require("fs");
+const path = require("path");
 
 // --- Singleton DB ---
 let db;
 
 // Allow optional custom path (for tests)
-export function initDb(userDataPath = null) {
+function initDb(userDataPath = null) {
     if (db) return db; // already initialized
 
     const basePath = userDataPath || path.join(process.cwd(), "electron-data");
@@ -39,15 +35,15 @@ function runMigrations(firstTime) {
 initDb();
 
 // ---- Products CRUD ----
-export function listProducts() {
+function listProducts() {
     return db.prepare("SELECT * FROM products ORDER BY name ASC").all();
 }
 
-export function getProduct(id) {
+function getProduct(id) {
     return db.prepare("SELECT * FROM products WHERE id = ?").get(id);
 }
 
-export function upsertProduct(product) {
+function upsertProduct(product) {
     if (product.id) {
         const info = db.prepare(`
             UPDATE products
@@ -75,12 +71,12 @@ export function upsertProduct(product) {
     return getProduct(id);
 }
 
-export function deleteProduct(id) {
+function deleteProduct(id) {
     return db.prepare("DELETE FROM products WHERE id = ?").run(id);
 }
 
 // ---- Stock movements ----
-export function pushStockMovement(mv) {
+function pushStockMovement(mv) {
     const existing = db.prepare("SELECT id FROM stock_movements WHERE movement_uuid = ?").get(mv.movement_uuid);
     if (existing) return { id: existing.id, deduped: true };
 
@@ -99,12 +95,12 @@ export function pushStockMovement(mv) {
     return { id: info.lastInsertRowid, deduped: false };
 }
 
-export function listStockMovements() {
+function listStockMovements() {
     return db.prepare("SELECT * FROM stock_movements ORDER BY created_at DESC").all();
 }
 
 // ---- Sync queue ----
-export function enqueueSync(item) {
+function enqueueSync(item) {
     const info = db.prepare(`
         INSERT INTO sync_queue (entity_type, entity_uuid, payload)
         VALUES (?, ?, ?)
@@ -112,23 +108,22 @@ export function enqueueSync(item) {
     return info.lastInsertRowid;
 }
 
-
-export function peekSyncQueue() {
+function peekSyncQueue() {
     return db.prepare("SELECT id, entity_type, entity_uuid, payload, queued_at FROM sync_queue ORDER BY id ASC").all()
         .map(r => ({ ...r, payload: JSON.parse(r.payload) }));
 }
 
-export function dequeueSync(id) {
+function dequeueSync(id) {
     return db.prepare("DELETE FROM sync_queue WHERE id = ?").run(id);
 }
 
 // ---- Device meta ----
-export function getDeviceMeta(key) {
+function getDeviceMeta(key) {
     const row = db.prepare("SELECT value FROM device_meta WHERE key = ?").get(key);
     return row ? JSON.parse(row.value) : null;
 }
 
-export function setDeviceMeta(key, value) {
+function setDeviceMeta(key, value) {
     const str = JSON.stringify(value);
     const exists = db.prepare("SELECT key FROM device_meta WHERE key = ?").get(key);
     if (exists) {
@@ -138,10 +133,24 @@ export function setDeviceMeta(key, value) {
     }
 }
 
-// --- Export singleton db ---
-export { db };
-
 // --- Helper ---
 function generateId() {
     return `local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
+
+// --- Export everything ---
+module.exports = {
+    initDb,
+    listProducts,
+    getProduct,
+    upsertProduct,
+    deleteProduct,
+    pushStockMovement,
+    listStockMovements,
+    enqueueSync,
+    peekSyncQueue,
+    dequeueSync,
+    getDeviceMeta,
+    setDeviceMeta,
+    db
+};

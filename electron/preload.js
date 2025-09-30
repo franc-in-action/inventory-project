@@ -1,5 +1,6 @@
-// preload.js
-import { contextBridge, ipcRenderer } from "electron";
+// preload.js (CommonJS)
+
+const { contextBridge, ipcRenderer } = require("electron");
 
 const API = {
     products: {
