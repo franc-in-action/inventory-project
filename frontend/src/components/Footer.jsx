@@ -41,17 +41,15 @@ export default function Footer() {
         direction={{ base: "column", md: "row" }}
       >
         <ButtonGroup alignItems="center" gap={2}>
-          {/* 🌗 Dark / Light Toggle */}
           <Button
             onClick={toggleColorMode}
             variant="outline"
             leftIcon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             title={`Switch to ${colorMode === "light" ? "dark" : "light"} mode`}
           >
-            {colorMode === "light" ? "Dark" : "Light"} Mode
+            {colorMode === "light" ? "Dark" : "Light"}
           </Button>
 
-          {/* 🎨 Theme Selector */}
           <Select
             value={themeKey}
             onChange={(e) => handleThemeChange(e.target.value)}
@@ -66,7 +64,6 @@ export default function Footer() {
             ))}
           </Select>
 
-          {/* 🔓 Logout */}
           <Button
             colorScheme="red"
             onClick={() => logout(navigate)}
