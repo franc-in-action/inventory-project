@@ -87,6 +87,7 @@ export function ProtectedLayout({ children }) {
         display="flex"
         flexDirection="column"
         minH="100vh"
+        width="-webkit-fill-available"
         gap={2}
         transition="margin-left 0.2s ease"
       >
@@ -98,7 +99,6 @@ export function ProtectedLayout({ children }) {
         <Box key={refreshKey} flex="1" maxH={"80vh"} overflowX={"auto"}>
           {children}
         </Box>
-        {/* Footer here */}
         <Footer />
       </Box>
     </Box>

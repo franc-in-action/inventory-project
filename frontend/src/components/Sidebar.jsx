@@ -9,6 +9,7 @@ import {
   Divider,
   Collapse,
   Button,
+  Link,
   IconButton,
   Flex,
   Tooltip,
@@ -56,7 +57,6 @@ export default function Sidebar({ isOpen, onClose }) {
       toggleMenu(link.label);
     }
   };
-
 
   const links = [
     {
@@ -230,8 +230,18 @@ export default function Sidebar({ isOpen, onClose }) {
               </Tooltip>
             ) : (
               <Box>
-                <Tooltip label={isCollapsed ? link.label : ""} placement="right">
-                  <Button
+                <Tooltip
+                  label={isCollapsed ? link.label : ""}
+                  placement="right"
+                >
+                  <NavLink
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      fontWeight: "normal",
+                    }}
                     justifyContent={isCollapsed ? "center" : "space-between"}
                     w="full"
                     onClick={() => handleMenuClick(link)}
@@ -246,7 +256,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         <Text>{openMenu === link.label ? "▲" : "▼"}</Text>
                       </>
                     )}
-                  </Button>
+                  </NavLink>
                 </Tooltip>
 
                 {!isCollapsed && (
