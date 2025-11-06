@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { getUserFromToken, getDefaultPage } from "../modules/auth/authApi.js";
 
 const PAGE_TITLES = [
+  { path: "/", title: "Home" },
   { path: "/dashboard", title: "Dashboard" },
   { path: "/pos", title: "POS Order Management" },
   { path: "/products", title: "Products" },
@@ -29,7 +30,7 @@ export default function Header({ onOpenSidebar, onRefresh }) {
   const user = getUserFromToken();
   const defaultPage = getDefaultPage();
 
-  let headingText = "ERP System";
+  let headingText = "Dashboard";
   if (location.pathname !== defaultPage) {
     const match = PAGE_TITLES.find((p) => location.pathname.startsWith(p.path));
     headingText = match ? match.title : location.pathname.replace("/", "");
@@ -47,19 +48,26 @@ export default function Header({ onOpenSidebar, onRefresh }) {
         <Heading>{headingText}</Heading>
 
         <Flex align="center" gap={4}>
-          {user && (
-            <Text>
-              {user.name} ({user.role})
-            </Text>
-          )}
-          {user?.location && <Text>{user.location}</Text>}
-        </Flex>
+          <Flex align="center" alignItems="flex-end" direction="column" gap={0}>
+            {user && (
+              <Text>
+                {user.name} ({user.role})
+              </Text>
+            )}
+            {user?.location && (
+              <Text fontSize="small" fontWeight="bold">
+                {user.location}
+              </Text>
+            )}
+          </Flex>
 
-        <IconButton
-          aria-label="Refresh content"
-          icon={<RepeatIcon />}
-          onClick={onRefresh}
-        />
+          <IconButton
+            aria-label="Refresh content"
+            icon={<RepeatIcon />}
+            colorScheme="blue"
+            onClick={onRefresh}
+          />
+        </Flex>
       </Flex>
     </Box>
   );
