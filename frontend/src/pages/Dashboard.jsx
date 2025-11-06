@@ -124,28 +124,28 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   // State for showing/hiding the Windows XP Window
-  const [isWindowOpen, setIsWindowOpen] = useState(false);
+  // const [isWindowOpen, setIsWindowOpen] = useState(false);
 
-  const xpTabs = [
-    { label: "Music", content: <Text>Nicki Minaj, Bell Towers...</Text> },
-    {
-      label: "Dogs",
-      content: <img src="https://place-puppy.com/200x200" alt="Dog" />,
-    },
-    {
-      label: "Food",
-      content: (
-        <iframe
-          width="100%"
-          height="200"
-          src="https://www.youtube.com/embed/TODJBQ0tnow"
-          frameBorder="0"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        ></iframe>
-      ),
-    },
-  ];
+  // const xpTabs = [
+  //   { label: "Music", content: <Text>Nicki Minaj, Bell Towers...</Text> },
+  //   {
+  //     label: "Dogs",
+  //     content: <img src="https://place-puppy.com/200x200" alt="Dog" />,
+  //   },
+  //   {
+  //     label: "Food",
+  //     content: (
+  //       <iframe
+  //         width="100%"
+  //         height="200"
+  //         src="https://www.youtube.com/embed/TODJBQ0tnow"
+  //         frameBorder="0"
+  //         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+  //         allowFullScreen
+  //       ></iframe>
+  //     ),
+  //   },
+  // ];
 
   return (
     <Flex direction="column" p={4}>
@@ -177,14 +177,14 @@ export default function Dashboard() {
       </Flex>
 
       {/* Button to open Windows XP Window */}
-      <Box mb={6}>
+      {/* <Box mb={6}>
         <Button colorScheme="blue" onClick={() => setIsWindowOpen(true)}>
           Open XP Window
         </Button>
-      </Box>
+      </Box> */}
 
       {/* Windows XP Window */}
-      {isWindowOpen && (
+      {/* {isWindowOpen && (
         <Window
           onClose={() => setIsWindowOpen(false)}
           defaultPosition={{ x: 150, y: 150 }}
@@ -195,7 +195,7 @@ export default function Dashboard() {
             <XpTab tabs={xpTabs} />
           </WindowBody>
         </Window>
-      )}
+      )} */}
 
       {/* Reports Tabs Section */}
       <Box w="100%" maxW="1200px" mt={8}>

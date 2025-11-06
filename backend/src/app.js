@@ -30,9 +30,21 @@ import reportsRouter from "./routes/reports.js";
 const app = express();
 
 // Enable CORS for frontend dev server
+// app.use(
+//   cors({
+//     origin: "http://localhost:5144",
+//     credentials: true,
+//   })
+// );
+
+const allowedOrigins = [
+  "https://erp.francisshirima.me",
+  "http://localhost:5144", // still allow local dev
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5144",
+    origin: allowedOrigins,
     credentials: true,
   })
 );

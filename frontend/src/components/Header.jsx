@@ -50,7 +50,7 @@ export default function Header({ onOpenSidebar, onRefresh }) {
     useThemeSwitcher();
   const { setPreference } = useUserPreferences();
 
-  let headingText = "Inventory App";
+  let headingText = "ERP System";
   if (location.pathname !== defaultPage) {
     const match = PAGE_TITLES.find((p) => location.pathname.startsWith(p.path));
     headingText = match ? match.title : location.pathname.replace("/", "");
