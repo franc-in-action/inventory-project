@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import { ThemeProvider, useThemeSwitcher } from "./theme/ThemeContext.jsx";
+import "./index.css";
 
 function Root() {
   const { theme } = useThemeSwitcher();

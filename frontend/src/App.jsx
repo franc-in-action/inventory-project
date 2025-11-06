@@ -43,6 +43,7 @@ import CustomerReportsPage from "./modules/reports/models/CustomerReportsPage.js
 import ReportsPage from "./modules/reports/ReportsPage.jsx";
 
 import Header from "./components/Header.jsx";
+import Footer from "./components/Footer.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 
 import { PERMISSIONS } from "./constants/permissions.js";
@@ -89,10 +90,16 @@ export function ProtectedLayout({ children }) {
         gap={2}
         transition="margin-left 0.2s ease"
       >
-        <Header onOpenSidebar={onOpen} onRefresh={handleRefresh} maxH={"20vh"} />
+        <Header
+          onOpenSidebar={onOpen}
+          onRefresh={handleRefresh}
+          maxH={"20vh"}
+        />
         <Box key={refreshKey} flex="1" maxH={"80vh"} overflowX={"auto"}>
           {children}
         </Box>
+        {/* Footer here */}
+        <Footer />
       </Box>
     </Box>
   );
