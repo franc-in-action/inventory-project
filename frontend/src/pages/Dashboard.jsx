@@ -35,9 +35,6 @@ import StockReportsPage from "../modules/reports/models/StockReportsPage.jsx";
 import SalesReportsPage from "../modules/reports/models/SalesReportsPage.jsx";
 import CustomerReportsPage from "../modules/reports/models/CustomerReportsPage.jsx";
 
-// Import the Windows XP Window component
-import { Window, TitleBar, WindowBody, XpTab } from "../components/Xp.jsx";
-
 // Dashboard navigation links
 const dashboardLinks = [
   { label: "POS", href: "/pos", icon: FaCashRegister },
@@ -72,52 +69,6 @@ function NavCard({ icon, label, onClick }) {
     </Card>
   );
 }
-
-// Sample content for XP-style tabs
-const xpTab = [
-  {
-    label: "General",
-    content: (
-      <div>
-        <p>This is the General tab content.</p>
-        <p>You can put forms, text, or other components here.</p>
-        <fieldset>
-          <legend>Settings</legend>
-          <label>
-            <input type="checkbox" /> Enable feature A
-          </label>
-          <br />
-          <label>
-            <input type="checkbox" /> Enable feature B
-          </label>
-        </fieldset>
-      </div>
-    ),
-  },
-  {
-    label: "Details",
-    content: (
-      <div>
-        <p>Here are some detailed information items:</p>
-        <ul>
-          <li>Detail 1</li>
-          <li>Detail 2</li>
-          <li>Detail 3</li>
-        </ul>
-      </div>
-    ),
-  },
-  {
-    label: "About",
-    content: (
-      <div>
-        <p>Application Version: 1.0.0</p>
-        <p>Author: Retro Dev</p>
-        <p>© 2025 XP-style UI Example</p>
-      </div>
-    ),
-  },
-];
 
 export default function Dashboard() {
   const user = getUserFromToken();
