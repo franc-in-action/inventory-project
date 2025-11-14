@@ -177,9 +177,7 @@ export default function Sidebar({ isOpen, onClose }) {
       zIndex={20}
       overflowY="auto"
       transition="width 0.2s"
-      bg="white"
       borderRight="1px solid"
-      borderColor="gray.200"
     >
       {/* Collapse / Expand button */}
       <Flex justify="flex-end" mb={4}>

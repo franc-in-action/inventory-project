@@ -13,6 +13,7 @@ import {
   Box,
   Spacer,
   Button,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -92,19 +93,22 @@ export default function Dashboard() {
       )}
 
       {/* Navigation Cards */}
-      <Flex wrap="wrap" justify="center" mb={10} gap={4}>
+      <SimpleGrid
+        columns={{ base: 1, sm: 2, md: 3, lg: 5 }} // responsive columns
+        spacing={4} // gap between cards
+        padding={{ base: "0 12px", sm: "0 20px", md: "0 30px", lg: "0 50px" }}
+      >
         {dashboardLinks.map((link) => (
           <NavCard
             key={link.label}
             icon={link.icon}
             label={link.label}
             onClick={() => navigate(link.href)}
-            flex="1 1 200px" // makes each card at least 200px, grow equally
-            maxW="200px" // optional: sets maximum width
-            h="200px" // fixed height
+            aspectRatio={1} // ensures square cards
+            w="100%" // card fills its grid cell
           />
         ))}
-      </Flex>
+      </SimpleGrid>
 
       {/* Reports Tabs Section */}
       <Box w="100%" maxW="1200px" mt={8}>
