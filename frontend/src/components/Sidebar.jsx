@@ -241,8 +241,9 @@ export default function Sidebar({ isOpen, onClose }) {
                       padding: "10px 12px",
                       borderRadius: "8px",
                       fontWeight: "normal",
+                      justifyContent: isCollapsed ? "center" : "space-between",
                     }}
-                    justifyContent={isCollapsed ? "center" : "space-between"}
+                    // justifyContent={isCollapsed ? "center" : "space-between"}
                     w="full"
                     onClick={() => handleMenuClick(link)}
                     leftIcon={<Icon as={link.icon} w={5} h={5} />}
