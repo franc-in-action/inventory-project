@@ -92,13 +92,16 @@ export default function Dashboard() {
       )}
 
       {/* Navigation Cards */}
-      <Flex wrap="wrap" justify="center" mb={10}>
+      <Flex wrap="wrap" justify="center" mb={10} gap={4}>
         {dashboardLinks.map((link) => (
           <NavCard
             key={link.label}
             icon={link.icon}
             label={link.label}
             onClick={() => navigate(link.href)}
+            flex="1 1 200px" // makes each card at least 200px, grow equally
+            maxW="200px" // optional: sets maximum width
+            h="200px" // fixed height
           />
         ))}
       </Flex>
