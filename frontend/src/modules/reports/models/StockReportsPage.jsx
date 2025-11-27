@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Flex, Box, Heading, Select, Spacer, Button } from "@chakra-ui/react";
+import { RepeatIcon } from "@chakra-ui/icons";
 import StockValuationReport from "../StockValuationReport.jsx";
 import StockMovementsReport from "../StockMovementsReport.jsx";
 
@@ -38,9 +39,12 @@ export default function StockReportsPage() {
         />
 
         <Button
+          colorScheme="blue"
           onClick={() => {
             /* Add manual refresh if needed */
           }}
+          leftIcon={<RepeatIcon />}
+          title="Reresh"
         >
           Refresh
         </Button>
